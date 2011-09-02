@@ -1,0 +1,16 @@
+{
+  "eqeqeq": true,
+  "forin": true,
+  "immed": true,
+  "newcap": true,
+  "noarg": true,
+  "noempty": true,
+  "nonew": true,
+  "nomen": true,
+  "onevar": true,
+  "passfail": true,
+  "regexp": true,
+  "undef": true,
+  "strict": true,
+  "white": true
+}
