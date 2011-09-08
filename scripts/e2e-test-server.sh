@@ -7,7 +7,7 @@ echo "Starting JsTestDriver Server (http://code.google.com/p/js-test-driver/)"
 echo "Please open the following url and capture one or more browsers:"
 echo "http://localhost:$PORT"
 
-java -jar "$BASE_DIR/../test/lib/jstestdriver/JsTestDriver.jar" \
+exec java -jar "$BASE_DIR/../test/lib/jstestdriver/JsTestDriver.jar" \
      --port $PORT \
      --browserTimeout 20000 \
      --config "$BASE_DIR/../config/jsTestDriver-scenario.conf" \
