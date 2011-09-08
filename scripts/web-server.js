@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 var sys = require('sys'),
     http = require('http'),
     fs = require('fs'),
@@ -28,10 +26,10 @@ function createServlet(Class) {
 }
 
 /**
- * An Http server implementation that uses a map of methods to decide
+ * An HTTP server implementation that uses a map of methods to decide
  * action routing.
  *
- * @param {Object} Map of method => Handler function
+ * @param {Object} handlers Map of method => Handler function
  */
 function HttpServer(handlers) {
   this.handlers = handlers;
@@ -69,7 +67,9 @@ HttpServer.prototype.handleRequest_ = function(req, res) {
 /**
  * Handles static content.
  */
-function StaticServlet() {}
+function StaticServlet() {
+	// no instance variables.
+}
 
 StaticServlet.MimeMap = {
   'txt': 'text/plain',
@@ -99,7 +99,7 @@ StaticServlet.prototype.handleRequest = function(req, res) {
       return self.sendDirectory_(req, res, path);
     return self.sendFile_(req, res, path);
   });
-}
+};
 
 StaticServlet.prototype.sendError_ = function(req, res, error) {
   res.writeHead(500, {
@@ -114,7 +114,6 @@ StaticServlet.prototype.sendError_ = function(req, res, error) {
 };
 
 StaticServlet.prototype.sendMissing_ = function(req, res, path) {
-  path = path.substring(1);
   res.writeHead(404, {
       'Content-Type': 'text/html'
   });
@@ -131,7 +130,6 @@ StaticServlet.prototype.sendMissing_ = function(req, res, path) {
 };
 
 StaticServlet.prototype.sendForbidden_ = function(req, res, path) {
-  path = path.substring(1);
   res.writeHead(403, {
       'Content-Type': 'text/html'
   });
@@ -168,8 +166,7 @@ StaticServlet.prototype.sendFile_ = function(req, res, path) {
   var file = fs.createReadStream(path);
   var defaultType = path.match(/\/boutique_db\//) ? 'application/json' : 'text/plain';
   res.writeHead(200, {
-    'Content-Type': StaticServlet.
-      MimeMap[path.split('.').pop()] || defaultType
+    'Content-Type': StaticServlet.MimeMap[path.split('.').pop()] || defaultType
   });
   if (req.method === 'HEAD') {
     res.end();
@@ -200,9 +197,9 @@ StaticServlet.prototype.sendDirectory_ = function(req, res, path) {
 
     var remaining = files.length;
     files.forEach(function(fileName, index) {
-      fs.stat(path + '/' + fileName, function(err, stat) {
-        if (err)
-          return self.sendError_(req, res, err);
+      fs.stat(path + '/' + fileName, function(statErr, stat) {
+        if (statErr)
+          return self.sendError_(req, res, statErr);
         if (stat.isDirectory()) {
           files[index] = fileName + '/';
         }
@@ -214,7 +211,6 @@ StaticServlet.prototype.sendDirectory_ = function(req, res, path) {
 };
 
 StaticServlet.prototype.writeDirectoryIndex_ = function(req, res, path, files) {
-  path = path.substring(1);
   res.writeHead(200, {
     'Content-Type': 'text/html'
   });
