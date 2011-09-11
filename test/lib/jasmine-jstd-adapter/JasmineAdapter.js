@@ -4,7 +4,6 @@
  */
 (function(window) {
   var rootDescribes = new Describes(window);
-  var describePath = [];
   rootDescribes.collectMode();
   
   var jasmineTest = TestCase('Jasmine Adapter Tests', null, 'jasmine test case');
@@ -80,7 +79,7 @@
   function formatStack(stack) {
     var lines = (stack||'').split(/\r?\n/);
     var frames = [];
-    for (i = 0; i < lines.length; i++) {
+    for (var i = 0; i < lines.length; i++) {
       if (!lines[i].match(/\/jasmine[\.-]/)) {
         frames.push(lines[i].replace(/https?:\/\/\w+(:\d+)?\/test\//, '').replace(/^\s*/, '      '));
       }
@@ -121,7 +120,7 @@
           fn.call(this);
         } finally {
           window.it = oldIt;
-        };
+        }
       });
     };
     window.iit = function(name, fn){
@@ -151,7 +150,7 @@
     this.isExclusive = function(spec) {
       if (exclusive) {
         var blocks = spec.queue.blocks;
-        for ( var i = 0; i < blocks.length; i++) {
+        for (var i = 0; i < blocks.length; i++) {
           if (blocks[i].func.exclusive) {
             return true;
           }
