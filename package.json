@@ -1,0 +1,14 @@
+{
+    "name": "boutique",
+    "version": "0.0.1",
+    "description": "tailor's shop manager",
+    "author": "Marcello Nuccio <marcello.nuccio@gmail.com>",
+    "dependencies": {
+        "connect" : "1.7.x"
+    },
+    "devDependencies": {
+        "cradle" : "0.5.x",
+        "glob" : "2.0.x"
+    },
+    "engines": { "node": "~0.4.11" }
+}
