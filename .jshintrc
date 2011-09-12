@@ -6,7 +6,7 @@
   "noarg": true,
   "noempty": true,
   "nonew": true,
-  "nomen": true,
+  "nomen": false,
   "onevar": true,
   "passfail": true,
   "regexp": true,
