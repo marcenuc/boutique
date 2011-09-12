@@ -89,19 +89,19 @@ function MockBrowser() {
       requests = [];
 
   this.isMock = true;
-  self.url = "http://server";
-  self.lastUrl = self.url; // used by url polling fn
+  self.$$url = "http://server";
+  self.$$lastUrl = self.$$url; // used by url polling fn
   self.pollFns = [];
 
 
   // register url polling fn
 
-  self.onHashChange = function(listener) {
+  self.onUrlChange = function(listener) {
     self.pollFns.push(
       function() {
-        if (self.lastUrl != self.url) {
-          self.lastUrl = self.url;
-          listener();
+        if (self.$$lastUrl != self.$$url) {
+          self.$$lastUrl = self.$$url;
+          listener(self.$$url);
         }
       }
     );
@@ -152,14 +152,7 @@ function MockBrowser() {
           throw new Error("Missing HTTP request header: " + key + ": " + value);
         }
       });
-      callback(expectation.code, expectation.response, function(header) {
-        if (header) {
-          header = header.toLowerCase();
-          return expectation.responseHeaders && expectation.responseHeaders[header] || null;
-        } else {
-          return expectation.responseHeaders || {};
-        }
-      });
+      callback(expectation.code, expectation.response);
     });
   };
   self.xhr.expectations = expectations;
@@ -169,22 +162,12 @@ function MockBrowser() {
     if (data && angular.isString(data)) url += "|" + data;
     var expect = expectations[method] || (expectations[method] = {});
     return {
-      respond: function(code, response, responseHeaders) {
+      respond: function(code, response) {
         if (!angular.isNumber(code)) {
-          responseHeaders = response;
           response = code;
           code = 200;
         }
-        angular.forEach(responseHeaders, function(value, key) {
-          delete responseHeaders[key];
-          responseHeaders[key.toLowerCase()] = value;
-        });
-        expect[url] = {
-          code: code,
-          response: response,
-          headers: headers || {},
-          responseHeaders: responseHeaders || {}
-        };
+        expect[url] = {code:code, response:response, headers: headers || {}};
       }
     };
   };
@@ -285,7 +268,7 @@ function MockBrowser() {
   self.defer = function(fn, delay) {
     delay = delay || 0;
     self.deferredFns.push({time:(self.defer.now + delay), fn:fn, id: self.deferredNextId});
-    self.deferredFns.sort(function(a,b){return a.time - b.time;});
+    self.deferredFns.sort(function(a,b){ return a.time - b.time;});
     return self.deferredNextId++;
   };
 
@@ -319,6 +302,11 @@ function MockBrowser() {
       self.deferredFns.shift().fn();
     }
   };
+
+  self.$$baseHref = '';
+  self.baseHref = function() {
+    return this.$$baseHref;
+  };
 }
 MockBrowser.prototype = {
 
@@ -343,12 +331,13 @@ MockBrowser.prototype = {
   hover: function(onHover) {
   },
 
-  getUrl: function(){
-    return this.url;
-  },
+  url: function(url, replace) {
+    if (url) {
+      this.$$url = url;
+      return this;
+    }
 
-  setUrl: function(url){
-    this.url = url;
+    return this.$$url;
   },
 
   cookies:  function(name, value) {
@@ -391,7 +380,7 @@ angular.service('$browser', function(){
  * See {@link angular.mock} for more info on angular mocks.
  */
 angular.service('$exceptionHandler', function() {
-  return function(e) {throw e;};
+  return function(e) { throw e; };
 });
 
 
@@ -411,10 +400,10 @@ angular.service('$log', MockLogFactory);
 
 function MockLogFactory() {
   var $log = {
-    log: function(){$log.log.logs.push(arguments);},
-    warn: function(){$log.warn.logs.push(arguments);},
-    info: function(){$log.info.logs.push(arguments);},
-    error: function(){$log.error.logs.push(arguments);}
+    log: function(){ $log.log.logs.push(arguments); },
+    warn: function(){ $log.warn.logs.push(arguments); },
+    info: function(){ $log.info.logs.push(arguments); },
+    error: function(){ $log.error.logs.push(arguments); }
   };
 
   $log.log.logs = [];
@@ -456,7 +445,7 @@ function MockLogFactory() {
  * </pre>
  *
  */
-function TzDate(offset, timestamp, toStringVal) {
+function TzDate(offset, timestamp) {
   if (angular.isString(timestamp)) {
     var tsStr = timestamp;
 
@@ -478,10 +467,6 @@ function TzDate(offset, timestamp, toStringVal) {
 
   this.getTime = function() {
     return this.date.getTime() - this.offsetDiff;
-  };
-
-  this.toString = function() {
-   return toStringVal;
   };
 
   this.toLocaleDateString = function() {
@@ -554,8 +539,6 @@ function TzDate(offset, timestamp, toStringVal) {
       'toLocaleTimeString', 'toSource', 'toString', 'toTimeString', 'toUTCString', 'valueOf'];
 
   angular.forEach(unimplementedMethods, function(methodName) {
-    if (methodName == 'toString' && toStringVal) return;
-
     self[methodName] = function() {
       throw {
         name: "MethodNotImplemented",
