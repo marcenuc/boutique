@@ -5,8 +5,17 @@
 (function () {
   'use strict';
   var fs = require('fs'),
-    src = fs.readFileSync('./app/js/validate_doc_update.js', 'utf8'),
-    validate_doc_update = src.replace(/^function validate_doc_update\(/, 'function (');
+    validate_src_file = './app/js/validate_doc_update.js',
+    validate_orig_src = fs.readFileSync(validate_src_file, 'utf8'),
+    jsp = require('uglify-js').parser,
+    pro = require('uglify-js').uglify,
+    ast = pro.ast_squeeze(pro.ast_mangle(jsp.parse(validate_orig_src))),
+    validate_src = pro.gen_code(ast),
+    regexp_head = /^function validate_doc_update\(/;
+
+  if (!validate_orig_src.match(regexp_head) || !validate_src.match(regexp_head)) {
+    throw 'Invalid contents in ' + validate_src_file;
+  }
   
   exports.boutique_db = {
     _security: {
@@ -14,7 +23,7 @@
       readers: { names: [], roles: ['azienda'] }
     },
     '_design/boutique_db': {
-      validate_doc_update: validate_doc_update,
+      validate_doc_update: validate_src.replace(regexp_head, 'function('),
       views: {
         all: {
           map: function (doc) {
