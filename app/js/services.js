@@ -1,23 +1,71 @@
-/* http://docs.angularjs.org/#!angular.service */
+/*jslint nomen: true */
+/*global angular: false, validate_doc_update: false,
+         AziendaCtrl: false */
 
-/**
- * App service which is responsible for the main configuration of the app.
- */
-angular.service('myAngularApp', function($route, $location, $window) {
+/* App service which is responsible for the main configuration of the app. */
+angular.service('Boutique', function ($route, $window) {
+  'use strict';
 
-  $route.when('/view1', {template: 'partials/partial1.html', controller: MyCtrl1});
-  $route.when('/view2', {template: 'partials/partial2.html', controller: MyCtrl2});
+  $route.when('/azienda', {template: 'partials/azienda.html', controller: AziendaCtrl});
+  $route.otherwise({redirectTo: '/'});
 
   var self = this;
 
-  $route.onChange(function() {
-    if ($location.hash === '') {
-      $location.updateHash('/view1');
-      self.$eval();
-    } else {
-      $route.current.scope.params = $route.current.params;
-      $window.scrollTo(0,0);
-    }
+  self.$on('$afterRouteChange', function () {
+    $window.scrollTo(0, 0);
   });
 
-}, {$inject:['$route', '$location', '$window'], $eager: true});
+}, { $inject: ['$route', '$window'], $eager: true });
+
+
+angular.service('Document', function ($resource) {
+  'use strict';
+  var r = $resource('/boutique_db/:id', { id: '@_id' }, {
+    query: {
+      method: 'GET',
+      isArray: false,
+      params: {
+        id: '_all_docs',
+        include_docs: 'true'
+      }
+    },
+    save: { method: 'PUT' }
+  });
+  
+  function range(key) {
+    return {
+      startkey: '"' + key + '_"',
+      endkey: '"' + key + '_\uFFF0"'
+    };
+  }
+  
+  r.aziende = function () {
+    return r.query(range('azienda'));
+  };
+  
+  r.clienti = function (azienda) {
+    var baseId = azienda.replace(/^azienda_/, 'cliente_');
+    return r.query(range(baseId));
+  };
+  
+  return r;
+}, { $inject: ['$resource'] });
+
+
+angular.service('userCtx', function () {
+  'use strict';
+  return {
+    name: 'boutique',
+    browser: true
+  };
+});
+
+
+angular.service('Validator', function (userCtx) {
+  'use strict';
+  return { 
+    check: function (doc, oldDoc) {
+      return validate_doc_update(doc, oldDoc, userCtx);
+    }
+  };
+}, { $inject: ['userCtx'] });

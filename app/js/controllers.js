@@ -1,10 +1,14 @@
-/* App Controllers */
-
-
-function MyCtrl1() {}
-MyCtrl1.$inject = [];
-
-
-function MyCtrl2() {
+function AziendaCtrl(Document) {
+  'use strict';
+  this.aziende = Document.aziende();
+  this.codice = '';
+  this.azienda = new Document({});
 }
-MyCtrl2.$inject = [];
+AziendaCtrl.$inject = ['Document'];
+
+AziendaCtrl.prototype = {
+  save: function () {
+    'use strict';
+    this.azienda.$save({ id: 'azienda_' + this.codice });
+  }
+};
