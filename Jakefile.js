@@ -1,6 +1,7 @@
 /*jslint node: true */
 /*jshint node: true */
-/*global desc: false, task: false, fail: false, complete: false, namespace: false */
+/*global desc: false, task: false, fail: false, complete: false, namespace: false,
+         setTimeout: false */
 /*
  * Example "server.js" configuration file:
  * 
@@ -71,6 +72,9 @@ namespace('test', function () {
   desc('Run server for unit tests');
   task('unit-server', function () {
     console_exec('java', unitOpts.concat('--port', '9876', '--browserTimeout', '20000'));
+    setTimeout(function () {
+      console_exec('chromium-browser', ['--incognito', 'http://localhost:9876/capture?strict']);
+    }, 1500);
   });
 
   desc('Run unit tests');
