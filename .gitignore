@@ -5,5 +5,3 @@ build.xml
 *.swp
 
 node_modules
-.project
-.settings
