@@ -5,3 +5,5 @@ build.xml
 *.swp
 
 node_modules
+
+config/server-configs.js
