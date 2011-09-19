@@ -41,11 +41,12 @@ describe('Controllers', function () {
   };
       
   describe('AziendaCtrl', function () {
-    var scope, $browser = null, ctrl = null;
+    var scope, $browser = null, $routeParams = null, ctrl = null;
 
     beforeEach(function () {
       scope = angular.scope();
       $browser = scope.$service('$browser');
+      $routeParams = scope.$service('$routeParams');
 
       $browser.xhr.expectGET('/boutique_db/_all_docs?endkey=%22azienda_%EF%BF%B0%22&include_docs=true&startkey=%22azienda_%22').respond(aziende);
       ctrl = scope.$new(AziendaCtrl);
@@ -57,16 +58,42 @@ describe('Controllers', function () {
       expect(ctrl.aziende).toEqualData(aziende);
     });
     
-    it('should set default azienda to new empty document', function () {
+    it('should set codice and azienda based on $routeParams.codice', function () {
+      $routeParams.codice = '099997';
+      expect(ctrl.codice).toBeUndefined();
       expect(ctrl.azienda).toEqualData({});
+      $browser.xhr.flush();
+      expect(ctrl.codice).toBe('099997');
+      expect(ctrl.azienda).toEqualData(aziende.rows[1].doc);
     });
     
     describe('save', function () {
-      it('should ', function () {
+      it('should PUT the data to the DB', function () {
         $browser.xhr.expectPUT('/boutique_db/azienda_010101', { nome: 'Azienda 010101' }).respond({ ok: true });
         ctrl.codice = '010101';
         ctrl.azienda.nome = 'Azienda 010101';
         ctrl.save();
+      });
+    });
+    
+    describe('select', function () {
+      it('should put the azienda at given index from aziende to azienda and set codice', function () {
+        $browser.xhr.flush();
+        ctrl.select(1);
+        expect(ctrl.codice).toBe('099997');
+        expect(ctrl.azienda).toEqualData(aziende.rows[1].doc);
+      });
+    });
+    
+    describe('selectCodice', function () {
+      it('should put the azienda with given codice from aziende to azienda and set codice', function () {
+        $browser.xhr.flush();
+        expect(ctrl.selectCodice('000000')).toBe(false);
+        expect(ctrl.codice).toBeUndefined();
+        expect(ctrl.azienda).toEqualData({});
+        expect(ctrl.selectCodice('099997')).toBe(true);
+        expect(ctrl.codice).toBe('099997');
+        expect(ctrl.azienda).toEqualData(aziende.rows[1].doc);
       });
     });
   });
