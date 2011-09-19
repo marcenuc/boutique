@@ -1,0 +1,9 @@
+<table>
+<thead><tr><th>ID<th>Nome
+<tbody><tr ng:repeat="row in aziende.rows"><td>{{row.id | linkById }}<td>{{row.doc.nome}}
+</table>
+<form ng:submit="save()" class="azienda">
+<label>Codice:<input name="codice"></label>
+<label>Nome:<input name="azienda.nome"></label>
+<input type=submit value=Salva>
+</form>
