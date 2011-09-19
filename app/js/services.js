@@ -6,8 +6,8 @@
 angular.service('Boutique', function ($route, $window) {
   'use strict';
 
-  $route.when('/azienda', {template: 'partials/azienda.html', controller: AziendaCtrl});
-  $route.otherwise({redirectTo: '/'});
+  $route.when('/azienda/:codice', { template: 'partials/azienda.html', controller: AziendaCtrl });
+  $route.otherwise({ redirectTo: '/' });
 
   var self = this;
 
@@ -39,13 +39,13 @@ angular.service('Document', function ($resource) {
     };
   }
   
-  r.aziende = function () {
-    return r.query(range('azienda'));
+  r.aziende = function (success) {
+    return r.query(range('azienda'), success);
   };
   
-  r.clienti = function (azienda) {
+  r.clienti = function (azienda, success) {
     var baseId = azienda.replace(/^azienda_/, 'cliente_');
-    return r.query(range(baseId));
+    return r.query(range(baseId), success);
   };
   
   return r;

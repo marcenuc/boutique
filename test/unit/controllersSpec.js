@@ -1,4 +1,4 @@
-/*global describe: false, beforeEach: false, it: false, expect: false, angular: false,
+/*global describe: false, beforeEach: false, afterEach: false, it: false, expect: false, angular: false,
          AziendaCtrl: false */
 
 describe('Controllers', function () {
@@ -51,6 +51,11 @@ describe('Controllers', function () {
       $browser.xhr.expectGET('/boutique_db/_all_docs?endkey=%22azienda_%EF%BF%B0%22&include_docs=true&startkey=%22azienda_%22').respond(aziende);
       ctrl = scope.$new(AziendaCtrl);
     });
+    
+    afterEach(function () {
+      expect($browser.xhr.requests.length).toBe(0, 'You have not flushed the $browser.xhr requests.');
+    });
+    
 
     it('should populate "aziende" model with all aziende fetched from xhr', function () {
       expect(ctrl.aziende).toEqualData({});
@@ -61,10 +66,10 @@ describe('Controllers', function () {
     it('should set codice and azienda based on $routeParams.codice', function () {
       $routeParams.codice = '099997';
       expect(ctrl.codice).toBeUndefined();
-      expect(ctrl.azienda).toEqualData({});
+      expect(ctrl.azienda).toEqual({});
       $browser.xhr.flush();
       expect(ctrl.codice).toBe('099997');
-      expect(ctrl.azienda).toEqualData(aziende.rows[1].doc);
+      expect(ctrl.azienda).toEqual(aziende.rows[1].doc);
     });
     
     describe('save', function () {
@@ -73,6 +78,26 @@ describe('Controllers', function () {
         ctrl.codice = '010101';
         ctrl.azienda.nome = 'Azienda 010101';
         ctrl.save();
+        $browser.xhr.flush();
+      });
+      
+      it('should set _rev field in new documents', function () {
+        var azienda = { nome: 'Nuova azienda' };
+        $browser.xhr.expectPUT('/boutique_db/azienda_010101', azienda).respond({ ok: true, rev: '1' });
+        ctrl.codice = '010101';
+        ctrl.azienda = azienda;
+        ctrl.save();
+        $browser.xhr.flush();
+        expect(ctrl.azienda._rev).toBe('1');
+      });
+      
+      it('should update _rev field in existing documents', function () {
+        var azienda = { _id: 'azienda_010101', _rev: '1', nome: 'Vecchia azienda'};
+        $browser.xhr.expectPUT('/boutique_db/azienda_010101', azienda).respond({ ok: true, rev: '2' });
+        ctrl.azienda = azienda;
+        ctrl.save();
+        $browser.xhr.flush();
+        expect(ctrl.azienda._rev).toBe('2');
       });
     });
     
