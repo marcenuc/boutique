@@ -64,8 +64,8 @@ angular.service('userCtx', function () {
 angular.service('Validator', function (userCtx) {
   'use strict';
   return { 
-    check: function (doc, oldDoc) {
-      return validate_doc_update(doc, oldDoc, userCtx);
+    check: function (doc, oldDoc, docId) {
+      return validate_doc_update(doc, oldDoc, userCtx, docId);
     }
   };
 }, { $inject: ['userCtx'] });

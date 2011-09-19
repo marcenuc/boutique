@@ -104,5 +104,10 @@ describe('Services', function () {
       expect(Validator.check({ _id: 'azienda_1', nome: ' ' })).toHaveError(msg);
       expect(Validator.check({ _id: 'azienda_1', nome: 'n' })).not.toHaveError(msg);
     });
+    
+    it('should override doc._id with third parameter', function () {
+      var msg = 'Invalid azienda code';
+      expect(Validator.check({ _id: 'azienda_000000' }, {}, 'azienda_1')).toHaveError(msg);
+    });
   });
 });

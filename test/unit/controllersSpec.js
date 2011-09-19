@@ -99,6 +99,16 @@ describe('Controllers', function () {
         $browser.xhr.flush();
         expect(ctrl.azienda._rev).toBe('2');
       });
+      
+      it('should not submit the data if not valid', function () {
+        var azienda = { _id: 'azienda_010101', _rev: '1', nome: ''};
+        $browser.xhr.expectPUT('/boutique_db/azienda_010101', azienda).respond({ ok: true, rev: '2' });
+        ctrl.azienda = azienda;
+        ctrl.save();
+        $browser.xhr.flush();
+        expect(ctrl.azienda._rev).toBe('1');
+        expect(ctrl.flash.errors.length).toBeGreaterThan(0);
+      });
     });
     
     describe('select', function () {

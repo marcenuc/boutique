@@ -1,7 +1,8 @@
-function AziendaCtrl($routeParams, Document) {
+function AziendaCtrl($routeParams, Document, Validator) {
   'use strict';
   var self = this;
   this.Document = Document;
+  this.Validator = Validator;
   
   this.aziende = Document.aziende(function () {
     if ($routeParams.codice) {
@@ -10,17 +11,25 @@ function AziendaCtrl($routeParams, Document) {
   });
   this.codice = $routeParams.codice;
   this.azienda = {};
+  this.flash = {};
 }
-AziendaCtrl.$inject = ['$routeParams', 'Document'];
+AziendaCtrl.$inject = ['$routeParams', 'Document', 'Validator'];
 
 AziendaCtrl.prototype = {
+  validate: function (docId) {
+    'use strict';
+    this.flash = this.Validator.check(this.azienda, {}, docId);
+    return this.flash.errors.length === 0;
+  },
   save: function () {
     'use strict';
     var self = this,
-      id = this.azienda._id || 'azienda_' + this.codice;
-    this.Document.save({ id: id }, this.azienda, function (res) {
-      self.azienda._rev = res.rev;
-    });
+      docId = this.azienda._id || 'azienda_' + this.codice;
+    if (this.validate(docId)) {
+      this.Document.save({ id: docId }, this.azienda, function (res) {
+        self.azienda._rev = res.rev;
+      });
+    }
   },
   select: function (idx) {
     'use strict';
