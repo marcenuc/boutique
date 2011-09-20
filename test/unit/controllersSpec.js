@@ -56,75 +56,72 @@ describe('Controllers', function () {
       expect($browser.xhr.requests.length).toBe(0, 'You have not flushed the $browser.xhr requests.');
     });
     
+    
+    describe('inizialization', function () {
+      it('should have an empty list of aziende before fetching', function () {
+        expect(ctrl.aziende).toEqualData({});
+        $browser.xhr.flush();
+      });
 
-    it('should populate "aziende" model with all aziende fetched from xhr', function () {
-      expect(ctrl.aziende).toEqualData({});
-      $browser.xhr.flush();
-      expect(ctrl.aziende).toEqualData(aziende);
+      it('should populate "aziende" model with all aziende fetched from xhr', function () {
+        $browser.xhr.flush();
+        expect(ctrl.aziende).toEqualData(aziende);
+      });
+      
+      it('should set azienda._id to $routeParams.codice after fetching aziende', function () {
+        $routeParams.codice = '099997';        
+        $browser.xhr.flush();
+        expect(ctrl.azienda).toEqual(aziende.rows[1].doc);
+      });
     });
     
-    it('should set codice and azienda based on $routeParams.codice', function () {
-      $routeParams.codice = '099997';
-      expect(ctrl.azienda).toEqual({});
-      $browser.xhr.flush();
-      expect(ctrl.azienda).toEqual(aziende.rows[1].doc);
-    });
-    
-    describe('save', function () {
-      it('should PUT the data to the DB', function () {
-        $browser.xhr.expectPUT('/boutique_db/azienda_010101', { nome: 'Azienda 010101' }).respond({ ok: true });
-        ctrl.codice = '010101';
-        ctrl.azienda.nome = 'Azienda 010101';
-        ctrl.save();
+
+    describe('actions', function () {
+      beforeEach(function () {
         $browser.xhr.flush();
       });
       
-      it('should not submit the data if not valid', function () {
-        var azienda = { _id: 'azienda_010101', _rev: '1', nome: ''};
-        $browser.xhr.expectPUT('/boutique_db/azienda_010101', azienda).respond({ ok: true, rev: '2' });
-        ctrl.azienda = azienda;
-        ctrl.save();
-        $browser.xhr.flush();
-        expect(ctrl.azienda._rev).toBe('1');
-        expect(ctrl.flash.errors.length).toBeGreaterThan(0);
-      });
+      describe('save', function () {
+        it('should not submit the data if not valid', function () {
+          ctrl.azienda = { _id: 'azienda_010101', _rev: '1', nome: ''};
+          ctrl.save();
+          expect(ctrl.azienda._rev).toBe('1');
+          expect(ctrl.flash.errors[0]).toEqual({ message: 'Required: nome' });
+        });
       
-      it('should set _rev field in new documents', function () {
-        var azienda = { _id: 'azienda_010101', nome: 'Nuova azienda' };
-        $browser.xhr.expectPUT('/boutique_db/azienda_010101', azienda).respond({ ok: true, rev: '1' });
-        ctrl.azienda = azienda;
-        ctrl.save();
-        $browser.xhr.flush();
-        expect(ctrl.azienda._rev).toBe('1');
-      });
+        it('should set _rev field in new documents', function () {
+          ctrl.azienda = { _id: 'azienda_010101', nome: 'Nuova azienda' };
+          $browser.xhr.expectPUT('/boutique_db/azienda_010101', ctrl.azienda).respond({ ok: true, rev: '1' });
+          ctrl.save();
+          $browser.xhr.flush();
+          expect(ctrl.azienda._rev).toBe('1');
+        });
       
-      it('should update _rev field in existing documents', function () {
-        var azienda = { _id: 'azienda_010101', _rev: '1', nome: 'Vecchia azienda' };
-        $browser.xhr.expectPUT('/boutique_db/azienda_010101', azienda).respond({ ok: true, rev: '2' });
-        ctrl.azienda = azienda;
-        ctrl.save();
-        $browser.xhr.flush();
-        expect(ctrl.azienda._rev).toBe('2');
+        it('should update _rev field in existing documents', function () {
+          ctrl.azienda = { _id: 'azienda_010101', _rev: '1', nome: 'Vecchia azienda' };
+          $browser.xhr.expectPUT('/boutique_db/azienda_010101', ctrl.azienda).respond({ ok: true, rev: '2' });
+          ctrl.save();
+          $browser.xhr.flush();
+          expect(ctrl.azienda._rev).toBe('2');
+        });
       });
-    });
     
-    describe('select', function () {
-      it('should copy to azienda from aziende at given index and set codice', function () {
-        $browser.xhr.flush();
-        ctrl.select(1);
-        expect(ctrl.azienda).toEqualData(aziende.rows[1].doc);
-        expect(ctrl.azienda === ctrl.aziende.rows[1].doc).toBe(false);
-      });      
-    });
+      describe('select', function () {
+        it('should copy to azienda from aziende at given index', function () {
+          ctrl.select(1);
+          expect(ctrl.azienda).toEqualData(aziende.rows[1].doc);
+          expect(ctrl.azienda === ctrl.aziende.rows[1].doc).toBe(false);
+        });      
+      });
     
-    describe('selectCodice', function () {
-      it('should copy to azienda from aziende with given codice and set codice', function () {
-        $browser.xhr.flush();
-        expect(ctrl.selectCodice('000000')).toBe(false);
-        expect(ctrl.azienda).toEqualData({});
-        expect(ctrl.selectCodice('099997')).toBe(true);
-        expect(ctrl.azienda).toEqualData(aziende.rows[1].doc);
-        expect(ctrl.azienda === ctrl.aziende.rows[1].doc).toBe(false);
+      describe('selectCodice', function () {
+        it('should copy to azienda from aziende with given codice', function () {
+          expect(ctrl.selectCodice('000000')).toBe(false);
+          expect(ctrl.azienda).toEqualData({});
+          expect(ctrl.selectCodice('099997')).toBe(true);
+          expect(ctrl.azienda).toEqualData(aziende.rows[1].doc);
+          expect(ctrl.azienda === ctrl.aziende.rows[1].doc).toBe(false);
+        });
       });
     });
   });
