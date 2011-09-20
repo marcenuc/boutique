@@ -1,7 +1,7 @@
-function validate_doc_update(doc, oldDoc, userCtx, docId) {
+function validate_doc_update(doc, oldDoc, userCtx, secObj) {
   'use strict';
   var es = [],
-    ids = /^([a-z]+)_([0-9]+)$/.exec(docId || doc._id);
+    ids = /^([a-z]+)_([0-9]+)$/.exec(doc._id);
 
   function error(message) {
     if (userCtx.browser) {

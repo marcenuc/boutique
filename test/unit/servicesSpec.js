@@ -82,6 +82,11 @@ describe('Services', function () {
 
     it('should require an authenticated user', function () {
       expect(angular.service('Validator')({ browser: true }).check({})).toHaveError('Non autorizzato');
+      expect(angular.service('Validator')({ browser: true }).check({ _deleted: true })).toHaveError('Non autorizzato');
+    });
+    
+    it('should not validate deleted documents', function () {
+      expect(Validator.check({ _deleted: true }).errors.length).toBe(0);
     });
     
     it('should reject unknown or invalid type', function () {
@@ -103,11 +108,6 @@ describe('Services', function () {
       expect(Validator.check({ _id: 'azienda_1' })).toHaveError(msg);
       expect(Validator.check({ _id: 'azienda_1', nome: ' ' })).toHaveError(msg);
       expect(Validator.check({ _id: 'azienda_1', nome: 'n' })).not.toHaveError(msg);
-    });
-    
-    it('should override doc._id with third parameter', function () {
-      var msg = 'Invalid azienda code';
-      expect(Validator.check({ _id: 'azienda_000000' }, {}, 'azienda_1')).toHaveError(msg);
     });
   });
 });

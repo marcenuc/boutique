@@ -1,41 +1,42 @@
-describe('my app', function() {
+/*global describe: false, beforeEach: false, browser: false, it: false,
+         expect: false, element: false, repeater: false, binding: false, input: false */
+describe('Boutique', function () {
+  'use strict';
 
-  beforeEach(function() {
+  beforeEach(function () {
     browser().navigateTo('../../app/index.html');
   });
 
-
-  it('should automatically redirect to /view1 when location hash/fragment is empty', function() {
-    expect(browser().location().hash()).toBe("/view1");
+  it('should automatically redirect to / when location hash/fragment is empty', function () {
+    expect(browser().location().hash()).toBe('/');
   });
 
 
-  describe('view1', function() {
-
-    beforeEach(function() {
-      browser().navigateTo('#/view1');
+  describe('azienda', function () {
+    beforeEach(function () {
+      browser().navigateTo('#/azienda/');
     });
-
-
-    it('should render view1 when user navigates to /view1', function() {
-      expect(element('ng\\:view p:first').text()).
-        toMatch(/partial for view 1/);
+  
+    it('should render all aziende when user navigates to /azienda', function () {
+      var r = repeater('ng\\:view table tbody tr', 'row in aziende.rows');
+      expect(r.row(0)).toEqual(['<a href="#/azienda/000001">000001</a>', 'Magazzino Disponibile-Tailor S.r.l.']);
+      expect(r.row(1)).toEqual(['<a href="#/azienda/000002">000002</a>', 'Negozio Lecce - Tailor S.r.l.']);
     });
-
+        
+    it('should create a new azienda from the input form at /azienda', function () {
+      var codice = input('codice'),
+        nome = input('azienda.nome'),
+        flash = element('.flash');
+      expect(flash.text()).toBe('\n  \n');
+      expect(codice.val()).toBe('');
+      expect(nome.val()).toBe('');
+      codice.enter('010102');
+      nome.enter('Azienda test');
+      element('form.azienda input[type=submit]').click();
+      expect(codice.val()).toBe('010102');
+      expect(nome.val()).toBe('Azienda test');
+      expect(flash.text()).toBe('Salvato');
+    });
   });
 
-
-  describe('view2', function() {
-
-    beforeEach(function() {
-      browser().navigateTo('#/view2');
-    });
-
-
-    it('should render view1 when user navigates to /view2', function() {
-      expect(element('ng\\:view p:first').text()).
-        toMatch(/partial for view 2/);
-    });
-
-  });
 });

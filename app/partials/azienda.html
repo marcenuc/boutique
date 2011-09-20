@@ -1,9 +1,14 @@
+<div class="flash">
+  <ul ng:repeat="(class, messages) in flash" ng:class="class">
+    <li ng:repeat="message in messages">{{message.message}}
+  </ul>
+</div>
 <table>
 <thead><tr><th>ID<th>Nome
 <tbody><tr ng:repeat="row in aziende.rows"><td>{{row.id | linkById }}<td>{{row.doc.nome}}
 </table>
 <form ng:submit="save()" class="azienda">
-<label>Codice:<input name="codice"></label>
+<label>Codice:<input name="azienda._id" ng:format="codiceAzienda"></label>
 <label>Nome:<input name="azienda.nome"></label>
 <input type=submit value=Salva>
 </form>
