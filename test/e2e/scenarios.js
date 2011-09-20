@@ -24,18 +24,18 @@ describe('Boutique', function () {
     });
         
     it('should create a new azienda from the input form at /azienda', function () {
-      var codice = input('codice'),
+      var codice = input('azienda._id'),
         nome = input('azienda.nome'),
         flash = element('.flash');
-      expect(flash.text()).toBe('\n  \n');
+      expect(flash.text()).toMatch(/^\s*$/);
       expect(codice.val()).toBe('');
       expect(nome.val()).toBe('');
       codice.enter('010102');
       nome.enter('Azienda test');
-      element('form.azienda input[type=submit]').click();
+      element('form.azienda input[type="submit"]').click();
       expect(codice.val()).toBe('010102');
       expect(nome.val()).toBe('Azienda test');
-      expect(flash.text()).toBe('Salvato');
+      expect(flash.text()).toMatch(/^\s*Salvato\s*$/);
     });
   });
 
