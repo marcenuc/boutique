@@ -30,20 +30,23 @@ function validate_doc_update(doc, oldDoc, userCtx, docId) {
 
   if (!userCtx.name) {
     error('Non autorizzato');
-  } else if (!ids) {
-    error('Invalid type');
-  } else {
-    switch (ids[1]) {
-    case 'azienda':
-      hasValidAziendaCode();
-      mustHave('nome');
-      break;
-    case 'cliente':
-      mustHave('nome');
-      break;
-    default:
+  }
+  if (!doc._deleted) {
+    if (!ids) {
       error('Invalid type');
-      break;
+    } else {
+      switch (ids[1]) {
+      case 'azienda':
+        hasValidAziendaCode();
+        mustHave('nome');
+        break;
+      case 'cliente':
+        mustHave('nome');
+        break;
+      default:
+        error('Invalid type');
+        break;
+      }
     }
   }
   
