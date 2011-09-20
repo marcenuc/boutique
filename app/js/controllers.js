@@ -31,7 +31,7 @@ AziendaCtrl.$inject = ['$routeParams', 'Document', 'Validator'];
       if (this.validate()) {
         this.Document.save(this.azienda, function (res) {
           self.azienda._rev = res.rev;
-          self.flash.notice = ['Salvato'];
+          self.flash.notice = [{ message: 'Salvato' }];
         });
       }
     },
