@@ -4,7 +4,7 @@
 
 (function () {
   'use strict';
-  
+
   /* App service which is responsible for the main configuration of the app. */
   angular.service('Boutique', function ($route, $window) {
 
@@ -32,7 +32,7 @@
       },
       save: { method: 'PUT' }
     });
-  
+
     function range(key) {
       return {
         startkey: '"' + key + '_"',
@@ -43,12 +43,25 @@
     r.aziende = function (success) {
       return r.query(range('azienda'), success);
     };
-  
+
     r.clienti = function (azienda, success) {
       var baseId = azienda.replace(/^azienda_/, 'cliente_');
       return r.query(range(baseId), success);
     };
-  
+
+    r.toAziendaId = function (codice) {
+      if (codice) {
+        return 'azienda_' + codice;
+      }
+    };
+
+    r.toCodice = function (id) {
+      var ids = /^[a-z]+_([0-9][0-9_]*)$/.exec(id);
+      if (ids) {
+        return ids[1];
+      }
+    };
+
     return r;
   }, { $inject: ['$resource'] });
 
@@ -62,7 +75,7 @@
 
 
   angular.service('Validator', function (userCtx) {
-    return { 
+    return {
       check: function (doc, oldDoc) {
         return validate_doc_update(doc, oldDoc, userCtx);
       }
