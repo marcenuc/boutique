@@ -10,7 +10,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       throw { forbidden: message };
     }
   }
-  
+
   function mustHave(field) {
     var v = doc[field];
     if (typeof v === 'string') {
@@ -21,15 +21,18 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       error('Required: ' + field);
     }
   }
-  
+
   function hasValidAziendaCode() {
     if (!/^\d{6}$/.exec(ids[2])) {
       error('Invalid azienda code');
-    }    
+    }
   }
 
   if (!userCtx.name) {
     error('Non autorizzato');
+  }
+  if (oldDoc && oldDoc._id !== doc._id) {
+    error('Invalid _id');
   }
   if (!doc._deleted) {
     if (!ids) {
@@ -49,7 +52,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       }
     }
   }
-  
+
   if (userCtx.browser) {
     return { errors: es };
   }

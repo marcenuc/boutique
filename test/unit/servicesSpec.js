@@ -161,5 +161,11 @@ describe('Services', function () {
       expect(Validator.check({ _id: 'azienda_1', nome: ' ' })).toHaveError(msg);
       expect(Validator.check({ _id: 'azienda_1', nome: 'n' })).not.toHaveError(msg);
     });
+
+    it('should forbid change of _id', function () {
+      var msg = 'Invalid _id';
+      expect(Validator.check({ _id: 'azienda_1' }, { _id: 'azienda_1' })).not.toHaveError(msg);
+      expect(Validator.check({ _id: 'azienda_1' }, { _id: 'azienda_2' })).toHaveError(msg);
+    });
   });
 });
