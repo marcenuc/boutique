@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v0.10.1
+ * @license AngularJS v0.10.2-0ed254c8
  * (c) 2010-2011 AngularJS http://angularjs.org
  * License: MIT
  */
@@ -619,8 +619,8 @@ function isLeafNode (node) {
  *  </doc:source>
  *  <doc:scenario>
    it('should print that initialy the form object is NOT equal to master', function() {
-     expect(element('.doc-example-live input[name=master.salutation]').val()).toBe('Hello');
-     expect(element('.doc-example-live input[name=master.name]').val()).toBe('world');
+     expect(element('.doc-example-live input[name="master.salutation"]').val()).toBe('Hello');
+     expect(element('.doc-example-live input[name="master.name"]').val()).toBe('world');
      expect(element('.doc-example-live span').css('display')).toBe('inline');
    });
 
@@ -711,8 +711,8 @@ function copy(source, destination){
  *  </doc:source>
  *  <doc:scenario>
      it('should print that initialy greeting is equal to the hardcoded value object', function() {
-       expect(element('.doc-example-live input[name=greeting.salutation]').val()).toBe('Hello');
-       expect(element('.doc-example-live input[name=greeting.name]').val()).toBe('world');
+       expect(element('.doc-example-live input[name="greeting.salutation"]').val()).toBe('Hello');
+       expect(element('.doc-example-live input[name="greeting.name"]').val()).toBe('world');
        expect(element('.doc-example-live span').css('display')).toBe('none');
      });
 
@@ -1030,11 +1030,11 @@ function assertArgFn(arg, name) {
  * - `codeName` – `{string}` – Code name of the release, such as "jiggling-armfat".
  */
 var version = {
-  full: '0.10.1',    // all of these placeholder strings will be replaced by rake's
+  full: '0.10.2-0ed254c8',    // all of these placeholder strings will be replaced by rake's
   major: 0,    // compile task
   minor: 10,
-  dot: 1,
-  codeName: 'inexorable-juggernaut'
+  dot: 2,
+  codeName: 'sneaky-seagull'
 };
 
 var array = [].constructor;
@@ -3125,8 +3125,9 @@ Route.prototype = {
   }
 };
 
-function ResourceFactory(xhr) {
+function ResourceFactory(xhr, xhrError) {
   this.xhr = xhr;
+  this.xhrError = xhrError;
 }
 
 ResourceFactory.DEFAULT_ACTIONS = {
@@ -3213,7 +3214,7 @@ ResourceFactory.prototype = {
             }
             (success||noop)(value);
           },
-          error || action.verifyCache,
+          error || self.xhrError,
           action.verifyCache);
         return value;
       };
@@ -4080,8 +4081,10 @@ function htmlSanitizeWriter(buf){
  * - [clone()](http://api.jquery.com/clone/)
  * - [css()](http://api.jquery.com/css/)
  * - [data()](http://api.jquery.com/data/)
+ * - [eq()](http://api.jquery.com/eq/)
  * - [hasClass()](http://api.jquery.com/hasClass/)
  * - [parent()](http://api.jquery.com/parent/)
+ * - [prop()](http://api.jquery.com/prop/)
  * - [remove()](http://api.jquery.com/remove/)
  * - [removeAttr()](http://api.jquery.com/removeAttr/)
  * - [removeClass()](http://api.jquery.com/removeClass/)
@@ -4089,7 +4092,7 @@ function htmlSanitizeWriter(buf){
  * - [replaceWith()](http://api.jquery.com/replaceWith/)
  * - [text()](http://api.jquery.com/text/)
  * - [trigger()](http://api.jquery.com/trigger/)
- * - [eq()](http://api.jquery.com/eq/)
+ * - [unbind()](http://api.jquery.com/unbind/)
  *
  * ## In addtion to the above, Angular privides an additional method to both jQuery and jQuery lite:
  *
@@ -4291,22 +4294,32 @@ forEach({
     if (isDefined(value)) {
       element.style[name] = value;
     } else {
-      return element.style[name];
+      var val;
+
+      if (msie <=8) {
+        // this is some IE specific weirdness that jQuery 1.6.4 does not sure why
+        val = element.currentStyle && element.currentStyle[name];
+        if (val === '') val = 'auto';
+      }
+
+      val = val || element.style[name];
+
+      return  (val === '') ? undefined : val;
     }
   },
 
   attr: function(element, name, value){
-    if (name === 'class') {
-      if(isDefined(value)) {
-        element.className = value;
-      } else {
-        return element.className;
-      }
-    } else if (SPECIAL_ATTR[name]) {
+    if (SPECIAL_ATTR[name]) {
       if (isDefined(value)) {
-        element[name] = !!value;
+        if (!!value) {
+          element[name] = true;
+          element.setAttribute(name, name);
+        } else {
+          element[name] = false;
+          element.removeAttribute(name);
+        }
       } else {
-        return element[name];
+        return (element[name] || element.getAttribute(name)) ? name : undefined;
       }
     } else if (isDefined(value)) {
       element.setAttribute(name, value);
@@ -4316,6 +4329,14 @@ forEach({
       var ret = element.getAttribute(name, 2);
       // normalize non-existing attributes to undefined (as jQuery)
       return ret === null ? undefined : ret;
+    }
+  },
+
+  prop: function(element, name, value) {
+    if (isDefined(value)) {
+      element[name] = value;
+    } else {
+      return element[name];
     }
   },
 
@@ -4442,6 +4463,25 @@ forEach({
       }
       eventHandler.fns.push(fn);
     });
+  },
+
+  unbind: function(element, type, fn) {
+    var bind = JQLiteData(element, 'bind');
+    if (!bind) return; //no listeners registered
+
+    if (isUndefined(type)) {
+      forEach(bind, function(eventHandler, type) {
+        removeEventListenerFn(element, type, eventHandler);
+        delete bind[type];
+      });
+    } else {
+      if (isUndefined(fn)) {
+        removeEventListenerFn(element, type, bind[type]);
+        delete bind[type];
+      } else {
+        angularArray.remove(bind[type].fns, fn);
+      }
+    }
   },
 
   replaceWith: function(element, replaceNode) {
@@ -5505,7 +5545,7 @@ defineApi('Function', [angularGlobal, angularCollection, angularFunction]);
          input('amount').enter('-1234');
          expect(binding('amount | currency')).toBe('($1,234.00)');
          expect(binding('amount | currency:"USD$"')).toBe('(USD$1,234.00)');
-         expect(element('.doc-example-live .ng-binding').attr('className')).
+         expect(element('.doc-example-live .ng-binding').prop('className')).
            toMatch(/ng-format-negative/);
        });
      </doc:scenario>
@@ -6333,10 +6373,10 @@ extend(angularValidator, {
       <doc:scenario>
         it('should invalidate non ssn', function(){
          var textBox = element('.doc-example-live :input');
-         expect(textBox.attr('className')).not().toMatch(/ng-validation-error/);
+         expect(textBox.prop('className')).not().toMatch(/ng-validation-error/);
          expect(textBox.val()).toEqual('123-45-6789');
          input('ssn').enter('123-45-67890');
-         expect(textBox.attr('className')).toMatch(/ng-validation-error/);
+         expect(textBox.prop('className')).toMatch(/ng-validation-error/);
         });
       </doc:scenario>
     </doc:example>
@@ -6374,17 +6414,17 @@ extend(angularValidator, {
       <doc:scenario>
         it('should invalidate number', function(){
          var n1 = element('.doc-example-live :input[name=n1]');
-         expect(n1.attr('className')).not().toMatch(/ng-validation-error/);
+         expect(n1.prop('className')).not().toMatch(/ng-validation-error/);
          input('n1').enter('1.x');
-         expect(n1.attr('className')).toMatch(/ng-validation-error/);
+         expect(n1.prop('className')).toMatch(/ng-validation-error/);
          var n2 = element('.doc-example-live :input[name=n2]');
-         expect(n2.attr('className')).not().toMatch(/ng-validation-error/);
+         expect(n2.prop('className')).not().toMatch(/ng-validation-error/);
          input('n2').enter('9');
-         expect(n2.attr('className')).toMatch(/ng-validation-error/);
+         expect(n2.prop('className')).toMatch(/ng-validation-error/);
          var n3 = element('.doc-example-live :input[name=n3]');
-         expect(n3.attr('className')).not().toMatch(/ng-validation-error/);
+         expect(n3.prop('className')).not().toMatch(/ng-validation-error/);
          input('n3').enter('201');
-         expect(n3.attr('className')).toMatch(/ng-validation-error/);
+         expect(n3.prop('className')).toMatch(/ng-validation-error/);
         });
       </doc:scenario>
     </doc:example>
@@ -6428,17 +6468,17 @@ extend(angularValidator, {
       <doc:scenario>
         it('should invalidate integer', function(){
          var n1 = element('.doc-example-live :input[name=n1]');
-         expect(n1.attr('className')).not().toMatch(/ng-validation-error/);
+         expect(n1.prop('className')).not().toMatch(/ng-validation-error/);
          input('n1').enter('1.1');
-         expect(n1.attr('className')).toMatch(/ng-validation-error/);
+         expect(n1.prop('className')).toMatch(/ng-validation-error/);
          var n2 = element('.doc-example-live :input[name=n2]');
-         expect(n2.attr('className')).not().toMatch(/ng-validation-error/);
+         expect(n2.prop('className')).not().toMatch(/ng-validation-error/);
          input('n2').enter('10.1');
-         expect(n2.attr('className')).toMatch(/ng-validation-error/);
+         expect(n2.prop('className')).toMatch(/ng-validation-error/);
          var n3 = element('.doc-example-live :input[name=n3]');
-         expect(n3.attr('className')).not().toMatch(/ng-validation-error/);
+         expect(n3.prop('className')).not().toMatch(/ng-validation-error/);
          input('n3').enter('100.1');
-         expect(n3.attr('className')).toMatch(/ng-validation-error/);
+         expect(n3.prop('className')).toMatch(/ng-validation-error/);
         });
       </doc:scenario>
     </doc:example>
@@ -6472,9 +6512,9 @@ extend(angularValidator, {
       <doc:scenario>
         it('should invalidate date', function(){
          var n1 = element('.doc-example-live :input');
-         expect(n1.attr('className')).not().toMatch(/ng-validation-error/);
+         expect(n1.prop('className')).not().toMatch(/ng-validation-error/);
          input('text').enter('123/123/123');
-         expect(n1.attr('className')).toMatch(/ng-validation-error/);
+         expect(n1.prop('className')).toMatch(/ng-validation-error/);
         });
       </doc:scenario>
     </doc:example>
@@ -6510,9 +6550,9 @@ extend(angularValidator, {
       <doc:scenario>
         it('should invalidate email', function(){
          var n1 = element('.doc-example-live :input');
-         expect(n1.attr('className')).not().toMatch(/ng-validation-error/);
+         expect(n1.prop('className')).not().toMatch(/ng-validation-error/);
          input('text').enter('a@b.c');
-         expect(n1.attr('className')).toMatch(/ng-validation-error/);
+         expect(n1.prop('className')).toMatch(/ng-validation-error/);
         });
       </doc:scenario>
     </doc:example>
@@ -6544,9 +6584,9 @@ extend(angularValidator, {
       <doc:scenario>
         it('should invalidate phone', function(){
          var n1 = element('.doc-example-live :input');
-         expect(n1.attr('className')).not().toMatch(/ng-validation-error/);
+         expect(n1.prop('className')).not().toMatch(/ng-validation-error/);
          input('text').enter('+12345678');
-         expect(n1.attr('className')).toMatch(/ng-validation-error/);
+         expect(n1.prop('className')).toMatch(/ng-validation-error/);
         });
       </doc:scenario>
     </doc:example>
@@ -6582,9 +6622,9 @@ extend(angularValidator, {
       <doc:scenario>
         it('should invalidate url', function(){
          var n1 = element('.doc-example-live :input');
-         expect(n1.attr('className')).not().toMatch(/ng-validation-error/);
+         expect(n1.prop('className')).not().toMatch(/ng-validation-error/);
          input('text').enter('abc://server/path');
-         expect(n1.attr('className')).toMatch(/ng-validation-error/);
+         expect(n1.prop('className')).toMatch(/ng-validation-error/);
         });
       </doc:scenario>
     </doc:example>
@@ -6617,9 +6657,9 @@ extend(angularValidator, {
       <doc:scenario>
         it('should invalidate json', function(){
          var n1 = element('.doc-example-live :input');
-         expect(n1.attr('className')).not().toMatch(/ng-validation-error/);
+         expect(n1.prop('className')).not().toMatch(/ng-validation-error/);
          input('json').enter('{name}');
-         expect(n1.attr('className')).toMatch(/ng-validation-error/);
+         expect(n1.prop('className')).toMatch(/ng-validation-error/);
         });
       </doc:scenario>
     </doc:example>
@@ -6689,13 +6729,13 @@ extend(angularValidator, {
       <doc:scenario>
         it('should change color in delayed way', function(){
          var textBox = element('.doc-example-live :input');
-         expect(textBox.attr('className')).not().toMatch(/ng-input-indicator-wait/);
-         expect(textBox.attr('className')).not().toMatch(/ng-validation-error/);
+         expect(textBox.prop('className')).not().toMatch(/ng-input-indicator-wait/);
+         expect(textBox.prop('className')).not().toMatch(/ng-validation-error/);
          input('text').enter('X');
-         expect(textBox.attr('className')).toMatch(/ng-input-indicator-wait/);
+         expect(textBox.prop('className')).toMatch(/ng-input-indicator-wait/);
          sleep(.6);
-         expect(textBox.attr('className')).not().toMatch(/ng-input-indicator-wait/);
-         expect(textBox.attr('className')).toMatch(/ng-validation-error/);
+         expect(textBox.prop('className')).not().toMatch(/ng-input-indicator-wait/);
+         expect(textBox.prop('className')).toMatch(/ng-validation-error/);
         });
       </doc:scenario>
     </doc:example>
@@ -7895,10 +7935,10 @@ angularServiceInject("$log", $logFactory = function($window){
       </doc:scenario>
     </doc:example>
  */
-angularServiceInject('$resource', function($xhr){
-  var resource = new ResourceFactory($xhr);
+angularServiceInject('$resource', function($xhr, xhrError){
+  var resource = new ResourceFactory($xhr, xhrError);
   return bind(resource, resource.route);
-}, ['$xhr.cache']);
+}, ['$xhr.cache', '$xhr.error']);
 
 /**
  * @workInProgress
@@ -8135,14 +8175,16 @@ angularServiceInject('$route', function($location, $routeParams) {
   /////////////////////////////////////////////////////
 
   function switchRouteMatcher(on, when) {
-    var regex = '^' + when.replace(/[\.\\\(\)\^\$]/g, "\$1") + '$',
+    // TODO(i): this code is convoluted and inefficient, we should construct the route matching
+    //   regex only once and then reuse it
+    var regex = '^' + when.replace(/([\.\\\(\)\^\$])/g, "\\$1") + '$',
         params = [],
         dst = {};
     forEach(when.split(/\W/), function(param) {
       if (param) {
         var paramRegExp = new RegExp(":" + param + "([\\W])");
         if (regex.match(paramRegExp)) {
-          regex = regex.replace(paramRegExp, "([^\/]*)$1");
+          regex = regex.replace(paramRegExp, "([^\\/]*)$1");
           params.push(param);
         }
       }
@@ -9436,17 +9478,17 @@ function ngClass(selector) {
      </doc:source>
      <doc:scenario>
        it('should check ng:class', function(){
-         expect(element('.doc-example-live span').attr('className')).not().
+         expect(element('.doc-example-live span').prop('className')).not().
            toMatch(/ng-input-indicator-wait/);
 
          using('.doc-example-live').element(':button:first').click();
 
-         expect(element('.doc-example-live span').attr('className')).
+         expect(element('.doc-example-live span').prop('className')).
            toMatch(/ng-input-indicator-wait/);
 
          using('.doc-example-live').element(':button:last').click();
 
-         expect(element('.doc-example-live span').attr('className')).not().
+         expect(element('.doc-example-live span').prop('className')).not().
            toMatch(/ng-input-indicator-wait/);
        });
      </doc:scenario>
@@ -9485,9 +9527,9 @@ angularDirective("ng:class", ngClass(function(){return true;}));
      </doc:source>
      <doc:scenario>
        it('should check ng:class-odd and ng:class-even', function(){
-         expect(element('.doc-example-live li:first span').attr('className')).
+         expect(element('.doc-example-live li:first span').prop('className')).
            toMatch(/ng-format-negative/);
-         expect(element('.doc-example-live li:last span').attr('className')).
+         expect(element('.doc-example-live li:last span').prop('className')).
            toMatch(/ng-input-indicator-wait/);
        });
      </doc:scenario>
@@ -9526,9 +9568,9 @@ angularDirective("ng:class-odd", ngClass(function(i){return i % 2 === 0;}));
      </doc:source>
      <doc:scenario>
        it('should check ng:class-odd and ng:class-even', function(){
-         expect(element('.doc-example-live li:first span').attr('className')).
+         expect(element('.doc-example-live li:first span').prop('className')).
            toMatch(/ng-format-negative/);
-         expect(element('.doc-example-live li:last span').attr('className')).
+         expect(element('.doc-example-live li:last span').prop('className')).
            toMatch(/ng-input-indicator-wait/);
        });
      </doc:scenario>
@@ -9644,7 +9686,7 @@ angularDirective("ng:hide", function(expression, element){
        it('should check ng:style', function(){
          expect(element('.doc-example-live span').css('color')).toBe('rgb(0, 0, 0)');
          element('.doc-example-live :button[value=set]').click();
-         expect(element('.doc-example-live span').css('color')).toBe('red');
+         expect(element('.doc-example-live span').css('color')).toBe('rgb(255, 0, 0)');
          element('.doc-example-live :button[value=clear]').click();
          expect(element('.doc-example-live span').css('color')).toBe('rgb(0, 0, 0)');
        });
@@ -9993,9 +10035,9 @@ angularTextMarkup('option', function(text, textNode, parentElement){
       </doc:source>
       <doc:scenario>
         it('should toggle button', function() {
-          expect(element('.doc-example-live :button').attr('disabled')).toBeFalsy();
+          expect(element('.doc-example-live :button').prop('disabled')).toBeFalsy();
           input('checked').check();
-          expect(element('.doc-example-live :button').attr('disabled')).toBeTruthy();
+          expect(element('.doc-example-live :button').prop('disabled')).toBeTruthy();
         });
       </doc:scenario>
     </doc:example>
@@ -10023,9 +10065,9 @@ angularTextMarkup('option', function(text, textNode, parentElement){
       </doc:source>
       <doc:scenario>
         it('should check both checkBoxes', function() {
-          expect(element('.doc-example-live #checkSlave').attr('checked')).toBeFalsy();
+          expect(element('.doc-example-live #checkSlave').prop('checked')).toBeFalsy();
           input('master').check();
-          expect(element('.doc-example-live #checkSlave').attr('checked')).toBeTruthy();
+          expect(element('.doc-example-live #checkSlave').prop('checked')).toBeTruthy();
         });
       </doc:scenario>
     </doc:example>
@@ -10059,9 +10101,9 @@ angularTextMarkup('option', function(text, textNode, parentElement){
        </doc:source>
        <doc:scenario>
          it('should toggle multiple', function() {
-           expect(element('.doc-example-live #select').attr('multiple')).toBeFalsy();
+           expect(element('.doc-example-live #select').prop('multiple')).toBeFalsy();
            input('checked').check();
-           expect(element('.doc-example-live #select').attr('multiple')).toBeTruthy();
+           expect(element('.doc-example-live #select').prop('multiple')).toBeTruthy();
          });
        </doc:scenario>
      </doc:example>
@@ -10089,9 +10131,9 @@ angularTextMarkup('option', function(text, textNode, parentElement){
       </doc:source>
       <doc:scenario>
         it('should toggle readonly attr', function() {
-          expect(element('.doc-example-live :text').attr('readonly')).toBeFalsy();
+          expect(element('.doc-example-live :text').prop('readonly')).toBeFalsy();
           input('checked').check();
-          expect(element('.doc-example-live :text').attr('readonly')).toBeTruthy();
+          expect(element('.doc-example-live :text').prop('readonly')).toBeTruthy();
         });
       </doc:scenario>
     </doc:example>
@@ -10122,9 +10164,9 @@ angularTextMarkup('option', function(text, textNode, parentElement){
      </doc:source>
      <doc:scenario>
        it('should select Greetings!', function() {
-         expect(element('.doc-example-live #greet').attr('selected')).toBeFalsy();
+         expect(element('.doc-example-live #greet').prop('selected')).toBeFalsy();
          input('checked').check();
-         expect(element('.doc-example-live #greet').attr('selected')).toBeTruthy();
+         expect(element('.doc-example-live #greet').prop('selected')).toBeTruthy();
        });
      </doc:scenario>
    </doc:example>
@@ -10399,11 +10441,11 @@ function compileFormatter(expr) {
       </doc:source>
       <doc:scenario>
          it('should check ng:validate', function(){
-           expect(element('.doc-example-live :input:last').attr('className')).
+           expect(element('.doc-example-live :input:last').prop('className')).
              toMatch(/ng-validation-error/);
 
            input('value').enter('123');
-           expect(element('.doc-example-live :input:last').attr('className')).
+           expect(element('.doc-example-live :input:last').prop('className')).
              not().toMatch(/ng-validation-error/);
          });
       </doc:scenario>
@@ -10431,9 +10473,11 @@ function compileFormatter(expr) {
       </doc:source>
       <doc:scenario>
        it('should check ng:required', function(){
-         expect(element('.doc-example-live :input').attr('className')).toMatch(/ng-validation-error/);
+         expect(element('.doc-example-live :input').prop('className')).
+           toMatch(/ng-validation-error/);
          input('value').enter('123');
-         expect(element('.doc-example-live :input').attr('className')).not().toMatch(/ng-validation-error/);
+         expect(element('.doc-example-live :input').prop('className')).
+           not().toMatch(/ng-validation-error/);
        });
       </doc:scenario>
     </doc:example>
@@ -10871,7 +10915,8 @@ angularWidget('select', function(element){
     // optionGroupsCache[?][0] is the parent: either the SELECT or OPTGROUP element
     var optionGroupsCache = [[{element: selectElement, label:''}]],
         scope = this,
-        model = modelAccessor(scope, element);
+        model = modelAccessor(scope, element),
+        inChangeEvent;
 
     // find existing special options
     forEach(selectElement.children(), function(option){
@@ -10887,6 +10932,12 @@ angularWidget('select', function(element){
           key = selectElement.val(),
           tempScope = scope.$new(),
           value, optionElement, index, groupIndex, length, groupLength;
+
+      // let's set a flag that the current model change is due to a change event.
+      // the default action of option selection will cause the appropriate option element to be
+      // deselected and another one to be selected - there is no need for us to be updating the DOM
+      // in this case.
+      inChangeEvent = true;
 
       try {
         if (isMultiselect) {
@@ -10923,6 +10974,7 @@ angularWidget('select', function(element){
         scope.$root.$apply();
       } finally {
         tempScope = null; // TODO(misko): needs to be $destroy
+        inChangeEvent = false;
       }
     });
 
@@ -11041,8 +11093,8 @@ angularWidget('select', function(element){
               if (existingOption.id !== option.id) {
                 lastElement.val(existingOption.id = option.id);
               }
-              if (existingOption.selected !== option.selected) {
-                lastElement.attr('selected', option.selected);
+              if (!inChangeEvent && existingOption.selected !== option.selected) {
+                lastElement.prop('selected', (existingOption.selected = option.selected));
               }
             } else {
               // grow elements
@@ -11057,7 +11109,7 @@ angularWidget('select', function(element){
                 element: element,
                 label: option.label,
                 id: option.id,
-                checked: option.selected
+                selected: option.selected
               });
               if (lastElement) {
                 lastElement.after(element);

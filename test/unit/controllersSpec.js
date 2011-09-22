@@ -43,8 +43,13 @@ describe('Controllers', function () {
   describe('AziendaCtrl', function () {
     var scope = null, $browser = null, $routeParams = null, ctrl = null;
 
-    function newController() {
-      $browser.xhr.expectGET('/boutique_db/_all_docs?endkey=%22azienda_%EF%BF%B0%22&include_docs=true&startkey=%22azienda_%22').respond(angular.copy(aziende));
+    function newController(response) {
+      var xpct = $browser.xhr.expectGET('/boutique_db/_all_docs?endkey=%22azienda_%EF%BF%B0%22&include_docs=true&startkey=%22azienda_%22');
+      if (response) {
+        xpct.respond(response.status, response);
+      } else {
+        xpct.respond(angular.copy(aziende));
+      }
       ctrl = scope.$new(AziendaCtrl);
     }
 
@@ -78,6 +83,16 @@ describe('Controllers', function () {
         newController();
         $browser.xhr.flush();
         expect(ctrl.aziende).toEqualData(aziende);
+      });
+
+      it('should flash fetch errors', function () {
+        var $route = scope.$service('$route');
+        newController({ status: 500, body: 'No service' });
+        $route.reload();
+        scope.$digest();
+        $route.current.scope = ctrl;
+        $browser.xhr.flush();
+        expect(ctrl.flash).toEqual({ errors: [{ message: 'ERROR 500: No service' }] });
       });
 
       it('should set azienda and aziendaIdx according to $routeParams.codice', function () {

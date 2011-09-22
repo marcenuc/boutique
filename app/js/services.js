@@ -19,6 +19,11 @@
 
   }, { $inject: ['$route', '$window'], $eager: true });
 
+  angular.service('$xhr.error', function ($route) {
+    return function (request, response) {
+      $route.current.scope.flash = { errors: [{ message: 'ERROR ' + response.status + ': ' + response.body }] };
+    };
+  }, { $inject: ['$route'], $eager: true });
 
   angular.service('Document', function ($resource) {
     var r = $resource('/boutique_db/:id', { id: '@_id' }, {
@@ -40,8 +45,8 @@
       };
     }
 
-    r.aziende = function (success) {
-      return r.query(range('azienda'), success);
+    r.aziende = function (success, error) {
+      return r.query(range('azienda'), success, error);
     };
 
     r.clienti = function (azienda, success) {

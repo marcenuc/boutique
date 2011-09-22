@@ -11,6 +11,24 @@ describe('Services', function () {
     $browser = scope.$service('$browser');
   });
 
+  describe('$xhr.error', function () {
+    var xhrError = null, $route = null;
+
+    beforeEach(function () {
+      xhrError = scope.$service('$xhr.error');
+      $route = scope.$service('$route');
+    });
+
+    it('should set flash in current scope', function () {
+      $route.reload();
+      scope.$digest();
+      $route.current.scope = scope;
+      xhrError({ url: '/foo' }, { status: 500, body: 'Ouch!' });
+      expect(scope.flash).toEqual({ errors: [{ message: 'ERROR 500: Ouch!' }]});
+    });
+  });
+
+
   describe('Document', function () {
     var Document = null;
 
