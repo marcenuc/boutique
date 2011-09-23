@@ -23,8 +23,8 @@ describe('Services', function () {
       $route.reload();
       scope.$digest();
       $route.current.scope = scope;
-      xhrError({ url: '/foo' }, { status: 500, body: 'Ouch!' });
-      expect(scope.flash).toEqual({ errors: [{ message: 'ERROR 500: Ouch!' }]});
+      xhrError(500, 'Ouch!');
+      expect(scope.flash).toEqual({ errors: [{ message: 'ERROR 500: "Ouch!"' }]});
     });
   });
 

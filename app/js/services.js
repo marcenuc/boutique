@@ -21,7 +21,7 @@
 
   angular.service('$xhr.error', function ($route) {
     return function (request, response) {
-      $route.current.scope.flash = { errors: [{ message: 'ERROR ' + response.status + ': ' + response.body }] };
+      $route.current.scope.flash = { errors: [{ message: 'ERROR ' + request + ': ' + JSON.stringify(response) }] };
     };
   }, { $inject: ['$route'], $eager: true });
 
