@@ -48,7 +48,7 @@ describe('Controllers', function () {
       if (status) {
         xpct.respond(status, body);
       } else {
-        xpct.respond(angular.copy(aziende));
+        xpct.respond(JSON.stringify(aziende));
       }
       ctrl = scope.$new(AziendaCtrl);
     }
