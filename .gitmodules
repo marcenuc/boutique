@@ -1,0 +1,3 @@
+[submodule "lib/connect-exec"]
+	path = lib/connect-exec
+	url = git://github.com/marcenuc/connect-exec.git
