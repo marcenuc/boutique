@@ -7,3 +7,4 @@ build.xml
 node_modules
 
 config/server-configs.js
+local.properties
