@@ -22,6 +22,7 @@ exports.couchdb = {
  */
 var spawn = require('child_process').spawn,
   util = require('util'),
+  path = require('path'),
   servers = require('./servers');
 
 function exec(command, args, reader) {
@@ -261,12 +262,20 @@ namespace('webserver', function () {
   'use strict';
 
   desc('Start Web server');
-  task('start', function () {
-    var connect = require('connect');
+  task('start', function (environment) {
+    var connect = require('connect'),
+      cmdExec = require('connect-exec').exec,
+      server = connect.createServer()
+        .use(connect.logger())
+        .use('/as400',
+          cmdExec('application/json', __dirname, 'java', ['-jar', 'as400-querier.jar']))
+        .use('/app', connect['static'](path.join(__dirname, 'app')));
 
-    connect(
-      connect.logger(),
-      connect['static'](__dirname)
-    ).listen(servers.couchdb.webserver.port);
+    if (environment === 'test') {
+      console.log('Serving tests.');
+      server.use('/test', connect['static'](path.join(__dirname, 'test')));
+    }
+
+    server.listen(servers.couchdb.webserver.port);
   });
 });
