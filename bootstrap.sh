@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -ex
 npm update --dev
 git submodule init
 git submodule update
