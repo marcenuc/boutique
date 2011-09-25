@@ -3,8 +3,12 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
   var es = [],
     ids = /^([a-z]+)_([0-9]+)$/.exec(doc._id);
 
+  /*
+   * secObj is used by to know the context of execution:
+   * if "undefined", it's running in a browser, otherwise on CouchDB.
+   */
   function error(message) {
-    if (userCtx.browser) {
+    if (!secObj) {
       es.push({ message: message });
     } else {
       throw { forbidden: message };
@@ -53,7 +57,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
     }
   }
 
-  if (userCtx.browser) {
+  if (!secObj) {
     return { errors: es };
   }
 }

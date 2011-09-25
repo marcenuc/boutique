@@ -124,13 +124,9 @@ describe('Services', function () {
 
 
   describe('userCtx', function () {
-    /**
-     * userCtx.browser is used by validate_doc_update() to know the context
-     * of execution: if "undefined", it's running in CouchDB.
-     */
-    it('should have "browser" === true', function () {
+    it('should have "name" === "boutique"', function () {
       var userCtx = scope.$service('userCtx');
-      expect(userCtx.browser).toEqual(true);
+      expect(userCtx.name).toEqual('boutique');
     });
   });
 
@@ -151,8 +147,8 @@ describe('Services', function () {
     });
 
     it('should require an authenticated user', function () {
-      expect(angular.service('Validator')({ browser: true }).check({})).toHaveError('Non autorizzato');
-      expect(angular.service('Validator')({ browser: true }).check({ _deleted: true })).toHaveError('Non autorizzato');
+      expect(angular.service('Validator')({}).check({})).toHaveError('Non autorizzato');
+      expect(angular.service('Validator')({}).check({ _deleted: true })).toHaveError('Non autorizzato');
     });
 
     it('should not validate deleted documents', function () {

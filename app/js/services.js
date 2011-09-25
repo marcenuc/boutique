@@ -73,8 +73,7 @@
 
   angular.service('userCtx', function () {
     return {
-      name: 'boutique',
-      browser: true
+      name: 'boutique'
     };
   });
 
