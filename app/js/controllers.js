@@ -32,7 +32,7 @@ var Ctrl = {};
   }
 
   function padLeft(str, len, padder) {
-    var s = str.toString(), l = len || 2, p = padder || '0';
+    var s = str.toString(), l = len || 2, p = padder || ' ';
     return new Array(l + 1 - s.length).join(p) + s;
   }
   //TODO exported for testing... better options?
@@ -84,7 +84,7 @@ var Ctrl = {};
         if (k && (!this.aziendeSelezionate.length || this.aziendeSelezionate.indexOf(r[2]) >= 0)) {
           desscal = ms[k[1] + k[2]] || nodesscal;
           scal = scalarini[desscal[1]];
-          taglia = scal ? scal[k[5]] : '..';
+          taglia = scal ? scal[k[5]] : '--';
 
           this.filtrate.push([
             k[1], k[2], k[3], k[4], k[5], taglia, r[1], desscal[0], this.aziende[r[2]], (r[3] ? 'PRONTO' : 'IN_PRODUZIONE')
