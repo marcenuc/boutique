@@ -1,0 +1,16 @@
+<div class="flash">
+  <ul ng:repeat="(class, messages) in flash" ng:class="class">
+    <li ng:repeat="message in messages">{{message.message}}
+  </ul>
+</div>
+<form ng:submit="fetch()" class="bolla">
+<label>Data:<input name="intestazione.data"></label>
+<label>Numero:<input name="intestazione.numero"></label>
+<label>Ente numerazione:<input name="intestazione.enteNumerazione"></label>
+<label>Codice numerazione:<input name="intestazione.codiceNumerazione"></label>
+<input type=submit value=Cerca>
+</form>
+<table>
+<thead><tr><th ng:repeat="col in bolla.columnNames">{{col}}
+<tbody><tr ng:repeat="row in bolla.rows"><td ng:repeat="v in row">{{v}}
+</table>

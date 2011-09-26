@@ -1,6 +1,5 @@
 /*jslint nomen: true */
-/*global angular: false, validate_doc_update: false,
-         AziendaCtrl: false */
+/*global angular: false, validate_doc_update: false, Ctrl: false */
 
 (function () {
   'use strict';
@@ -8,12 +7,13 @@
   /* App service which is responsible for the main configuration of the app. */
   angular.service('Boutique', function ($route, $window) {
 
-    $route.when('/azienda/:codice', { template: 'partials/azienda.html', controller: AziendaCtrl });
+    $route.when('/azienda/:codice', { template: 'partials/azienda.html', controller: Ctrl.Azienda });
+    $route.when('/bolla', { template: 'partials/bolla.html', controller: Ctrl.Bolla });
+    $route.when('/ricerca-articoli', { template: 'partials/ricerca-articoli.html', controller: Ctrl.RicercaArticoli });
+    $route.when('/ricerca-giacenza', { template: 'partials/ricerca-giacenza.html', controller: Ctrl.RicercaArticoli });
     $route.otherwise({ redirectTo: '/' });
 
-    var self = this;
-
-    self.$on('$afterRouteChange', function () {
+    this.$on('$afterRouteChange', function () {
       $window.scrollTo(0, 0);
     });
 
@@ -69,6 +69,21 @@
 
     return r;
   }, { $inject: ['$resource'] });
+
+
+  angular.service('As400', function ($xhr) {
+    return {
+      bolla: function (intestazioneBolla, success) {
+        var p, params = [];
+        for (p in intestazioneBolla) {
+          if (intestazioneBolla.hasOwnProperty(p)) {
+            params.push(p + '=' + intestazioneBolla[p]);
+          }
+        }
+        $xhr('GET', '/boutique_app/as400/bolla/' + params.join('/'), success);
+      }
+    };
+  }, { $inject: ['$xhr'] });
 
 
   angular.service('userCtx', function () {

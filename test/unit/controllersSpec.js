@@ -1,47 +1,76 @@
-/*global describe: false, beforeEach: false, afterEach: false, it: false, expect: false, angular: false,
-         AziendaCtrl: false */
+/*global describe: false, beforeEach: false, afterEach: false, it: false, xit: false, expect: false, angular: false, Ctrl: false */
 
-describe('Controllers', function () {
+describe('Controller', function () {
   'use strict';
 
-  var aziende = {
-    "total_rows" : 15,
-    "offset" : 1,
-    "rows" : [ {
-      "id" : "azienda_019998",
-      "key" : "azienda_019998",
-      "value" : { "rev" : "1-d6363be2d62ec0f2eb5b961527bdddbf" },
-      "doc" : {
-        "_id" : "azienda_019998",
-        "_rev" : "1-d6363be2d62ec0f2eb5b961527bdddbf",
-        "tipo" : "MAGAZZINO",
-        "nome" : "Magazzino Disponibile-Tailor S.r.l.",
-        "indirizzo" : "S.S. 275 km. 21,4 Lucugnano",
-        "comune" : "Tricase (LE) ITALY",
-        "provincia" : "LE",
-        "cap" : "73030",
-        "contatti" : [ "0833/706311", "0833/706322 (fax)" ]
-      }
-    }, {
-      "id" : "azienda_099997",
-      "key" : "azienda_099997",
-      "value" : { "rev" : "2-9415d085eb2ad39b3d7e40cab79cbf5b" },
-      "doc" : {
-        "_id" : "azienda_099997",
-        "_rev" : "2-9415d085eb2ad39b3d7e40cab79cbf5b",
-        "tipo" : "NEGOZIO",
-        "contatti" : [ "0832 332401" ],
-        "nome" : "Negozio Lecce - Tailor S.r.l.",
-        "indirizzo" : "Via Liborio Romano 73",
-        "comune" : "Lecce",
-        "provincia" : "LE",
-        "cap" : "73100"
-      }
-    } ]
-  };
+  var scope = null,
+    $browser = null,
+    ctrl = null,
+    aziende = {
+      "total_rows" : 15,
+      "offset" : 1,
+      "rows" : [ {
+        "id" : "azienda_019998",
+        "key" : "azienda_019998",
+        "value" : { "rev" : "1-d6363be2d62ec0f2eb5b961527bdddbf" },
+        "doc" : {
+          "_id" : "azienda_019998",
+          "_rev" : "1-d6363be2d62ec0f2eb5b961527bdddbf",
+          "tipo" : "MAGAZZINO",
+          "nome" : "Magazzino Disponibile-Tailor S.r.l.",
+          "indirizzo" : "S.S. 275 km. 21,4 Lucugnano",
+          "comune" : "Tricase (LE) ITALY",
+          "provincia" : "LE",
+          "cap" : "73030",
+          "contatti" : [ "0833/706311", "0833/706322 (fax)" ]
+        }
+      }, {
+        "id" : "azienda_099997",
+        "key" : "azienda_099997",
+        "value" : { "rev" : "2-9415d085eb2ad39b3d7e40cab79cbf5b" },
+        "doc" : {
+          "_id" : "azienda_099997",
+          "_rev" : "2-9415d085eb2ad39b3d7e40cab79cbf5b",
+          "tipo" : "NEGOZIO",
+          "contatti" : [ "0832 332401" ],
+          "nome" : "Negozio Lecce - Tailor S.r.l.",
+          "indirizzo" : "Via Liborio Romano 73",
+          "comune" : "Lecce",
+          "provincia" : "LE",
+          "cap" : "73100"
+        }
+      } ]
+    };
 
-  describe('AziendaCtrl', function () {
-    var scope = null, $browser = null, $routeParams = null, ctrl = null;
+  beforeEach(function () {
+    scope = angular.scope();
+    $browser = scope.$service('$browser');
+    ctrl = null;
+  });
+
+  afterEach(function () {
+    expect($browser.xhr.requests.length).toBe(0, 'You have not flushed the $browser.xhr requests.');
+  });
+
+
+  describe('utils', function () {
+    describe('dotPad', function () {
+      it('should pad with dots strings shorter than the given length', function () {
+        expect(Ctrl.utils.dotPad(null, 5)).toBe('.....');
+        expect(Ctrl.utils.dotPad('', 5)).toBe('.....');
+        expect(Ctrl.utils.dotPad('1', 5)).toBe('1....');
+        expect(Ctrl.utils.dotPad('..1', 5)).toBe('..1..');
+      });
+
+      it('should left untouched strings longer than pad length', function () {
+        expect(Ctrl.utils.dotPad('..1', 2)).toBe('..1');
+      });
+    });
+  });
+
+
+  describe('Azienda', function () {
+    var $routeParams = null;
 
     function newController(status, body) {
       var xpct = $browser.xhr.expectGET('/boutique_db/_all_docs?endkey=%22azienda_%EF%BF%B0%22&include_docs=true&startkey=%22azienda_%22');
@@ -50,20 +79,12 @@ describe('Controllers', function () {
       } else {
         xpct.respond(JSON.stringify(aziende));
       }
-      ctrl = scope.$new(AziendaCtrl);
+      ctrl = scope.$new(Ctrl.Azienda);
     }
 
     beforeEach(function () {
-      scope = angular.scope();
-      $browser = scope.$service('$browser');
       $routeParams = scope.$service('$routeParams');
-      ctrl = null;
     });
-
-    afterEach(function () {
-      expect($browser.xhr.requests.length).toBe(0, 'You have not flushed the $browser.xhr requests.');
-    });
-
 
     describe('inizialization', function () {
 
@@ -134,8 +155,6 @@ describe('Controllers', function () {
           expect(ctrl.validate()).toBe(true);
           expect(ctrl.flash).toEqual({ errors: [] });
         });
-
-
       });
 
       describe('save', function () {
