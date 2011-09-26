@@ -5,26 +5,29 @@ var Ctrl = {};
 (function () {
   'use strict';
 
-  Ctrl.Bolla = function (As400, userCtx) {
-    var self = this;
+  Ctrl.RicercaBollaAs400 = function (As400, userCtx) {
+    this.As400 = As400;
 
-    this.flash = userCtx.flash;
-    userCtx.flash = {};
     this.intestazione = {};
     this.bolla = null;
 
-    this.fetch = function () {
-      As400.bolla(self.intestazione, function (code, dati) {
+    this.flash = userCtx.flash;
+    userCtx.flash = {};
+  };
+  Ctrl.RicercaBollaAs400.$inject = ['As400', 'userCtx'];
+
+  Ctrl.RicercaBollaAs400.prototype = {
+    fetch: function () {
+      var self = this;
+      this.As400.bolla(this.intestazione, function (code, dati) {
         if (code === 200) {
           self.bolla = dati;
         } else {
           self.flash = { errors: [{ message: 'Errore ' + code }] };
         }
       });
-    };
+    }
   };
-  Ctrl.Bolla.$inject = ['As400', 'userCtx'];
-
 
   function dotPad(str, len) {
     var s = str || '', l = len || 2;
