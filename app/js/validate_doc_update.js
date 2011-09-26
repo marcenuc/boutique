@@ -1,7 +1,7 @@
 function validate_doc_update(doc, oldDoc, userCtx, secObj) {
   'use strict';
   var es = [],
-    ids = /^([a-z_]+)(?:_([0-9]+))?$/.exec(doc._id);
+    ids = /^([a-z][a-z_]*[a-z])(?:_([0-9]+))?$/.exec(doc._id);
 
   /*
    * secObj is used by to know the context of execution:
@@ -39,7 +39,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
     error('Invalid _id');
   }
   if (!doc._deleted) {
-    if (!ids) {
+    if (!ids || !doc._id) {
       error('Invalid type');
     } else {
       switch (ids[1]) {
