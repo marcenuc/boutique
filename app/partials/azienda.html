@@ -3,12 +3,33 @@
     <li ng:repeat="message in messages">{{message.message}}
   </ul>
 </div>
-<table>
-<thead><tr><th>ID<th>Nome
-<tbody><tr ng:repeat="row in aziende.rows"><td>{{row.id | linkById }}<td>{{row.doc.nome}}
-</table>
+
 <form ng:submit="save()" class="azienda">
-<label>Codice:<input name="azienda._id" ng:format="codiceAzienda"></label>
-<label>Nome:<input name="azienda.nome"></label>
-<input type=submit value=Salva>
+<fieldset>
+<legend>Azienda</legend>
+<div>
+  <label>Codice:<input name="azienda._id" ng:format="codiceAzienda" size=6 maxlength=6 required></label>
+  <label>Tipo:<select name="azienda.tipo"><option>MAGAZZINO<option>NEGOZIO</select></label>
+  <label><input type=checkbox name="azienda.attivo">&nbsp;Attivo</label><br>
+  <label>Nome:<input name="azienda.nome" required></label><br>
+  <label>Indirizzo:<input name="azienda.indirizzo" size=30></label><br>
+  <label>Comune:<input name="azienda.comune" size=30></label><br>
+  <label>CAP:<input name="azienda.cap" size=5 maxlength=5></label>
+  <label>Provincia:<input name="azienda.provincia" size=2 maxlength=2></label>
+  <label>Nazione:<input name="azienda.nazione" size=2 maxlength=2></label><br>
+  <label>Versione listino:<input name="azienda.versione_listino"></label><br>
+  <label>Note:<input name="azienda.note"></label><br>
+  <label>Contatti:</label>
+  [&nbsp;<a href="" ng:click="azienda.contatti.$add()">aggiungi</a>&nbsp;]
+    <ul><li ng:repeat="contatto in azienda.contatti"><input name=contatto required size=30></ul>
+</div>
+<hr>
+<div><input type=submit value=Salva>[&nbsp;<a href="#/azienda/">Nuova</a>&nbsp;]</div>
+</fieldset>
 </form>
+
+<table>
+<caption>Aziende</caption>
+<thead><tr><th>Codice<th>Nome<th>Tipo<th>Comune
+<tbody><tr ng:repeat="row in aziende.rows"><td>{{row.id | linkById }}<td>{{row.doc.nome}}<td>{{row.doc.tipo}}<td>{{row.doc.comune}}
+</table>
