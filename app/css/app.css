@@ -354,31 +354,22 @@ body {
 table {
   border-spacing: 2px;
   border-collapse: separate;
-  margin-left: 2px;
-  margin-top: 9px;
-  margin-bottom: 9px;
-  display: inline;
-  float: left;
-  margin-right: 10px;
+  margin: 9px 10px 9px 2px;
   border: 1px solid #ddd;
 }
-/* line 20, src/screen.scss */
 table th {
   padding: 2px;
   font-size: smaller;
   background-color: #ddd;
 }
-/* line 26, src/screen.scss */
 table th[scope=row] {
   text-align: right;
 }
-/* line 30, src/screen.scss */
 table caption {
   padding: 4px;
   border-bottom: 1px solid #ddd;
   font-style: italic;
 }
-/* line 36, src/screen.scss */
 table td {
   border: 1px solid #ddd;
   padding: 1px 3px;
