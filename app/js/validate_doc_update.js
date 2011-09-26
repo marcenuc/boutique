@@ -1,7 +1,7 @@
 function validate_doc_update(doc, oldDoc, userCtx, secObj) {
   'use strict';
   var es = [],
-    ids = /^([a-z]+)_([0-9]+)$/.exec(doc._id);
+    ids = /^([a-z_]+)(?:_([0-9]+))?$/.exec(doc._id);
 
   /*
    * secObj is used by to know the context of execution:
@@ -50,8 +50,20 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       case 'cliente':
         mustHave('nome');
         break;
+      case 'scalarini':
+        mustHave('descrizioni');
+        mustHave('posizioni_codici');
+        mustHave('posizione_codici');
+        break;
+      case 'modelli_e_scalarini':
+        mustHave('lista');
+        break;
+      case 'inventari':
+        mustHave('data');
+        mustHave('inventario');
+        break;
       default:
-        error('Invalid type');
+        error('Unknown type');
         break;
       }
     }
