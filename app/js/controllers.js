@@ -72,16 +72,17 @@ var Ctrl = {};
     },
 
     filtraArticoli: function () {
-      var i, n, r, k, count,
+      var i, r, k,
         filtro = this.getFiltro(),
         desscal, ms = this.modelli_e_scalarini.lista,
         nodesscal = ['-- senza descrizione --', 'X'],
         scal, scalarini = this.scalarini.codici,
-        taglia, rows = this.inventari.inventario;
+        taglia, rows = this.inventari.inventario,
+        n = rows.length, count = 0;
 
       this.filtrate = [];
 
-      for (i = 0, n = rows.length, count = 0; i < n && count < this.limiteRisultati; i += 1) {
+      for (i = 0; i < n && count < this.limiteRisultati; i += 1) {
         r = rows[i];
         k = filtro.exec(r[0]);
         if (k && (!this.aziendeSelezionate.length || this.aziendeSelezionate.indexOf(r[2]) >= 0)) {
