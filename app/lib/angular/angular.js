@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v0.10.2-0ed254c8
+ * @license AngularJS v0.10.2-bf5e5f7b
  * (c) 2010-2011 AngularJS http://angularjs.org
  * License: MIT
  */
@@ -1030,7 +1030,7 @@ function assertArgFn(arg, name) {
  * - `codeName` – `{string}` – Code name of the release, such as "jiggling-armfat".
  */
 var version = {
-  full: '0.10.2-0ed254c8',    // all of these placeholder strings will be replaced by rake's
+  full: '0.10.2-bf5e5f7b',    // all of these placeholder strings will be replaced by rake's
   major: 0,    // compile task
   minor: 10,
   dot: 2,
@@ -3125,9 +3125,8 @@ Route.prototype = {
   }
 };
 
-function ResourceFactory(xhr, xhrError) {
+function ResourceFactory(xhr) {
   this.xhr = xhr;
-  this.xhrError = xhrError;
 }
 
 ResourceFactory.DEFAULT_ACTIONS = {
@@ -3214,7 +3213,7 @@ ResourceFactory.prototype = {
             }
             (success||noop)(value);
           },
-          error || self.xhrError,
+          error || action.verifyCache,
           action.verifyCache);
         return value;
       };
@@ -7599,6 +7598,8 @@ angularServiceInject('$location', function($browser, $sniffer, $config, $documen
       currentUrl.url(href);
       scope.$apply();
       event.preventDefault();
+      // hack to work around FF6 bug 684208 when scenario runner clicks on links
+      window.angular['ff-684208-preventDefault'] = true;
     });
   } else {
     currentUrl = new LocationHashbangUrl(initUrl, hashPrefix);
@@ -7935,10 +7936,10 @@ angularServiceInject("$log", $logFactory = function($window){
       </doc:scenario>
     </doc:example>
  */
-angularServiceInject('$resource', function($xhr, xhrError){
-  var resource = new ResourceFactory($xhr, xhrError);
+angularServiceInject('$resource', function($xhr){
+  var resource = new ResourceFactory($xhr);
   return bind(resource, resource.route);
-}, ['$xhr.cache', '$xhr.error']);
+}, ['$xhr.cache']);
 
 /**
  * @workInProgress
@@ -9935,10 +9936,10 @@ angularTextMarkup('option', function(text, textNode, parentElement){
         <input name="value" /><br />
         <a id="link-1" href ng:click="value = 1">link 1</a> (link, don't reload)<br />
         <a id="link-2" href="" ng:click="value = 2">link 2</a> (link, don't reload)<br />
-        <a id="link-3" ng:href="#!/{{'123'}}" ng:click="value = 3">link 3</a> (link, reload!)<br />
+        <a id="link-3" ng:href="/{{'123'}}" ng:ext-link>link 3</a> (link, reload!)<br />
         <a id="link-4" href="" name="xx" ng:click="value = 4">anchor</a> (link, don't reload)<br />
         <a id="link-5" name="xxx" ng:click="value = 5">anchor</a> (no link)<br />
-        <a id="link-6" ng:href="#!/{{value}}">link</a> (link, change hash)
+        <a id="link-6" ng:href="/{{value}}" ng:ext-link>link</a> (link, change hash)
       </doc:source>
       <doc:scenario>
         it('should execute ng:click but not reload when href without value', function() {
@@ -9954,10 +9955,10 @@ angularTextMarkup('option', function(text, textNode, parentElement){
         });
 
         it('should execute ng:click and change url when ng:href specified', function() {
+          expect(element('#link-3').attr('href')).toBe("/123");
+
           element('#link-3').click();
-          expect(input('value').val()).toEqual('3');
-          expect(element('#link-3').attr('href')).toBe("#!/123");
-          expect(browser().location().hash()).toEqual('!/123');
+          expect(browser().location().path()).toEqual('/123');
         });
 
         it('should execute ng:click but not reload when href empty string and name specified', function() {
@@ -9974,9 +9975,10 @@ angularTextMarkup('option', function(text, textNode, parentElement){
 
         it('should only change url when only ng:href', function() {
           input('value').enter('6');
+          expect(element('#link-6').attr('href')).toBe("/6");
+
           element('#link-6').click();
-          expect(browser().location().hash()).toEqual('!/6');
-          expect(element('#link-6').attr('href')).toBe("#!/6");
+          expect(browser().location().path()).toEqual('/6');
         });
       </doc:scenario>
     </doc:example>
@@ -11587,10 +11589,10 @@ angularWidget("@ng:non-bindable", noop);
            function MyCtrl($route) {
              $route.when('/overview',
                { controller: OverviewCtrl,
-                 template: 'guide/dev_guide.overview.html'});
+                 template: 'partials/guide/dev_guide.overview.html'});
              $route.when('/bootstrap',
                { controller: BootstrapCtrl,
-                 template: 'guide/dev_guide.bootstrap.auto_bootstrap.html'});
+                 template: 'partials/guide/dev_guide.bootstrap.auto_bootstrap.html'});
            };
            MyCtrl.$inject = ['$route'];
 
@@ -11598,9 +11600,9 @@ angularWidget("@ng:non-bindable", noop);
            function OverviewCtrl(){}
          </script>
          <div ng:controller="MyCtrl">
-           <a href="#!/overview">overview</a> |
-           <a href="#!/bootstrap">bootstrap</a> |
-           <a href="#!/undefined">undefined</a>
+           <a href="overview">overview</a> |
+           <a href="bootstrap">bootstrap</a> |
+           <a href="undefined">undefined</a>
 
            <br/>
 
