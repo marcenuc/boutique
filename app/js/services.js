@@ -46,22 +46,22 @@
     }
 
     r.aziende = function (success, error) {
-      return r.query(range('azienda'), success, error);
+      return r.query(range('Azienda'), success, error);
     };
 
     r.clienti = function (azienda, success) {
-      var baseId = azienda.replace(/^azienda_/, 'cliente_');
+      var baseId = azienda.replace(/^Azienda_/, 'Cliente_');
       return r.query(range(baseId), success);
     };
 
     r.toAziendaId = function (codice) {
       if (codice) {
-        return 'azienda_' + codice;
+        return 'Azienda_' + codice;
       }
     };
 
     r.toCodice = function (id) {
-      var ids = /^[a-z]+_([0-9][0-9_]*)$/.exec(id);
+      var ids = /^[A-Z][a-zA-Z]+_([0-9][0-9_]*)$/.exec(id);
       if (ids) {
         return ids[1];
       }

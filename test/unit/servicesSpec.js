@@ -59,7 +59,7 @@ describe('Services', function () {
 
       describe('aziende', function () {
         it('should query couchdb for all docs of type azienda', function () {
-          $browser.xhr.expectGET('/boutique_db/_all_docs?endkey=%22azienda_%EF%BF%B0%22&include_docs=true&startkey=%22azienda_%22').respond({ rows: [] });
+          $browser.xhr.expectGET('/boutique_db/_all_docs?endkey=%22Azienda_%EF%BF%B0%22&include_docs=true&startkey=%22Azienda_%22').respond({ rows: [] });
           var query = Document.aziende();
           expect(query).toEqualData({});
           $browser.xhr.flush();
@@ -70,8 +70,8 @@ describe('Services', function () {
 
       describe('clienti', function () {
         it('should query couchdb for all docs of type cliente', function () {
-          $browser.xhr.expectGET('/boutique_db/_all_docs?endkey=%22cliente_010101_%EF%BF%B0%22&include_docs=true&startkey=%22cliente_010101_%22').respond({ rows: [] });
-          var query = Document.clienti('azienda_010101');
+          $browser.xhr.expectGET('/boutique_db/_all_docs?endkey=%22Cliente_010101_%EF%BF%B0%22&include_docs=true&startkey=%22Cliente_010101_%22').respond({ rows: [] });
+          var query = Document.clienti('Azienda_010101');
           expect(query).toEqualData({});
           $browser.xhr.flush();
           expect(query).toEqualData({ rows: [] });
@@ -84,20 +84,20 @@ describe('Services', function () {
         it('should PUT new documents', function () {
           var data = { nome: 'Azienda 010101' },
             azienda = new Document(data),
-            response = { ok: true, id: 'azienda_010101', rev: '946B7D1C' };
+            response = { ok: true, id: 'Azienda_010101', rev: '946B7D1C' };
 
-          $browser.xhr.expectPUT('/boutique_db/azienda_010101', data).respond(response);
-          azienda.$save({ id: 'azienda_010101' }, function (resp) {
+          $browser.xhr.expectPUT('/boutique_db/Azienda_010101', data).respond(response);
+          azienda.$save({ id: 'Azienda_010101' }, function (resp) {
             expect(resp).toEqualData(response);
           });
           $browser.xhr.flush();
         });
 
         it('should PUT updated documents', function () {
-          var data = { _id: 'azienda_010101', nome: 'Azienda 010101' },
+          var data = { _id: 'Azienda_010101', nome: 'Azienda 010101' },
             azienda = new Document(data),
-            response = { ok: true, id: 'azienda_010101', rev: '946B7D1C' };
-          $browser.xhr.expectPUT('/boutique_db/azienda_010101', data).respond(response);
+            response = { ok: true, id: 'Azienda_010101', rev: '946B7D1C' };
+          $browser.xhr.expectPUT('/boutique_db/Azienda_010101', data).respond(response);
           azienda.$save(function (resp) {
             expect(resp).toEqualData(response);
           });
@@ -108,8 +108,8 @@ describe('Services', function () {
 
       describe('toAziendaId', function () {
 
-        it('should return "azienda_010101" for codice "010101"', function () {
-          expect(Document.toAziendaId('010101')).toBe('azienda_010101');
+        it('should return "Azienda_010101" for codice "010101"', function () {
+          expect(Document.toAziendaId('010101')).toBe('Azienda_010101');
         });
 
         it('should return undefined for undefined, null, or blank codice', function () {
@@ -122,12 +122,12 @@ describe('Services', function () {
 
       describe('toCodice', function () {
 
-        it('should return "010101" for id "azienda_010101', function () {
-          expect(Document.toCodice('azienda_010101')).toBe('010101');
+        it('should return "010101" for id "Azienda_010101', function () {
+          expect(Document.toCodice('Azienda_010101')).toBe('010101');
         });
 
         it('should return "010101_10" for id "cliente_010101_10', function () {
-          expect(Document.toCodice('cliente_010101_10')).toBe('010101_10');
+          expect(Document.toCodice('Cliente_010101_10')).toBe('010101_10');
         });
 
         it('should return undefined for undefined, null, or blank id', function () {
@@ -199,33 +199,38 @@ describe('Services', function () {
     it('should reject invalid types', function () {
       var msg = 'Invalid type';
       expect(Validator.check({})).toHaveError(msg);
-      expect(Validator.check({ _id: 'NONVALIDTYPE_002' })).toHaveError(msg);
+      expect(Validator.check({ _id: 'nONVALIDTYPE_002' })).toHaveError(msg);
       expect(Validator.check({ _id: 'invalidid_' })).toHaveError(msg);
     });
 
     it('should reject unknown types', function () {
       var msg = 'Unknown type';
-      expect(Validator.check({ _id: 'unknowntype_002' })).toHaveError(msg);
-      expect(Validator.check({ _id: 'unknownid' })).toHaveError(msg);
+      expect(Validator.check({ _id: 'UnknownType_002' })).toHaveError(msg);
+      expect(Validator.check({ _id: 'Unknownid' })).toHaveError(msg);
     });
 
     it('should require six digits code for azienda', function () {
       var msg = 'Invalid azienda code';
-      expect(Validator.check({ _id: 'azienda_1' })).toHaveError(msg);
-      expect(Validator.check({ _id: 'azienda_000000' })).not.toHaveError(msg);
+      expect(Validator.check({ _id: 'Azienda_1' })).toHaveError(msg);
+      expect(Validator.check({ _id: 'Azienda_000000' })).not.toHaveError(msg);
     });
 
     it('should require nome azienda', function () {
       var msg = 'Required: nome';
-      expect(Validator.check({ _id: 'azienda_1' })).toHaveError(msg);
-      expect(Validator.check({ _id: 'azienda_1', nome: ' ' })).toHaveError(msg);
-      expect(Validator.check({ _id: 'azienda_1', nome: 'n' })).not.toHaveError(msg);
+      expect(Validator.check({ _id: 'Azienda_1' })).toHaveError(msg);
+      expect(Validator.check({ _id: 'Azienda_1', nome: ' ' })).toHaveError(msg);
+      expect(Validator.check({ _id: 'Azienda_1', nome: 'n' })).not.toHaveError(msg);
     });
 
     it('should forbid change of _id', function () {
       var msg = 'Invalid _id';
-      expect(Validator.check({ _id: 'azienda_1' }, { _id: 'azienda_1' })).not.toHaveError(msg);
-      expect(Validator.check({ _id: 'azienda_1' }, { _id: 'azienda_2' })).toHaveError(msg);
+      expect(Validator.check({ _id: 'Azienda_1' }, { _id: 'Azienda_1' })).not.toHaveError(msg);
+      expect(Validator.check({ _id: 'Azienda_1' }, { _id: 'Azienda_2' })).toHaveError(msg);
+    });
+
+    it('should accept bolle as400', function () {
+      var msg = 'Invalid type';
+      expect(Validator.check({ _id: 'BollaAs400_110704_1234_Y_10' })).not.toHaveError(msg);
     });
   });
 });

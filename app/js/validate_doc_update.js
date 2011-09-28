@@ -1,10 +1,10 @@
 function validate_doc_update(doc, oldDoc, userCtx, secObj) {
   'use strict';
   var es = [],
-    ids = /^([a-z][a-z_]*[a-z])(?:_([0-9]+))?$/.exec(doc._id);
+    typeAndCode = /^([A-Z][a-zA-Z0-9]+)(?:_([0-9A-Z_]+))?$/.exec(doc._id || '');
 
   /*
-   * secObj is used by to know the context of execution:
+   * secObj is used to know the context of execution:
    * if "undefined", it's running in a browser, otherwise on CouchDB.
    */
   function error(message) {
@@ -27,7 +27,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
   }
 
   function hasValidAziendaCode() {
-    if (!/^\d{6}$/.exec(ids[2])) {
+    if (!/^\d{6}$/.exec(typeAndCode[2])) {
       error('Invalid azienda code');
     }
   }
@@ -39,26 +39,26 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
     error('Invalid _id');
   }
   if (!doc._deleted) {
-    if (!ids || !doc._id) {
+    if (!typeAndCode) {
       error('Invalid type');
     } else {
-      switch (ids[1]) {
-      case 'azienda':
+      switch (typeAndCode[1]) {
+      case 'Azienda':
         hasValidAziendaCode();
         mustHave('nome');
         break;
-      case 'cliente':
+      case 'Cliente':
         mustHave('nome');
         break;
-      case 'scalarini':
+      case 'Scalarini':
         mustHave('descrizioni');
         mustHave('posizioni_codici');
         mustHave('posizione_codici');
         break;
-      case 'modelli_e_scalarini':
+      case 'ModelliEScalarini':
         mustHave('lista');
         break;
-      case 'inventari':
+      case 'Inventari':
         mustHave('data');
         mustHave('inventario');
         break;

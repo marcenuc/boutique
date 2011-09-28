@@ -10,11 +10,11 @@ describe('Controller', function () {
       "total_rows" : 15,
       "offset" : 1,
       "rows" : [ {
-        "id" : "azienda_019998",
-        "key" : "azienda_019998",
+        "id" : "Azienda_019998",
+        "key" : "Azienda_019998",
         "value" : { "rev" : "1-d6363be2d62ec0f2eb5b961527bdddbf" },
         "doc" : {
-          "_id" : "azienda_019998",
+          "_id" : "Azienda_019998",
           "_rev" : "1-d6363be2d62ec0f2eb5b961527bdddbf",
           "tipo" : "MAGAZZINO",
           "nome" : "Magazzino Disponibile-Tailor S.r.l.",
@@ -25,11 +25,11 @@ describe('Controller', function () {
           "contatti" : [ "0833/706311", "0833/706322 (fax)" ]
         }
       }, {
-        "id" : "azienda_099997",
-        "key" : "azienda_099997",
+        "id" : "Azienda_099997",
+        "key" : "Azienda_099997",
         "value" : { "rev" : "2-9415d085eb2ad39b3d7e40cab79cbf5b" },
         "doc" : {
-          "_id" : "azienda_099997",
+          "_id" : "Azienda_099997",
           "_rev" : "2-9415d085eb2ad39b3d7e40cab79cbf5b",
           "tipo" : "NEGOZIO",
           "contatti" : [ "0832 332401" ],
@@ -73,7 +73,7 @@ describe('Controller', function () {
     var $routeParams = null;
 
     function newController(status, body) {
-      var xpct = $browser.xhr.expectGET('/boutique_db/_all_docs?endkey=%22azienda_%EF%BF%B0%22&include_docs=true&startkey=%22azienda_%22');
+      var xpct = $browser.xhr.expectGET('/boutique_db/_all_docs?endkey=%22Azienda_%EF%BF%B0%22&include_docs=true&startkey=%22Azienda_%22');
       if (status) {
         xpct.respond(status, body);
       } else {
@@ -148,10 +148,10 @@ describe('Controller', function () {
       describe('validate', function () {
         it('should set flash to validation errors', function () {
           expect(ctrl.flash).toBeUndefined();
-          ctrl.azienda = { _id: 'azienda_000001' };
+          ctrl.azienda = { _id: 'Azienda_000001' };
           expect(ctrl.validate()).toBe(false);
           expect(ctrl.flash).toEqual({ errors: [{ message: 'Required: nome' }] });
-          ctrl.azienda = { _id: 'azienda_000001', nome: 'a' };
+          ctrl.azienda = { _id: 'Azienda_000001', nome: 'a' };
           expect(ctrl.validate()).toBe(true);
           expect(ctrl.flash).toEqual({ errors: [] });
         });
@@ -175,7 +175,7 @@ describe('Controller', function () {
 
 
         it('should not submit the data if not valid', function () {
-          ctrl.azienda = { _id: 'azienda_010101', _rev: '1', nome: '' };
+          ctrl.azienda = { _id: 'Azienda_010101', _rev: '1', nome: '' };
           ctrl.save();
           expect(ctrl.azienda._rev).toBe('1');
           expect(ctrl.flash.errors[0]).toEqual({ message: 'Required: nome' });
@@ -183,10 +183,10 @@ describe('Controller', function () {
 
         it('should create new document if id changed', function () {
           ctrl.select(0);
-          ctrl.azienda._id = 'azienda_000000';
+          ctrl.azienda._id = 'Azienda_000000';
           var az = angular.copy(ctrl.azienda);
           delete az._rev;
-          $browser.xhr.expectPUT('/boutique_db/azienda_000000', az).respond(response);
+          $browser.xhr.expectPUT('/boutique_db/Azienda_000000', az).respond(response);
           ctrl.save();
           $browser.xhr.flush();
           expectAppendedAzienda();
@@ -196,7 +196,7 @@ describe('Controller', function () {
         describe('new document', function () {
 
           beforeEach(function () {
-            ctrl.azienda = { _id: 'azienda_010101', nome: 'Nuova azienda' };
+            ctrl.azienda = { _id: 'Azienda_010101', nome: 'Nuova azienda' };
             doSave();
           });
 
@@ -279,7 +279,7 @@ describe('Controller', function () {
         it('should return true only if _id of azienda is not equal to _id of azienda at aziendaIdx', function () {
           ctrl.select(0);
           expect(ctrl.isIdChanged()).toBe(false);
-          ctrl.azienda._id = 'azienda_999999';
+          ctrl.azienda._id = 'Azienda_999999';
           expect(ctrl.isIdChanged()).toBe(true);
         });
       });
