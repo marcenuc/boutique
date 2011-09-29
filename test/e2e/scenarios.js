@@ -16,13 +16,13 @@ describe('Boutique', function () {
     beforeEach(function () {
       browser().navigateTo('#/azienda/');
     });
-  
+
     it('should render all aziende when user navigates to /azienda', function () {
       var r = repeater('ng\\:view table tbody tr', 'row in aziende.rows');
       expect(r.row(0)).toEqual(['<a href="#/azienda/000001">000001</a>', 'Magazzino Disponibile-Tailor S.r.l.']);
       expect(r.row(1)).toEqual(['<a href="#/azienda/000002">000002</a>', 'Negozio Lecce - Tailor S.r.l.']);
     });
-        
+
     it('should create a new azienda from the input form at /azienda', function () {
       var codice = input('azienda._id'),
         nome = input('azienda.nome'),

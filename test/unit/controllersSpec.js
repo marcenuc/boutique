@@ -113,7 +113,7 @@ describe('Controller', function () {
         scope.$digest();
         $route.current.scope = ctrl;
         $browser.xhr.flush();
-        expect(ctrl.flash).toEqual({ errors: [{ message: 'ERROR 500: "No service"' }] });
+        expect(ctrl.flash).toEqual({ errors: [{ message: 'ERROR 500: No service' }] });
       });
 
       it('should set azienda and aziendaIdx according to $routeParams.codice', function () {
