@@ -52,8 +52,8 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         break;
       case 'Scalarini':
         mustHave('descrizioni');
-        mustHave('posizioni_codici');
-        mustHave('posizione_codici');
+        mustHave('posizioniCodici');
+        mustHave('posizioneCodici');
         break;
       case 'ModelliEScalarini':
         mustHave('lista');
@@ -61,6 +61,10 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       case 'Inventari':
         mustHave('data');
         mustHave('inventario');
+        break;
+      case 'CausaliAs400':
+        mustHave('1');
+        mustHave('2');
         break;
       default:
         error('Unknown type');
