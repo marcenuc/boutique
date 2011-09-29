@@ -20,25 +20,10 @@ exports.couchdb = {
   }
 };
  */
-var spawn = require('child_process').spawn,
+var exec = require('./lib/taskutil').exec,
   util = require('util'),
   path = require('path'),
   servers = require('./servers');
-
-function exec(command, args, reader) {
-  'use strict';
-  var cmd = spawn(command, args);
-
-  cmd.stdout.on('data', function (data) {
-    reader(null, data.toString());
-  });
-  cmd.stderr.on('data', function (data) {
-    reader(null, null, data.toString());
-  });
-  cmd.on('exit', function (code) {
-    reader(code);
-  });
-}
 
 function console_exec(command, args, success) {
   'use strict';
