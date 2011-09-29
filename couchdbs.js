@@ -16,7 +16,7 @@
   if (!validate_orig_src.match(regexp_head) || !validate_src.match(regexp_head)) {
     throw 'Invalid contents in ' + validate_src_file;
   }
-  
+
   exports.boutique_db = {
     _security: {
       admins: { names: ['boutique'], roles: [] },
@@ -31,24 +31,14 @@
           }
         }
       }
-    },
-    azienda_000001: {
-      tipo: 'MAGAZZINO',
-      nome: 'Magazzino Disponibile-Tailor S.r.l.',
-      indirizzo: 'S.S. 275 km. 21,4 Lucugnano',
-      comune: 'Tricase (LE) ITALY',
-      provincia: 'LE',
-      cap: '73030',
-      contatti: ['0833/706311', '0833/706322 (fax)']
-    },
-    azienda_000002: {
-      tipo: 'NEGOZIO',
-      contatti: ['0832 332401'],
-      nome: 'Negozio Lecce - Tailor S.r.l.',
-      indirizzo: 'Via Liborio Romano 73',
-      comune: 'Lecce',
-      provincia: 'LE',
-      cap: '73100'
     }
   };
+
+  ['019998', '019999', '099990', '099991', '099997'].forEach(function (codAzienda) {
+    var id = 'Azienda_' + codAzienda;
+    exports.boutique_db[id] = JSON.parse(fs.readFileSync('test/fixtures/' + id + '.json', 'utf8'));
+  });
+  ['Scalarini', 'ModelliEScalarini', 'Inventari'].forEach(function (id) {
+    exports.boutique_db[id] = JSON.parse(fs.readFileSync('test/fixtures/' + id + '.json', 'utf8'));
+  });
 }());
