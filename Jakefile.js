@@ -86,7 +86,7 @@ task('lint', function () {
   var glob = require('glob'),
     patterns = arguments.length > 0 ?
       [].slice.apply(arguments) :
-      ['*.js', 'config/*.js', 'test/*/*.js', 'app/js/*.js'];
+      ['*.js', 'lib/*.js', 'config/*.js', 'test/*/*.js', 'test-srv/*/*.js', 'app/js/*.js'];
 
   function lint(fileName) {
     console_exec('jshint', [fileName, '--config', '.jshintrc'], function () {
