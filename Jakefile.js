@@ -109,15 +109,19 @@ namespace('couchdb', function () {
   'use strict';
   var cradle = require('cradle');
 
+  function newConnection() {
+    return new (cradle.Connection)(servers.couchdb.host, servers.couchdb.port, {
+      auth: {
+        username: servers.couchdb.admin.username,
+        password: servers.couchdb.admin.password
+      }
+    });
+  }
+
   desc('Load couchapp');
   task('push', function () {
     var couchdbs = require('./couchdbs'),
-      connection = new (cradle.Connection)(servers.couchdb.host, servers.couchdb.port, {
-        auth: {
-          username: servers.couchdb.admin.username,
-          password: servers.couchdb.admin.password
-        }
-      });
+      connection = newConnection();
 
     function createDocs(db, docs) {
       Object.keys(docs).forEach(function (docId) {
@@ -245,8 +249,22 @@ namespace('couchdb', function () {
       );
     });
   }, true);
-});
 
+
+  desc('Aggiorna codifiche da As400');
+  task('aggiorna-codifiche', function () {
+    var as400 = require('./lib/as400'),
+      db = newConnection().database('boutique_db');
+    as400.updateCausaliAs400(db, function (err, res) {
+      if (err) {
+        console.log(util.inspect(err));
+      }
+      if (res) {
+        console.log(util.inspect(res));
+      }
+    });
+  });
+});
 
 namespace('webserver', function () {
   'use strict';
