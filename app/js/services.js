@@ -19,17 +19,20 @@
 
   }, { $inject: ['$route', '$window'], $eager: true });
 
+
   angular.service('$xhr.error', function ($route) {
     return function (request, response) {
-      var msg;
+      var msg, body;
       if (response) {
-        msg = 'ERROR ' + response.status + ': ' + response.body;
+        body = response.body;
+        msg = 'ERROR ' + response.status + ': ' + (typeof body !== 'string' ? JSON.stringify(body) : body);
       } else {
         msg = 'REQUEST FAILED: ' + JSON.stringify(request);
       }
       $route.current.scope.flash = { errors: [{ message: msg }] };
     };
   }, { $inject: ['$route'], $eager: true });
+
 
   angular.service('Document', function ($resource) {
     var r = $resource('/boutique_db/:id', { id: '@_id' }, {
