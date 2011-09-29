@@ -1,3 +1,7 @@
+/*jslint node: true */
+/*jshint node: true */
+/*global describe: false, beforeEach: false, afterEach: false, it: false, xit: false, expect: false */
+
 describe('As400', function () {
   'use strict';
 

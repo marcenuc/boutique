@@ -1,10 +1,10 @@
 /*jslint node: true */
 /*jshint node: true */
 /*global desc: false, task: false, fail: false, complete: false, namespace: false,
-         setTimeout: false */
+         setTimeout: false, console: false */
 /*
  * Example "server.js" configuration file:
- * 
+ *
 exports.couchdb = {
   protocol: 'http',
   host: 'localhost',
