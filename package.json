@@ -9,6 +9,7 @@
     "jake": "~0.1.14"
   },
   "devDependencies": {
+    "jasmine-node": "*",
     "uglify-js": "~1.0.7",
     "cradle": "0.5.x",
     "glob": "2.0.x"

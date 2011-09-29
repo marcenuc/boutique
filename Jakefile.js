@@ -72,6 +72,11 @@ namespace('test', function () {
   task('e2e', function () {
     console_exec('firefox', [servers.couchdb.webRouteUrl() + '/test/e2e/runner.html']);
   });
+
+  desc('Run server side tests');
+  task('srv', function () {
+    console_exec('./node_modules/.bin/jasmine-node', ['test-srv']);
+  });
 });
 
 
