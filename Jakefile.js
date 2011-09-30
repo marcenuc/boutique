@@ -20,14 +20,30 @@ exports.couchdb = {
   }
 };
  */
-var exec = require('./lib/taskutil').exec,
+var requirejs = require('requirejs'),
+  exec = require('./lib/taskutil').exec,
   util = require('util'),
   path = require('path'),
-  servers = require('./servers');
+  servers = require('./servers'),
+  cradle = require('cradle');
+
+requirejs.config({
+  baseUrl: __dirname,
+  nodeRequire: require
+});
+
+function newConnection() {
+  'use strict';
+  return new (cradle.Connection)(servers.couchdb.host, servers.couchdb.port, {
+    auth: {
+      username: servers.couchdb.admin.username,
+      password: servers.couchdb.admin.password
+    }
+  });
+}
 
 function console_exec(command, args, success) {
   'use strict';
-
   exec(command, args, function (err, stdout, stderr) {
     if (stdout) {
       process.stdout.write(stdout);
@@ -107,16 +123,6 @@ task('lint', function () {
 
 namespace('couchdb', function () {
   'use strict';
-  var cradle = require('cradle');
-
-  function newConnection() {
-    return new (cradle.Connection)(servers.couchdb.host, servers.couchdb.port, {
-      auth: {
-        username: servers.couchdb.admin.username,
-        password: servers.couchdb.admin.password
-      }
-    });
-  }
 
   desc('Load couchapp');
   task('push', function () {
@@ -262,6 +268,25 @@ namespace('couchdb', function () {
       if (res) {
         console.log(util.inspect(res));
       }
+    });
+  });
+});
+
+desc('Produce un file di testo con la stampa delle etichette');
+task('stampaEtichette', function (docId) {
+  'use strict';
+  requirejs(['lib/etichette'], function (etichette) {
+    var db = newConnection().database('boutique_db');
+    db.get(docId, function (err, doc) {
+      if (err) {
+        return fail(err);
+      }
+      etichette.toTxt(doc, function (err2, txt) {
+        if (err2) {
+          return fail(err2);
+        }
+        process.stdout.write(txt);
+      });
     });
   });
 });
