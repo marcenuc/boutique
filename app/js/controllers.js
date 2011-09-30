@@ -5,30 +5,6 @@ var Ctrl = {};
 (function () {
   'use strict';
 
-  Ctrl.RicercaBollaAs400 = function (As400, userCtx) {
-    this.As400 = As400;
-
-    this.intestazione = {};
-    this.bolla = null;
-
-    this.flash = userCtx.flash;
-    userCtx.flash = {};
-  };
-  Ctrl.RicercaBollaAs400.$inject = ['As400', 'userCtx'];
-
-  Ctrl.RicercaBollaAs400.prototype = {
-    fetch: function () {
-      var self = this;
-      this.As400.bolla(this.intestazione, function (code, dati) {
-        if (code === 200) {
-          self.bolla = dati;
-        } else {
-          self.flash = { errors: [{ message: 'Errore ' + code }] };
-        }
-      });
-    }
-  };
-
   function dotPad(str, len) {
     var s = str || '', l = len || 2;
     return s + new Array(l + 1 - s.length).join('.');
@@ -38,20 +14,137 @@ var Ctrl = {};
     var s = str.toString(), l = len || 2, p = padder || ' ';
     return new Array(l + 1 - s.length).join(p) + s;
   }
+
+  function colNamesToColIndexes(columnNames) {
+    var col = {}, i = 0, n = columnNames.length;
+    for (; i < n; i += 1) {
+      col[columnNames[i]] = i;
+    }
+    return col;
+  }
   //TODO exported for testing... better options?
   Ctrl.utils = {
     dotPad: dotPad,
-    padLeft: padLeft
+    padLeft: padLeft,
+    colNamesToColIndexes: colNamesToColIndexes
   };
 
+
+  Ctrl.RicercaBollaAs400 = function (As400, Document, userCtx) {
+    this.As400 = As400;
+    this.Document = Document;
+    this.userCtx = userCtx;
+    this.scalarini = Document.get({ id: 'Scalarini' });
+    this.causaliAs400 = Document.get({ id: 'CausaliAs400' });
+    this.intestazione = {};
+    this.bollaAs400 = null;
+
+    this.flash = userCtx.flash;
+    userCtx.flash = {};
+  };
+  Ctrl.RicercaBollaAs400.$inject = ['As400', 'Document', 'userCtx'];
+
+  Ctrl.RicercaBollaAs400.prototype = {
+    fetch: function () {
+      var self = this,
+        rexpBarcodeAs400 = /^(\d{3})(\d{5})(\d{4})(\d{4})(\d{2})$/;
+      /*
+       * Save id here to be sure that the data in `bolla`
+       * does match the data in `intestazione`.
+       * TODO write some test for this...
+       */
+      this.id = this.buildId();
+      this.caricata = true;
+
+      this.Document.get({ id: this.id }, function (bolla) {
+        //TODO trovare un modo di usare un widget o filtro nel template
+        self.bollaCDB = bolla;
+        self.bolla = {
+          codiceCliente: bolla.codiceCliente,
+          tipoMagazzino: bolla.tipoMagazzino,
+          codiceMagazzino: bolla.codiceMagazzino,
+          causale: bolla.causale,
+
+          rows: bolla.rows.map(function (r) {
+            var v = [].slice.call(rexpBarcodeAs400.exec(r[0]), 1);
+            v.push(r[1]);
+            return v;
+          })
+        };
+      }, function (status, resp) {
+        if (status === 404) {
+          self.caricata = false;
+          self.As400.bolla(self.intestazione, function (code, dati) {
+            if (code === 200) {
+              self.bollaAs400 = dati;
+            } else {
+              self.flash = { errors: [{ message: 'Errore ' + code }] };
+            }
+          });
+        } else {
+          self.flash = { errors: [{ message: 'Errore ' + status + ': ' + JSON.stringify(resp) }] };
+        }
+      });
+    },
+
+    buildId: function () {
+      return 'BollaAs400_' + ['data', 'numero', 'enteNumerazione', 'codiceNumerazione'].map(function (field) {
+        return this.intestazione[field];
+      }, this).join('_');
+    },
+
+    buildBolla: function () {
+      var r0 = this.bollaAs400.rows[0],
+        col = colNamesToColIndexes(this.bollaAs400.columnNames),
+        codiceCliente = r0[col.codiceCliente],
+        tipoMagazzino = r0[col.tipoMagazzino],
+        codiceMagazzino = r0[col.codiceMagazzino],
+        causale = r0[col.causale],
+        posizioniCodiciScalarino = this.scalarini.posizioniCodici,
+        rows = [],
+        ok = this.bollaAs400.rows.every(function (row) {
+          var qta, i, barcode, codiceTaglia,
+            pcs = posizioniCodiciScalarino[parseInt(row[col.scalarino], 10)];
+          for (i = 0; i < 12; i += 1) {
+            qta = parseInt(row[col['qta' + (i + 1)]], 10);
+            if (qta > 0) {
+              codiceTaglia = padLeft(pcs[i], 2, '0');
+              barcode = row[col.stagione] + row[col.modello] + row[col.articolo] + row[col.colore] + codiceTaglia;
+              rows.push([barcode, qta]);
+            }
+          }
+          return row[col.codiceCliente] === codiceCliente &&
+            row[col.tipoMagazzino] === tipoMagazzino &&
+            row[col.codiceMagazzino] === codiceMagazzino &&
+            row[col.causale] === causale;
+        }, this);
+
+      return ok ? {
+        _id: this.id,
+        codiceCliente: codiceCliente,
+        tipoMagazzino: tipoMagazzino,
+        codiceMagazzino: codiceMagazzino,
+        causale: [causale].concat(this.causaliAs400[tipoMagazzino][causale]),
+        rows: rows
+      } : null;
+    },
+
+    save: function () {
+      var self = this;
+      this.Document.save(this.buildBolla(), function (res) {
+        self.flash = { notice: [{ message: 'Salvato ' + JSON.stringify(res) }] };
+        self.fetch();
+      });
+    }
+  };
 
   Ctrl.RicercaArticoli = function (Document) {
     Document.aziende(this.setAziende);
     this.aziendeSelezionate = [];
 
-    this.scalarini = Document.get({ id: 'scalarini' });
-    this.modelli_e_scalarini = Document.get({ id: 'modelli_e_scalarini' });
-    this.inventari = Document.get({ id: 'inventari' });
+    this.scalarini = Document.get({ id: 'Scalarini' });
+    this.modelliEScalarini = Document.get({ id: 'ModelliEScalarini' });
+    this.inventari = Document.get({ id: 'Inventari' });
 
     this.filtrate = [];
     this.limiteRisultati = 50;
@@ -74,7 +167,7 @@ var Ctrl = {};
     filtraArticoli: function () {
       var i, r, k,
         filtro = this.getFiltro(),
-        desscal, ms = this.modelli_e_scalarini.lista,
+        desscal, ms = this.modelliEScalarini.lista,
         nodesscal = ['-- senza descrizione --', 'X'],
         scal, scalarini = this.scalarini.codici,
         taglia, rows = this.inventari.inventario,
@@ -101,12 +194,12 @@ var Ctrl = {};
     filtraGiacenza: function () {
       var riga, i, r, k, taglie = new Array(13), qtas, righe = {},
         filtro = this.getFiltro(),
-        desscal, ms = this.modelli_e_scalarini.lista,
+        desscal, ms = this.modelliEScalarini.lista,
         nn = '--',
         nodesscal = ['-- senza descrizione --', 'X'],
         rows = this.inventari.inventario,
         n = rows.length, count = 0,
-        colonneCodiciTaglie = this.scalarini.posizione_codici,
+        colonneCodiciTaglie = this.scalarini.posizioneCodici,
         colonnaTaglia, smacazst, smacazstFiltrati = {},
         scalarino = nn;
 
@@ -152,7 +245,7 @@ var Ctrl = {};
         if (desscal) {
           scalarino = desscal[1];
           for (i = 0; i < n; i += 1) {
-            k = this.scalarini.posizioni_codici[scalarino][i];
+            k = this.scalarini.posizioniCodici[scalarino][i];
             taglie[i] = typeof k === 'undefined' ? nn : this.scalarini.codici[scalarino][k];
           }
         } else {
@@ -175,6 +268,7 @@ var Ctrl = {};
     this.$location = $location;
 
     this.aziende = Document.aziende(this.cbAziendeLoaded);
+    //FIXME i contatti non vengono salvati.
     this.azienda = { _id: Document.toAziendaId($routeParams.codice) };
 
     this.flash = userCtx.flash;
@@ -218,7 +312,7 @@ var Ctrl = {};
           if (isNew) {
             self.userCtx.flash = notice;
             self.aziende.rows.push({ doc: angular.copy(self.azienda) });
-            self.$location.path('/azienda/' + self.Document.toCodice(self.azienda._id)).replace();
+            self.$location.path('/Azienda_' + self.Document.toCodice(self.azienda._id)).replace();
           } else {
             self.flash = notice;
             angular.copy(self.azienda, self.aziende.rows[self.aziendaIdx].doc);

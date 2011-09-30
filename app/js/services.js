@@ -7,8 +7,10 @@
   /* App service which is responsible for the main configuration of the app. */
   angular.service('Boutique', function ($route, $window) {
 
-    $route.when('/azienda/:codice', { template: 'partials/azienda.html', controller: Ctrl.Azienda });
-    $route.when('/ricerca-bolla-as400', { template: 'partials/ricerca-bolla-as400.html', controller: Ctrl.RicercaBollaAs400 });
+    $route.when('/Azienda_:codice', { template: 'partials/azienda.html', controller: Ctrl.Azienda });
+    $route.when('/Azienda', { template: 'partials/azienda.html', controller: Ctrl.Azienda });
+    $route.when('/BollaAs400_:codice', { template: 'partials/ricerca-bolla-as400.html', controller: Ctrl.RicercaBollaAs400 });
+    $route.when('/BollaAs400', { template: 'partials/ricerca-bolla-as400.html', controller: Ctrl.RicercaBollaAs400 });
     $route.when('/ricerca-articoli', { template: 'partials/ricerca-articoli.html', controller: Ctrl.RicercaArticoli });
     $route.when('/ricerca-giacenza', { template: 'partials/ricerca-giacenza.html', controller: Ctrl.RicercaArticoli });
     $route.otherwise({ redirectTo: '/' });

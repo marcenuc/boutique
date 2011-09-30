@@ -1,6 +1,6 @@
 function validate_doc_update(doc, oldDoc, userCtx, secObj) {
   'use strict';
-  var es = [],
+  var es = [], i, n, rows, r,
     typeAndCode = /^([A-Z][a-zA-Z0-9]+)(?:_([0-9A-Z_]+))?$/.exec(doc._id || '');
 
   /*
@@ -17,18 +17,26 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
 
   function mustHave(field) {
     var v = doc[field];
-    if (typeof v === 'string') {
-      if (!v.trim()) {
-        error('Required: ' + field);
-      }
-    } else if (!v) {
+    if (!v || (typeof v === 'string' && !v.trim())) {
       error('Required: ' + field);
     }
+  }
+
+  function validDate(year, month, day) {
+    var y = parseInt(year, 10), m = parseInt(month, 10), d = parseInt(day, 10);
+    return m > 0 && m < 13 && y > 0 && y < 32768 && d > 0 && d <= (new Date(y, m, 0)).getDate();
   }
 
   function hasValidAziendaCode() {
     if (!/^\d{6}$/.exec(typeAndCode[2])) {
       error('Invalid azienda code');
+    }
+  }
+
+  function hasValidBollaAs400Code() {
+    var m = /^(\d\d)(\d\d)(\d\d)_([1-9]\d*)_([A-Z])_(\d+)$/.exec(typeAndCode[2]);
+    if (!m || !validDate(m[1], m[2], m[3])) {
+      error('Invalid code');
     }
   }
 
@@ -43,6 +51,31 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       error('Invalid type');
     } else {
       switch (typeAndCode[1]) {
+      case 'BollaAs400':
+        hasValidBollaAs400Code();
+        mustHave('codiceCliente');
+        mustHave('tipoMagazzino');
+        mustHave('codiceMagazzino');
+        mustHave('causale');
+        rows = doc.rows;
+        if (!rows || !rows.length) {
+          error('Give a row!');
+        } else {
+          rows = doc.rows;
+          for (i = 0, n = rows.length; i < n; i += 1) {
+            r = rows[i];
+            if (r.length !== 2) {
+              error('Invalid row ' + i + ': ' + JSON.stringify(r));
+            }
+            if (!r[0] || !/^\d{18}$/.test(r[0])) {
+              error('Invalid barcode at row ' + i + ': ' + JSON.stringify(r));
+            }
+            if (typeof r[1] !== 'number') {
+              error('Invalid qta at row ' + i + ': ' + JSON.stringify(r));
+            }
+          }
+        }
+        break;
       case 'Azienda':
         hasValidAziendaCode();
         mustHave('nome');

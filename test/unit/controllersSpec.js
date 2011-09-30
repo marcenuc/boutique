@@ -6,6 +6,7 @@ describe('Controller', function () {
   var scope = null,
     $browser = null,
     ctrl = null,
+    okResponse = { ok: true, rev: '1' },
     aziende = {
       "total_rows" : 15,
       "offset" : 1,
@@ -56,14 +57,22 @@ describe('Controller', function () {
   describe('utils', function () {
     describe('dotPad', function () {
       it('should pad with dots strings shorter than the given length', function () {
-        expect(Ctrl.utils.dotPad(null, 5)).toBe('.....');
-        expect(Ctrl.utils.dotPad('', 5)).toBe('.....');
-        expect(Ctrl.utils.dotPad('1', 5)).toBe('1....');
-        expect(Ctrl.utils.dotPad('..1', 5)).toBe('..1..');
+        var u = Ctrl.utils.dotPad;
+        expect(u(null, 5)).toBe('.....');
+        expect(u('', 5)).toBe('.....');
+        expect(u('1', 5)).toBe('1....');
+        expect(u('..1', 5)).toBe('..1..');
       });
 
       it('should left untouched strings longer than pad length', function () {
         expect(Ctrl.utils.dotPad('..1', 2)).toBe('..1');
+      });
+    });
+
+    describe('colNamesToColIndexes', function () {
+      it('should return an hash with values equal to index of the column in the given array', function () {
+        var u = Ctrl.utils.colNamesToColIndexes;
+        expect(u(['a', 'b', 'c'])).toEqual({ a: 0, b: 1, c: 2 });
       });
     });
   });
@@ -158,10 +167,9 @@ describe('Controller', function () {
       });
 
       describe('save', function () {
-        var response = { ok: true, rev: '1' };
 
         function doSave() {
-          $browser.xhr.expectPUT('/boutique_db/' + ctrl.azienda._id, ctrl.azienda).respond(response);
+          $browser.xhr.expectPUT('/boutique_db/' + ctrl.azienda._id, ctrl.azienda).respond(JSON.stringify(okResponse));
           ctrl.save();
           $browser.xhr.flush();
         }
@@ -186,7 +194,7 @@ describe('Controller', function () {
           ctrl.azienda._id = 'Azienda_000000';
           var az = angular.copy(ctrl.azienda);
           delete az._rev;
-          $browser.xhr.expectPUT('/boutique_db/Azienda_000000', az).respond(response);
+          $browser.xhr.expectPUT('/boutique_db/Azienda_000000', az).respond(JSON.stringify(okResponse));
           ctrl.save();
           $browser.xhr.flush();
           expectAppendedAzienda();
@@ -201,7 +209,7 @@ describe('Controller', function () {
           });
 
           it('should set _rev field to the returned revision', function () {
-            expect(ctrl.azienda._rev).toBe(response.rev);
+            expect(ctrl.azienda._rev).toBe(okResponse.rev);
           });
 
           it('should append azienda to aziende', function () {
@@ -209,7 +217,7 @@ describe('Controller', function () {
           });
 
           it('should redirect to azienda page', function () {
-            expect(scope.$service('$location').path()).toBe('/azienda/010101');
+            expect(scope.$service('$location').path()).toBe('/Azienda_010101');
           });
 
         });
@@ -222,7 +230,7 @@ describe('Controller', function () {
           });
 
           it('should update _rev field to the returned revision', function () {
-            expect(ctrl.azienda._rev).toBe(response.rev);
+            expect(ctrl.azienda._rev).toBe(okResponse.rev);
           });
 
           it('should update aziende when saving updates to azienda', function () {
@@ -281,6 +289,93 @@ describe('Controller', function () {
           expect(ctrl.isIdChanged()).toBe(false);
           ctrl.azienda._id = 'Azienda_999999';
           expect(ctrl.isIdChanged()).toBe(true);
+        });
+      });
+    });
+  });
+
+
+  describe('RicercaBollaAs400', function () {
+    var scalarini = { posizioniCodici: {
+        '2': ["44", "46", "48", "50", "52", "54", "56", "58", "60", "62", "64", "66"],
+        '3': ["01"]
+      }},
+      causaliAs400 = {
+        '1': { '98': ['VENDITA', -1] }
+      },
+      intestazione = { data: '110704', numero: '1234', enteNumerazione: 'Y', codiceNumerazione: '10' },
+      bollaAs400 = {
+        columnNames: ['codiceCliente', 'tipoMagazzino', 'codiceMagazzino', 'causale', 'stagione', 'modello',
+                      'articolo', 'colore', 'scalarino', 'qta1', 'qta2', 'qta3', 'qta4', 'qta5', 'qta6',
+                      'qta7', 'qta8', 'qta9', 'qta10', 'qta11', 'qta12', 'prezzo'],
+        rows: [
+          ['002812', '1', 'C', '98', '112', '70899', '5017', '8000', '2', '1', '2', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1.00'],
+          ['002812', '1', 'C', '98', '114', '80243', '5157', '7184', '2', '0', '0', null, '0', '0', '0', '0', '0', '0', '0', '0', '2', '1.00'],
+          ['002812', '1', 'C', '98', '113', '10256', '2645', '7315', '3', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1.00']
+        ]
+      },
+      bollaDoc = {
+        _id: 'BollaAs400_110704_1234_Y_10',
+        codiceCliente: '002812',
+        tipoMagazzino: '1',
+        codiceMagazzino: 'C',
+        causale: ['98', 'VENDITA', -1],
+        rows: [
+          ['112708995017800044', 1],
+          ['112708995017800046', 2],
+          ['114802435157718466', 2]
+        ]
+      };
+
+    describe('actions', function () {
+
+      function newController() {
+        $browser.xhr.expectGET('/boutique_db/Scalarini').respond(JSON.stringify(scalarini));
+        $browser.xhr.expectGET('/boutique_db/CausaliAs400').respond(JSON.stringify(causaliAs400));
+        ctrl = scope.$new(Ctrl.RicercaBollaAs400);
+      }
+
+      beforeEach(function () {
+        newController();
+        $browser.xhr.flush();
+      });
+
+      describe('buildId', function () {
+        it('should put, in this order, "data", "numero", "enteNumerazione", and "codiceNumerazione" in the id', function () {
+          ctrl.intestazione = intestazione;
+          expect(ctrl.buildId()).toBe('BollaAs400_110704_1234_Y_10');
+        });
+      });
+
+      describe('buildBolla', function () {
+        it('should put codiceCliente, tipoMagazzino, codiceMagazzino, and causale in the doc', function () {
+          ctrl.id = 'BollaAs400_110704_1234_Y_10';
+          ctrl.bollaAs400 = bollaAs400;
+          expect(ctrl.buildBolla()).toEqual(bollaDoc);
+        });
+      });
+
+      describe('save', function () {
+        function doSave() {
+          $browser.xhr.expectPUT('/boutique_db/' + bollaDoc._id, bollaDoc).respond(JSON.stringify(okResponse));
+          ctrl.save();
+          $browser.xhr.flush();
+        }
+
+        it('should put the document', function () {
+          ctrl.id = bollaDoc._id;
+          ctrl.bollaAs400 = bollaAs400;
+          doSave();
+        });
+      });
+
+      describe('fetch', function () {
+        it('should GET bolla only from CouchDB if already present', function () {
+          $browser.xhr.expectGET('/boutique_db/' + bollaDoc._id).respond(JSON.stringify(bollaDoc));
+          $browser.xhr.expectGET('/boutique_app/as400/bolla/data=110704/numero=1234/enteNumerazione=Y/codiceNumerazione=10').respond(JSON.stringify(bollaAs400));
+          ctrl.intestazione = intestazione;
+          ctrl.fetch();
+          $browser.xhr.flush();
         });
       });
     });

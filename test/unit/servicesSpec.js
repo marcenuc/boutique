@@ -86,7 +86,7 @@ describe('Services', function () {
             azienda = new Document(data),
             response = { ok: true, id: 'Azienda_010101', rev: '946B7D1C' };
 
-          $browser.xhr.expectPUT('/boutique_db/Azienda_010101', data).respond(response);
+          $browser.xhr.expectPUT('/boutique_db/Azienda_010101', data).respond(JSON.stringify(response));
           azienda.$save({ id: 'Azienda_010101' }, function (resp) {
             expect(resp).toEqualData(response);
           });
@@ -97,7 +97,7 @@ describe('Services', function () {
           var data = { _id: 'Azienda_010101', nome: 'Azienda 010101' },
             azienda = new Document(data),
             response = { ok: true, id: 'Azienda_010101', rev: '946B7D1C' };
-          $browser.xhr.expectPUT('/boutique_db/Azienda_010101', data).respond(response);
+          $browser.xhr.expectPUT('/boutique_db/Azienda_010101', data).respond(JSON.stringify(response));
           azienda.$save(function (resp) {
             expect(resp).toEqualData(response);
           });
@@ -172,19 +172,26 @@ describe('Services', function () {
   });
 
 
+  beforeEach(function () {
+    this.addMatchers({
+      toHaveError: function (expected) {
+        return this.actual.errors.some(function (e) {
+          return e.message === expected;
+        });
+      },
+
+      toMatchError: function (expected) {
+        return this.actual.errors.some(function (e) {
+          return expected.test(e.message);
+        });
+      }
+    });
+  });
+
   describe('Validator', function () {
-    var Validator = null;
-
+    var check = null;
     beforeEach(function () {
-      Validator = scope.$service('Validator');
-
-      this.addMatchers({
-        toHaveError: function (expected) {
-          return this.actual.errors.some(function (e) {
-            return e.message === expected;
-          });
-        }
-      });
+      check = scope.$service('Validator').check;
     });
 
     it('should require an authenticated user', function () {
@@ -192,45 +199,63 @@ describe('Services', function () {
       expect(angular.service('Validator')({}).check({ _deleted: true })).toHaveError('Non autorizzato');
     });
 
+    it('should forbid change of _id', function () {
+      var msg = 'Invalid _id';
+      expect(check({ _id: 'Azienda_1' }, { _id: 'Azienda_1' })).not.toHaveError(msg);
+      expect(check({ _id: 'Azienda_1' }, { _id: 'Azienda_2' })).toHaveError(msg);
+    });
+
     it('should not validate deleted documents', function () {
-      expect(Validator.check({ _deleted: true }).errors.length).toBe(0);
+      expect(check({ _deleted: true }).errors.length).toBe(0);
     });
 
     it('should reject invalid types', function () {
       var msg = 'Invalid type';
-      expect(Validator.check({})).toHaveError(msg);
-      expect(Validator.check({ _id: 'nONVALIDTYPE_002' })).toHaveError(msg);
-      expect(Validator.check({ _id: 'invalidid_' })).toHaveError(msg);
+      expect(check({})).toHaveError(msg);
+      expect(check({ _id: 'nONVALIDTYPE_002' })).toHaveError(msg);
+      expect(check({ _id: 'invalidid_' })).toHaveError(msg);
     });
 
     it('should reject unknown types', function () {
       var msg = 'Unknown type';
-      expect(Validator.check({ _id: 'UnknownType_002' })).toHaveError(msg);
-      expect(Validator.check({ _id: 'Unknownid' })).toHaveError(msg);
+      expect(check({ _id: 'UnknownType_002' })).toHaveError(msg);
+      expect(check({ _id: 'Unknownid' })).toHaveError(msg);
     });
 
-    it('should require six digits code for azienda', function () {
-      var msg = 'Invalid azienda code';
-      expect(Validator.check({ _id: 'Azienda_1' })).toHaveError(msg);
-      expect(Validator.check({ _id: 'Azienda_000000' })).not.toHaveError(msg);
+    describe('Azienda', function () {
+      it('should require six digits code', function () {
+        var msg = 'Invalid azienda code';
+        expect(check({ _id: 'Azienda_1' })).toHaveError(msg);
+        expect(check({ _id: 'Azienda_000000' })).not.toHaveError(msg);
+      });
+
+      it('should require nome', function () {
+        var msg = 'Required: nome';
+        expect(check({ _id: 'Azienda_1' })).toHaveError(msg);
+        expect(check({ _id: 'Azienda_1', nome: ' ' })).toHaveError(msg);
+        expect(check({ _id: 'Azienda_1', nome: 'n' })).not.toHaveError(msg);
+      });
     });
 
-    it('should require nome azienda', function () {
-      var msg = 'Required: nome';
-      expect(Validator.check({ _id: 'Azienda_1' })).toHaveError(msg);
-      expect(Validator.check({ _id: 'Azienda_1', nome: ' ' })).toHaveError(msg);
-      expect(Validator.check({ _id: 'Azienda_1', nome: 'n' })).not.toHaveError(msg);
-    });
+    describe('BollaAs400', function () {
+      var validId = 'BollaAs400_110704_1234_Y_10';
 
-    it('should forbid change of _id', function () {
-      var msg = 'Invalid _id';
-      expect(Validator.check({ _id: 'Azienda_1' }, { _id: 'Azienda_1' })).not.toHaveError(msg);
-      expect(Validator.check({ _id: 'Azienda_1' }, { _id: 'Azienda_2' })).toHaveError(msg);
-    });
+      it('should require valid _id with (data, numero, ente, codice)', function () {
+        var msg = 'Invalid code';
+        expect(check({ _id: validId })).not.toHaveError('Invalid type');
+        expect(check({ _id: 'BollaAs400_110731_1_G_10' })).not.toHaveError(msg);
+        expect(check({ _id: 'BollaAs400_111131_1234_Y_10' })).toHaveError(msg);
+      });
 
-    it('should accept bolle as400', function () {
-      var msg = 'Invalid type';
-      expect(Validator.check({ _id: 'BollaAs400_110704_1234_Y_10' })).not.toHaveError(msg);
+      it('should require a row', function () {
+        var msg = 'Give a row!';
+        expect(check({ _id: validId })).toHaveError(msg);
+        expect(check({ _id: validId, rows: [] })).toHaveError(msg);
+        expect(check({ _id: validId, rows: [["112708995017800046"]] })).toMatchError(/Invalid row 0/);
+        expect(check({ _id: validId, rows: [["11270899501780004", 1]] })).toMatchError(/Invalid barcode at row 0/);
+        expect(check({ _id: validId, rows: [["112708995017800046", '1']] })).toMatchError(/Invalid qta at row 0/);
+        expect(check({ _id: validId, rows: [["112708995017800046", 1]] })).not.toMatchError(/Invalid[ \w]* row 0/);
+      });
     });
   });
 });
