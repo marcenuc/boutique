@@ -15,6 +15,7 @@ var Ctrl = {};
     return new Array(l + 1 - s.length).join(p) + s;
   }
 
+  //TODO DRY copied in lib/as400.js
   function colNamesToColIndexes(columnNames) {
     var col = {}, i = 0, n = columnNames.length;
     for (; i < n; i += 1) {

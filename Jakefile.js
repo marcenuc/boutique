@@ -261,14 +261,19 @@ namespace('couchdb', function () {
   task('aggiorna-codifiche', function () {
     var as400 = require('./lib/as400'),
       db = newConnection().database('boutique_db');
-    as400.updateCausaliAs400(db, function (err, res) {
+    function updateReporter(err, warns, res) {
       if (err) {
-        console.log(util.inspect(err));
+        fail(util.inspect(err));
+      }
+      if (warns && warns.length) {
+        console.warn(warns.join('\n'));
       }
       if (res) {
         console.log(util.inspect(res));
       }
-    });
+    }
+    as400.updateCausaliAs400(db, updateReporter);
+    as400.updateModelliEScalariniAs400(db, updateReporter);
   });
 });
 
