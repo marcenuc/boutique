@@ -24,13 +24,7 @@
     },
     '_design/boutique_db': {
       validate_doc_update: validate_src.replace(regexp_head, 'function('),
-      views: {
-        all: {
-          map: function (doc) {
-            emit(doc._id, 1);
-          }
-        }
-      }
+      views: {}
     }
   };
 
