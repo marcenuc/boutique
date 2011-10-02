@@ -1,9 +1,9 @@
 {
-  "_id": "Azienda_019998",
+  "_id": "Azienda_019997",
   "tipo": "MAGAZZINO",
-  "codiceMagazzino": "D",
+  "codiceMagazzino": "K",
   "versioneListino": "1",
-  "nome":"Magazzino Disponibile -1",
+  "nome":"Magazzino Disponibile +1",
   "provincia": "LE",
   "nazione": "IT"
 }

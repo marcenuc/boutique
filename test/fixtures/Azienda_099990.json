@@ -1,1 +1,8 @@
-{"_id":"azienda_099990","tipo":"MAGAZZINO","contatti":["0833 706311","0833 706322 (fax)"],"nome":"Magazzino Negozi","indirizzo":"S.S. 275 km. 21,4 Lucugnano","comune":"Tricase","provincia":"LE","cap":"73030"}
+{
+  "_id": "Azienda_099990",
+  "tipo":"MAGAZZINO",
+  "versioneListino": "1",
+  "nome": "Magazzino Negozi",
+  "provincia": "LE",
+  "nazione": "IT"
+}

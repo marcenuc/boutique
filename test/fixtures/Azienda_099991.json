@@ -1,1 +1,8 @@
-{"_id":"azienda_099991","tipo":"MAGAZZINO","attivo":true,"contatti":["0833 706311","0833 706322 (fax)"],"nome":"Campionario","indirizzo":"S.S. 275 km. 21,4 Lucugnano","comune":"Tricase","provincia":"LE","cap":"73030"}
+{
+  "_id": "Azienda_099991",
+  "tipo": "MAGAZZINO",
+  "versioneListino": "1",
+  "nome": "Campionario",
+  "provincia": "LE",
+  "nazione": "IT"
+}

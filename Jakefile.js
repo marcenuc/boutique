@@ -274,6 +274,7 @@ namespace('couchdb', function () {
     }
     as400.updateCausaliAs400(db, updateReporter);
     as400.updateModelliEScalariniAs400(db, updateReporter);
+    as400.updateAziendeAs400(db, updateReporter);
   });
 });
 

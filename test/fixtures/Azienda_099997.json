@@ -1,1 +1,8 @@
-{"_id":"azienda_099997","tipo":"NEGOZIO","versione_listino":"1","contatti":["0832 332401"],"laboratori":{"01":{"nome":"Prova"}},"venditori":{"01":{"nome":"Giulia"},"02":{"nome":"Prova"}},"nome":"Negozio Lecce - Tailor S.r.l.","indirizzo":"Via Liborio Romano 73","comune":"Lecce","provincia":"LE","cap":"73100"}
+{
+  "_id": "Azienda_099997",
+  "tipo": "NEGOZIO",
+  "versioneListino": "1",
+  "nome":"Negozio Lecce - Tailor S.r.l.",
+  "provincia": "LE",
+  "nazione": "IT"
+}

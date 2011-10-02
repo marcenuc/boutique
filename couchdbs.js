@@ -28,11 +28,11 @@
     }
   };
 
-  ['019998', '019999', '099990', '099991', '099997'].forEach(function (codAzienda) {
+  ['019997', '019998', '019999', '099990', '099991', '099997'].forEach(function (codAzienda) {
     var id = 'Azienda_' + codAzienda;
     exports.boutique_db[id] = JSON.parse(fs.readFileSync('test/fixtures/' + id + '.json', 'utf8'));
   });
-  ['Scalarini', 'ModelliEScalarini', 'Inventari'].forEach(function (id) {
+  ['Scalarini', 'Inventari'].forEach(function (id) {
     exports.boutique_db[id] = JSON.parse(fs.readFileSync('test/fixtures/' + id + '.json', 'utf8'));
   });
 }());

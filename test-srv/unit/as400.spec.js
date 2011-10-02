@@ -48,4 +48,30 @@ describe('As400', function () {
       ]);
     });
   });
+
+  describe('buildAziendaAs400', function () {
+    it('should use data from existing azienda', function () {
+      var azienda = { _id: 'Azienda_123456', nome: 'azienda1', indirizzo: 'via Silva, 2', comune: 'Scandiano', provincia: 'RE',
+        cap: '42019', note: 'some notes', nazione: 'CH', versioneListino: '1', tipo: 'MAGAZZINO', codiceMagazzino: 'K' },
+        aziendaAs400 = { columnNames: ['nome', 'indirizzo', 'comune', 'provincia', 'cap', 'note', 'nazione', 'telefono', 'fax'],
+          rows: [['Negozio LE', 'via Roma, 3', 'Lecce', 'LE', '73010', 'new', 'IT', '0832575859', '0832123456']]};
+      expect(as400.buildAziendaAs400(azienda, aziendaAs400)).toEqual([[], {
+        _id: 'Azienda_123456',
+        versioneListino: '1',
+        tipo: 'MAGAZZINO',
+        codiceMagazzino: 'K',
+        nome: 'Negozio LE',
+        indirizzo: 'via Roma, 3',
+        comune: 'Lecce',
+        provincia: 'LE',
+        cap: '73010',
+        note: 'new',
+        nazione: 'IT',
+        contatti: [
+          { tipo: 'Telefono', valore: '0832575859' },
+          { tipo: 'Fax', valore: '0832123456' }
+        ]
+      }]);
+    });
+  });
 });
