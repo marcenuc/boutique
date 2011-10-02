@@ -10,21 +10,22 @@
 <div>
   <label>Codice:<input name="azienda._id" ng:format="codiceAzienda" size=6 maxlength=6 required></label>
   <label>Tipo:<select name="azienda.tipo"><option>MAGAZZINO<option>NEGOZIO</select></label>
-  <label><input type=checkbox name="azienda.attivo">&nbsp;Attivo</label><br>
+  <label><input type=checkbox name="azienda.inattivo">&nbsp;Inattivo</label><br>
   <label>Nome:<input name="azienda.nome" required></label><br>
   <label>Indirizzo:<input name="azienda.indirizzo" size=30></label><br>
   <label>Comune:<input name="azienda.comune" size=30></label><br>
   <label>CAP:<input name="azienda.cap" size=5 maxlength=5></label>
   <label>Provincia:<input name="azienda.provincia" size=2 maxlength=2></label>
-  <label>Nazione:<input name="azienda.nazione" size=2 maxlength=2></label><br>
-  <label>Versione listino:<input name="azienda.versione_listino"></label><br>
-  <label>Note:<input name="azienda.note"></label><br>
+  <label>Nazione:<input name="azienda.nazione" size=2 maxlength=2></label><br><br>
+  <label>Versione listino:<input name="azienda.versioneListino" size=2></label><br>
+  <label>Codice magazzino:<input name="azienda.codiceMagazzino" size=1 maxlength=1></label><br>
+  <label>Note:<input name="azienda.note" size=40></label><br><br>
   <label>Contatti:</label>
   [&nbsp;<a href="" ng:click="azienda.contatti.$add()">aggiungi</a>&nbsp;]
-    <ul><li ng:repeat="contatto in azienda.contatti"><input name=contatto required size=30></ul>
+    <ul><li ng:repeat="contatto in azienda.contatti"><select name="contatto.tipo"><option>Telefono<option>Fax<option>Mail</select><input name="contatto.valore" required size=30> [&nbsp;<a href="" ng:click="azienda.contatti.$remove(contatto)">X</a>&nbsp;]</li></ul>
 </div>
 <hr>
-<div><input type=submit value=Salva>[&nbsp;<a href="#/azienda/">Nuova</a>&nbsp;]</div>
+<div><input type=submit value=Salva> [&nbsp;<a href="#/Azienda">Nuova</a>&nbsp;]</div>
 </fieldset>
 </form>
 
