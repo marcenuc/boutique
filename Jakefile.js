@@ -10,7 +10,7 @@ requirejs.config({
 });
 process.env.LANG = 'C';
 
-requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', './servers'], function (require, taskutil, util, path, cradle, servers) {
+requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], function (require, taskutil, util, path, cradle, servers) {
   'use strict';
 
   function newConnection() {
