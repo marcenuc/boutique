@@ -31,6 +31,6 @@
 
 <table>
 <caption>Aziende</caption>
-<thead><tr><th>Codice<th>Nome<th>Tipo<th>Comune
-<tbody><tr ng:repeat="row in aziende.rows"><td>{{row.id | linkById }}<td>{{row.doc.nome}}<td>{{row.doc.tipo}}<td>{{row.doc.comune}}
+<thead><tr><th>Codice<th>Nome<th>Tipo<th>Codice magazzino<th>Comune<th>Provincia<th>Nazione<th>Inattivo<th>Note
+<tbody><tr ng:repeat="row in aziende.rows"><td>{{row.id | linkById }}<td>{{row.doc.nome}}<td>{{row.doc.tipo}}<td>{{row.doc.codiceMagazzino}}<td>{{row.doc.comune}}<td>{{row.doc.provincia}}<td>{{row.doc.nazione}}<td>{{row.doc.inattivo && 'X'}}<td>{{row.doc.note}}
 </table>
