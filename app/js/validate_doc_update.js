@@ -95,6 +95,9 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         mustHave('data');
         mustHave('inventario');
         break;
+      case 'Inventario':
+        hasValidAziendaCode();
+        break;
       case 'CausaliAs400':
         mustHave('1');
         mustHave('2');

@@ -32,7 +32,7 @@
     var id = 'Azienda_' + codAzienda;
     exports.boutique_db[id] = JSON.parse(fs.readFileSync('test/fixtures/' + id + '.json', 'utf8'));
   });
-  ['Scalarini', 'Inventari'].forEach(function (id) {
+  ['Scalarini'].forEach(function (id) {
     exports.boutique_db[id] = JSON.parse(fs.readFileSync('test/fixtures/' + id + '.json', 'utf8'));
   });
 }());
