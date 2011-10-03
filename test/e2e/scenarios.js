@@ -14,16 +14,15 @@ describe('Boutique', function () {
 
   describe('azienda', function () {
     beforeEach(function () {
-      browser().navigateTo('#/azienda/');
+      browser().navigateTo('#/Azienda');
     });
 
-    it('should render all aziende when user navigates to /azienda', function () {
+    it('should render all aziende when user navigates to /Azienda', function () {
       var r = repeater('ng\\:view table tbody tr', 'row in aziende.rows');
-      expect(r.row(0)).toEqual(['<a href="#/azienda/000001">000001</a>', 'Magazzino Disponibile-Tailor S.r.l.']);
-      expect(r.row(1)).toEqual(['<a href="#/azienda/000002">000002</a>', 'Negozio Lecce - Tailor S.r.l.']);
+      expect(r.row(0)).toEqual(['<a href="#/Azienda_019997">019997</a>', 'Magazzino Disponibile +1', 'MAGAZZINO', 'K', '', 'LE', 'IT', '', '']);
     });
 
-    it('should create a new azienda from the input form at /azienda', function () {
+    it('should create a new azienda from the input form at /Azienda', function () {
       var codice = input('azienda._id'),
         nome = input('azienda.nome'),
         flash = element('.flash');
