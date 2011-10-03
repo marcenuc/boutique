@@ -306,6 +306,16 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
 
   namespace('webserver', function () {
 
+    desc('Build optimized files for production');
+    task('build', function () {
+      taskutil.execBuffered('node', ['node_modules/requirejs/bin/r.js', '-o', 'app.build.js'], function (err, out) {
+        if (err) {
+          fail(util.inspect(err));
+        }
+        console.log(out);
+      });
+    });
+
     desc('Start Web server');
     task('start', function (environment) {
       var connect = require('connect'),
@@ -313,12 +323,15 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         server = connect.createServer()
           .use(connect.logger())
           .use('/as400',
-            cmdExec('application/json', __dirname, 'java', ['-jar', 'as400-querier.jar']))
-          .use('/app', connect['static'](path.join(__dirname, 'app')));
+            cmdExec('application/json', __dirname, 'java', ['-jar', 'as400-querier.jar']));
 
       if (environment === 'test') {
         console.log('Serving tests.');
-        server.use('/test', connect['static'](path.join(__dirname, 'test')));
+        server
+          .use('/app', connect['static'](path.join(__dirname, 'app')))
+          .use('/test', connect['static'](path.join(__dirname, 'test')));
+      } else {
+        server.use('/app', connect['static'](path.join(__dirname, 'build')));
       }
 
       server.listen(servers.couchdb.webserver.port);
