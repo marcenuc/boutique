@@ -260,7 +260,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', './servers'], fu
     desc('Carica listino');
     task('carica-listino', function (versione, data) {
       requirejs(['lib/listino'], function (listino) {
-        var baseName = 'public/listino_' + versione + '_' + data,
+        var baseName = 'tmp/listino_' + versione + '_' + data,
           xlsName = baseName + '.xls',
           csvName = baseName + '.csv';
         taskutil.execBuffered('ssconvert', ['-T', 'Gnumeric_stf:stf_csv', '-S', xlsName, csvName], function (errConvert, out) {
