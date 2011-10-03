@@ -1,10 +1,8 @@
-/*jslint node: true */
-/*jshint node: true */
+/*global define: false */
 
-(function () {
+define(['config/server-configs'], function (configs) {
   'use strict';
-  var configs = require('./config/server-configs'),
-    couchdb = configs.couchdb;
+  var couchdb = configs.couchdb;
 
   couchdb.url = function () {
     return couchdb.protocol + '://' + couchdb.host + ':' + couchdb.port;
@@ -22,5 +20,5 @@
     return 'http://' + couchdb.webserver.host + ':' + couchdb.webserver.port;
   };
 
-  exports.couchdb = couchdb;
-}());
+  return { couchdb: couchdb };
+});

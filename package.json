@@ -11,6 +11,7 @@
     "jasmine-node": "*",
     "uglify-js": "~1.0.7",
     "cradle": "0.5.x",
+    "csv": "~0.0.10",
     "glob": "2.0.x"
   },
   "engines": { "node": "~0.4.11" }
