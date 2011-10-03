@@ -21,11 +21,11 @@ describe('Formatters', function () {
   describe('codiceAzienda', function () {
     var codiceAzienda = angular.formatter.codiceAzienda;
 
-    it('should format "azienda_010101" to "010101"', function () {
+    it('should format "Azienda_010101" to "010101"', function () {
       expect(codiceAzienda.format('Azienda_010101')).toEqual('010101');
     });
 
-    it('should parse "010101" as "azienda_010101"', function () {
+    it('should parse "010101" as "Azienda_010101"', function () {
       expect(codiceAzienda.parse('010101')).toEqual('Azienda_010101');
     });
   });
