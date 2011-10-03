@@ -1,5 +1,5 @@
 #!/bin/sh -ex
-npm update --dev
+npm update
 git submodule init
 git submodule update
 ln -s ../lib/connect-exec node_modules/
