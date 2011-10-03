@@ -257,8 +257,8 @@ namespace('couchdb', function () {
   }, true);
 
 
-  desc('Aggiorna codifiche da As400');
-  task('aggiorna-codifiche', function () {
+  desc('Aggiorna dati da As400');
+  task('sync-as400', function () {
     var as400 = require('./lib/as400'),
       db = newConnection().database('boutique_db');
     function updateReporter(err, warns, res) {
