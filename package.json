@@ -7,9 +7,7 @@
     "requirejs": "*",
     "underscore": "1.1.x",
     "connect": "1.7.x",
-    "jake": "~0.1.14"
-  },
-  "devDependencies": {
+    "jake": "~0.1.14",
     "jasmine-node": "*",
     "uglify-js": "~1.0.7",
     "cradle": "0.5.x",
