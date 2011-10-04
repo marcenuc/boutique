@@ -257,5 +257,24 @@ describe('Services', function () {
         expect(check({ _id: validId, rows: [["112708995017800046", 1]] })).not.toMatchError(/Invalid[ \w]* row 0/);
       });
     });
+
+    describe('Listino', function () {
+      var validId = 'Listino_1_20111003';
+
+      it('should require valid _id with (versione, dataUso)', function () {
+        var msg = 'Invalid code';
+        expect(check({ _id: validId })).not.toHaveError('Invalid type');
+        expect(check({ _id: 'Listino_1_20110229' })).toHaveError(msg);
+      });
+
+      it('should require an article', function () {
+        var msg = 'Listino senza righe valide';
+        expect(check({ _id: validId })).toHaveError('Listino vuoto');
+        expect(check({ _id: validId, negozio: {} })).toHaveError(msg);
+        expect(check({ _id: validId, negozio: { "112708995017": "100" } })).toHaveError(msg);
+        expect(check({ _id: validId, negozio: { "112708995017": 100 } })).not.toHaveError(msg);
+      });
+
+    });
   });
 });

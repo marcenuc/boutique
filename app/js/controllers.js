@@ -10,6 +10,7 @@ var Ctrl = {};
     return s + new Array(l + 1 - s.length).join('.');
   }
 
+  //TODO DRY copied in codici.js
   function padLeft(str, len, padder) {
     var s = str.toString(), l = len || 2, p = padder || ' ';
     return new Array(l + 1 - s.length).join(p) + s;

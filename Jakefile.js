@@ -106,7 +106,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
 
     desc('Load couchapp');
     task('push', function () {
-      var couchdbs = require('./couchdbs'),
+      var couchdbs = requirejs('couchdbs'),
         connection = newConnection();
 
       function createDocs(db, docs) {
@@ -274,15 +274,16 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
           if (out) {
             console.log(out);
           }
-          listino.readFromCsvFile(csvName + '.0', function (err, warns, lista) {
+          var db = newBoutiqueDbConnection();
+          listino.loadFromCsvFile(csvName + '.0', db, versione, data, function (err, warns, resp) {
             if (err) {
               fail(util.inspect(err));
             }
             if (warns && warns.length) {
               console.warn(warns.join('\n'));
             }
-            if (lista) {
-              console.log(lista.join('\n'));
+            if (resp) {
+              console.log(resp);
             }
           });
         });

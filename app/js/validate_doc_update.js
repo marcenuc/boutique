@@ -40,6 +40,13 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
     }
   }
 
+  function hasValidListinoCode() {
+    var m = /^(\d)_(\d{4})(\d{2})(\d{2})$/.exec(typeAndCode[2]);
+    if (!m || !validDate(m[2], m[3], m[4])) {
+      error('Invalid code');
+    }
+  }
+
   if (!userCtx.name) {
     error('Non autorizzato');
   }
@@ -101,6 +108,32 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       case 'CausaliAs400':
         mustHave('1');
         mustHave('2');
+        break;
+      case 'Listino':
+        hasValidListinoCode();
+        rows = doc.negozio;
+        if (!rows) {
+          error('Listino vuoto');
+        } else {
+          n = 0;
+          for (i in rows) {
+            if (rows.hasOwnProperty(i)) {
+              if (/^\d{12}$/.test(i)) {
+                r = rows[i];
+                if (typeof r !== 'number') {
+                  error('Invalid price for "' + i + '"');
+                } else {
+                  n += 1;
+                }
+              } else {
+                error('Invalid code: "' + i + '"');
+              }
+            }
+          }
+          if (n === 0) {
+            error('Listino senza righe valide');
+          }
+        }
         break;
       default:
         error('Unknown type');
