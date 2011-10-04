@@ -275,6 +275,11 @@ describe('Services', function () {
         expect(check({ _id: validId, negozio: { "112708995017": 100 } })).not.toHaveError(msg);
       });
 
+      it('should check listino outlet when present', function () {
+        var msg = 'Invalid price for "112708995017"';
+        expect(check({ _id: validId, negozio: { "112708995017": 100 }, outlet: { "112708995017": "100" } })).toHaveError(msg);
+        expect(check({ _id: validId, negozio: { "112708995017": 100 }, outlet: { "112708995017": 100 } })).not.toHaveError(msg);
+      });
     });
   });
 });
