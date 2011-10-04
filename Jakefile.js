@@ -257,13 +257,17 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       as400.updateAziendeAs400(db, updateReporter);
     });
 
+    function xlsToCsv(xlsName, csvName, callback) {
+      taskutil.execBuffered('ssconvert', ['-T', 'Gnumeric_stf:stf_csv', '-S', xlsName, csvName], callback);
+    }
+
     desc('Carica listino');
     task('carica-listino', function (versione, data) {
       requirejs(['lib/listino'], function (listino) {
         var baseName = 'tmp/listino_' + versione + '_' + data,
-          xlsName = baseName + '.xls',
+          xlsName = baseName + '.xlsx',
           csvName = baseName + '.csv';
-        taskutil.execBuffered('ssconvert', ['-T', 'Gnumeric_stf:stf_csv', '-S', xlsName, csvName], function (errConvert, out) {
+        xlsToCsv(xlsName, csvName, function (errConvert, out) {
           if (errConvert) {
             fail(util.inspect(errConvert));
           }
