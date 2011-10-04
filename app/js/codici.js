@@ -33,7 +33,18 @@ var CODICI;
   };
 
   CODICI.parseBarcodeAs400 = function (code) {
-    return CODICI.rexpBarcodeAs400.exec(code);
+    var m = CODICI.rexpBarcodeAs400.exec(code);
+    if (m) {
+      return {
+        stagione: m[1],
+        modello: m[2],
+        articolo: m[3],
+        colore: m[4],
+        taglia: m[5],
+        codiceListino: code.substring(0, 12),
+        codiceDescrizioneEScalarino: code.substring(0, 8)
+      };
+    }
   };
 }());
 
