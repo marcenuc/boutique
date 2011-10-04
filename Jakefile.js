@@ -295,16 +295,11 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
   task('stampaEtichette', function (docId) {
     requirejs(['lib/etichette'], function (etichette) {
       var db = newBoutiqueDbConnection();
-      db.get(docId, function (err, doc) {
+      etichette.stampa(db, docId, function (err, stampa) {
         if (err) {
           return fail(err);
         }
-        etichette.toTxt(doc, function (err2, txt) {
-          if (err2) {
-            return fail(err2);
-          }
-          process.stdout.write(txt);
-        });
+        process.stdout.write(stampa);
       });
     });
   });
