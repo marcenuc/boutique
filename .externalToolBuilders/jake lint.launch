@@ -3,9 +3,9 @@
 <booleanAttribute key="org.eclipse.debug.ui.ATTR_LAUNCH_IN_BACKGROUND" value="false"/>
 <booleanAttribute key="org.eclipse.ui.externaltools.ATTR_BUILDER_ENABLED" value="true"/>
 <stringAttribute key="org.eclipse.ui.externaltools.ATTR_BUILD_SCOPE" value="${working_set:&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&lt;resources&gt;&#10;&lt;item path=&quot;/boutique/Jakefile.js&quot; type=&quot;1&quot;/&gt;&#10;&lt;item path=&quot;/boutique/app/js&quot; type=&quot;2&quot;/&gt;&#10;&lt;item path=&quot;/boutique/app/lib/main.js&quot; type=&quot;1&quot;/&gt;&#10;&lt;item path=&quot;/boutique/config/server-configs.js&quot; type=&quot;1&quot;/&gt;&#10;&lt;item path=&quot;/boutique/couchdbs.js&quot; type=&quot;1&quot;/&gt;&#10;&lt;item path=&quot;/boutique/lib/as400.js&quot; type=&quot;1&quot;/&gt;&#10;&lt;item path=&quot;/boutique/lib/etichette.js&quot; type=&quot;1&quot;/&gt;&#10;&lt;item path=&quot;/boutique/lib/listino.js&quot; type=&quot;1&quot;/&gt;&#10;&lt;item path=&quot;/boutique/lib/taskutil.js&quot; type=&quot;1&quot;/&gt;&#10;&lt;item path=&quot;/boutique/servers.js&quot; type=&quot;1&quot;/&gt;&#10;&lt;item path=&quot;/boutique/test/e2e/scenarios.js&quot; type=&quot;1&quot;/&gt;&#10;&lt;item path=&quot;/boutique/test/unit&quot; type=&quot;2&quot;/&gt;&#10;&lt;item path=&quot;/boutique/test-srv&quot; type=&quot;2&quot;/&gt;&#10;&lt;/resources&gt;}"/>
-<stringAttribute key="org.eclipse.ui.externaltools.ATTR_LOCATION" value="${project_loc}/node_modules/.bin/jake"/>
+<stringAttribute key="org.eclipse.ui.externaltools.ATTR_LOCATION" value="${workspace_loc:/boutique/jake}"/>
 <stringAttribute key="org.eclipse.ui.externaltools.ATTR_RUN_BUILD_KINDS" value="auto,"/>
 <stringAttribute key="org.eclipse.ui.externaltools.ATTR_TOOL_ARGUMENTS" value="&quot;lint[${resource_loc}]&quot;"/>
 <booleanAttribute key="org.eclipse.ui.externaltools.ATTR_TRIGGERS_CONFIGURED" value="true"/>
-<stringAttribute key="org.eclipse.ui.externaltools.ATTR_WORKING_DIRECTORY" value="${project_loc}"/>
+<stringAttribute key="org.eclipse.ui.externaltools.ATTR_WORKING_DIRECTORY" value="${workspace_loc:/boutique}"/>
 </launchConfiguration>
