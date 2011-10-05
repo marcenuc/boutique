@@ -102,6 +102,10 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
   });
 
 
+  function xlsToCsv(xlsName, csvName, callback) {
+    taskutil.execBuffered('ssconvert', ['-T', 'Gnumeric_stf:stf_csv', '-S', xlsName, csvName], callback);
+  }
+
   namespace('couchdb', function () {
 
     desc('Load couchapp');
@@ -239,7 +243,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
 
     desc('Aggiorna dati da As400');
     task('sync-as400', function () {
-      var as400 = require('./lib/as400'),
+      var as400 = requirejs('lib/as400'),
         db = newBoutiqueDbConnection();
       function updateReporter(err, warns, res) {
         if (err) {
@@ -256,10 +260,6 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       as400.updateModelliEScalariniAs400(db, updateReporter);
       as400.updateAziendeAs400(db, updateReporter);
     });
-
-    function xlsToCsv(xlsName, csvName, callback) {
-      taskutil.execBuffered('ssconvert', ['-T', 'Gnumeric_stf:stf_csv', '-S', xlsName, csvName], callback);
-    }
 
     desc('Carica listino');
     task('carica-listino', function (versione, data) {
@@ -286,6 +286,29 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
               console.log(resp);
             }
           });
+        });
+      });
+    });
+  });
+
+  desc('Produce un file di testo con la stampa delle etichette da un inventario XLS');
+  task('stampaEtichetteFromXLS', function (baseName, comparator) {
+    requirejs(['lib/etichette'], function (etichette) {
+      var xlsName = baseName + '.xlsx',
+        csvName = baseName + '.csv';
+      xlsToCsv(xlsName, csvName, function (errConvert, out) {
+        if (errConvert) {
+          fail(util.inspect(errConvert));
+        }
+        if (out) {
+          console.log(out);
+        }
+        var db = newBoutiqueDbConnection();
+        etichette.stampaFromCsvFile(csvName, db, comparator, function (err, stampa) {
+          if (err) {
+            return fail(err);
+          }
+          process.stdout.write(stampa);
         });
       });
     });

@@ -6,6 +6,7 @@ var CODICI;
     LEN_STAGIONE: 3,
     LEN_MODELLO: 5,
     LEN_ARTICOLO: 4,
+    LEN_COLORE: 4,
     LEN_TAGLIA: 2,
     LEN_DESC_TAGLIE: 3,
     rexpBarcodeAs400: /^(\d{3})(\d{5})(\d{4})(\d{4})(\d{2})$/
@@ -25,6 +26,17 @@ var CODICI;
       a = CODICI.padZero(articolo, CODICI.LEN_ARTICOLO);
     if (s && m && a) {
       return s + m + a;
+    }
+  };
+
+  CODICI.codiceAs400 = function (stagione, modello, articolo, colore, taglia) {
+    var s = CODICI.padZero(stagione, CODICI.LEN_STAGIONE),
+      m = CODICI.padZero(modello, CODICI.LEN_MODELLO),
+      a = CODICI.padZero(articolo, CODICI.LEN_ARTICOLO),
+      c = CODICI.padZero(colore, CODICI.LEN_COLORE),
+      t = CODICI.padZero(taglia, CODICI.LEN_TAGLIA);
+    if (s && m && a && c && t) {
+      return s + m + a + c + t;
     }
   };
 
