@@ -46,6 +46,21 @@ var CODICI;
       };
     }
   };
+
+  CODICI.barcodeDescs = function (codes, codiciScalarini, listaModelli) {
+    var codiceScalarino,
+      desscal = listaModelli[codes.codiceDescrizioneEScalarino];
+    if (desscal) {
+      codiceScalarino = codiciScalarini[desscal[1]];
+      if (codiceScalarino) {
+        return {
+          descrizione: desscal[0],
+          scalarino: desscal[1],
+          descrizioneTaglia: codiceScalarino[codes.taglia]
+        };
+      }
+    }
+  };
 }());
 
 /*global define: false*/
