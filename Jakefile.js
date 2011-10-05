@@ -292,10 +292,10 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
   });
 
   desc('Produce un file di testo con la stampa delle etichette');
-  task('stampaEtichette', function (docId) {
+  task('stampaEtichette', function (docId, comparator) {
     requirejs(['lib/etichette'], function (etichette) {
       var db = newBoutiqueDbConnection();
-      etichette.stampa(db, docId, function (err, stampa) {
+      etichette.stampa(db, docId, comparator, function (err, stampa) {
         if (err) {
           return fail(err);
         }
