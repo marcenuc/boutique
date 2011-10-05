@@ -25,13 +25,5 @@ define(['fs', 'uglify-js'], function (fs, uglifyJs) {
     }
   };
 
-  ['019997', '019998', '019999', '099990', '099991', '099997'].forEach(function (codAzienda) {
-    var id = 'Azienda_' + codAzienda;
-    couchdbs.boutique_db[id] = JSON.parse(fs.readFileSync('test/fixtures/' + id + '.json', 'utf8'));
-  });
-  ['Scalarini'].forEach(function (id) {
-    couchdbs.boutique_db[id] = JSON.parse(fs.readFileSync('test/fixtures/' + id + '.json', 'utf8'));
-  });
-
   return couchdbs;
 });

@@ -109,8 +109,9 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
   namespace('couchdb', function () {
 
     desc('Load couchapp');
-    task('push', function () {
+    task('push', function (docsFolder) {
       var couchdbs = requirejs('couchdbs'),
+        fs = requirejs('fs'),
         connection = newConnection();
 
       function createDocs(db, docs) {
@@ -119,6 +120,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
             if (err) {
               fail('Error creating ' + docId + ': (' + util.inspect(err) + ') ' + res);
             }
+            console.log('Pushed "' + docId + '"');
           });
         });
       }
@@ -127,6 +129,14 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         var docs = couchdbs[dbName],
           db = connection.database(dbName);
 
+        if (docsFolder) {
+          fs.readdirSync(docsFolder).forEach(function (f) {
+            var m = f.match(/^([A-Za-z0-9_]+)\.json$/);
+            if (m) {
+              docs[m[1]] = JSON.parse(fs.readFileSync(path.join(docsFolder, f), 'utf8'));
+            }
+          });
+        }
         db.exists(function (err, exists) {
           if (err) {
             fail('Error querying ' + dbName + ': ' + err);
