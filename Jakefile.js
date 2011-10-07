@@ -299,6 +299,37 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         });
       });
     });
+
+    desc('Aggiorna listino');
+    task('aggiorna-listino', function (versione, data, updateNum, sheet) {
+      requirejs(['lib/listino'], function (listino) {
+        var doUpdate = parseInt(updateNum, 10) > 0,
+          update = doUpdate ? '_' + updateNum : '',
+          baseName = 'tmp/listino_' + versione + '_' + data + update,
+          xlsName = baseName + '.xlsx',
+          csvName = baseName + '.csv';
+        xlsToCsv(xlsName, csvName, function (errConvert, out) {
+          if (errConvert) {
+            fail(util.inspect(errConvert));
+          }
+          if (out) {
+            console.log(out);
+          }
+          var db = newBoutiqueDbConnection();
+          listino.updateFromCsvFile(csvName + '.' + sheet, db, versione, data, doUpdate, function (err, warns, resp) {
+            if (err) {
+              fail(util.inspect(err));
+            }
+            if (warns && warns.length) {
+              console.warn(warns.join('\n'));
+            }
+            if (resp) {
+              console.log(resp);
+            }
+          });
+        });
+      });
+    });
   });
 
   desc('Produce un file di testo con la stampa delle etichette da un inventario XLS');
