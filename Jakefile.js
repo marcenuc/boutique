@@ -333,7 +333,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
   });
 
   desc('Produce un file di testo con la stampa delle etichette da un inventario XLS');
-  task('stampaEtichetteFromXLS', function (baseName, comparator) {
+  task('stampaEtichetteFromXLS', function (baseName, sheet, comparator) {
     requirejs(['lib/etichette'], function (etichette) {
       var xlsName = baseName + '.xlsx',
         csvName = baseName + '.csv';
@@ -345,9 +345,12 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
           console.log(out);
         }
         var db = newBoutiqueDbConnection();
-        etichette.stampaFromCsvFile(csvName, db, comparator, function (err, stampa) {
+        etichette.stampaFromCsvFile(csvName + '.' + sheet, db, comparator, function (err, warns, stampa) {
           if (err) {
             return fail(err);
+          }
+          if (warns && warns.length) {
+            console.warn(warns.join('\n'));
           }
           process.stdout.write(stampa);
         });

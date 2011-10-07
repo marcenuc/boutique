@@ -59,19 +59,34 @@ var CODICI;
     }
   };
 
-  CODICI.barcodeDescs = function (codes, codiciScalarini, listaModelli) {
-    var codiceScalarino,
+  CODICI.barcodeDescs = function (codes, descrizioniTaglie, listaModelli) {
+    var descrizioniTaglia,
       desscal = listaModelli[codes.codiceDescrizioneEScalarino];
     if (desscal) {
-      codiceScalarino = codiciScalarini[desscal[1]];
-      if (codiceScalarino) {
+      descrizioniTaglia = descrizioniTaglie[desscal[1]];
+      if (descrizioniTaglia) {
         return {
           descrizione: desscal[0],
           scalarino: desscal[1],
-          descrizioneTaglia: codiceScalarino[codes.taglia]
+          descrizioneTaglia: descrizioniTaglia[codes.taglia]
         };
       }
     }
+  };
+
+  CODICI.codiceTaglia = function (stagione, modello, codiciTaglie, listaModelli, descrizioneTaglia) {
+    var codiciTaglia,
+      desscal = listaModelli[stagione + modello],
+      scalarino;
+    if (desscal) {
+      scalarino = desscal[1];
+      codiciTaglia = codiciTaglie[scalarino];
+      if (codiciTaglia) {
+        return [null, codiciTaglia[descrizioneTaglia]];
+      }
+      return ['Descrizione taglia (' + descrizioneTaglia + ') non trovata per scalarino ' + scalarino + ': stagione="' + stagione + '", modello="' + modello + '"'];
+    }
+    return ['Modello non in anagrafe: stagione="' + stagione + '", modello="' + modello + '"'];
   };
 }());
 
