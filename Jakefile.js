@@ -255,21 +255,24 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
     task('sync-as400', function () {
       var as400 = requirejs('lib/as400'),
         db = newBoutiqueDbConnection();
-      function updateReporter(err, warns, res) {
+      function updateReporter(err, warnsAndDoc, res) {
         if (err) {
           fail(util.inspect(err));
         }
-        if (warns && warns.length) {
-          console.warn(warns.join('\n'));
+        if (warnsAndDoc && warnsAndDoc[0].length) {
+          console.warn(warnsAndDoc[0].join('\n'));
         }
         if (res) {
           console.log(util.inspect(res));
         }
       }
+
+      // FIXME: questi aggiornamenti devono essere seriali, non asincroni.
       as400.updateCausaliAs400(db, updateReporter);
       as400.updateTaglieScalariniAs400(db, updateReporter);
       as400.updateModelliEScalariniAs400(db, updateReporter);
       as400.updateAziendeAs400(db, updateReporter);
+      as400.updateInventarioAs400(db, updateReporter);
     });
 
     desc('Carica listino');
