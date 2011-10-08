@@ -8,7 +8,7 @@ var CODICI;
     LEN_ARTICOLO: 4,
     LEN_COLORE: 4,
     LEN_TAGLIA: 2,
-    LEN_DESC_TAGLIE: 3,
+    LEN_DESCRIZIONE_TAGLIA: 3,
     rexpBarcodeAs400: /^(\d{3})(\d{5})(\d{4})(\d{4})(\d{2})$/
   };
 

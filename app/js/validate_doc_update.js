@@ -3,22 +3,40 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
   var es = [], i, n, rows, r,
     typeAndCode = /^([A-Z][a-zA-Z0-9]+)(?:_([0-9A-Z_]+))?$/.exec(doc._id || '');
 
+  function typeOf(value) {
+    var s = typeof value;
+    if (s === 'object') {
+      if (value) {
+        if (typeof value.length === 'number' &&
+            !(value.propertyIsEnumerable('length')) &&
+            typeof value.splice === 'function') {
+          return 'array';
+        }
+      } else {
+        return 'null';
+      }
+    }
+    return s;
+  }
+
   /*
    * secObj is used to know the context of execution:
    * if "undefined", it's running in a browser, otherwise on CouchDB.
    */
   function error(message) {
-    if (!secObj) {
-      es.push({ message: message });
-    } else {
+    if (secObj) {
       throw { forbidden: message };
     }
+    es.push({ message: message });
   }
 
-  function mustHave(field) {
+  function mustHave(field, fieldType) {
     var v = doc[field];
     if (!v || (typeof v === 'string' && !v.trim())) {
       error('Required: ' + field);
+    }
+    if (fieldType && typeOf(v) !== fieldType) {
+      error(field + ' must be of type ' + fieldType);
     }
   }
 
@@ -27,8 +45,12 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
     return m > 0 && m < 13 && y > 0 && y < 32768 && d > 0 && d <= (new Date(y, m, 0)).getDate();
   }
 
+  function isValidAziendaCode(code) {
+    return (/^\d{6}$/).test(code);
+  }
+
   function hasValidAziendaCode() {
-    if (!/^\d{6}$/.exec(typeAndCode[2])) {
+    if (!isValidAziendaCode(typeAndCode[2])) {
       error('Invalid azienda code');
     }
   }
@@ -64,6 +86,48 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       }
     }
     return count;
+  }
+
+  function hasInventario(inventario) {
+    if (!inventario || !inventario.length) {
+      error('Inventario vuoto');
+      return;
+    }
+    inventario.forEach(function (row, idx) {
+      if (typeOf(row) !== 'array' || row.length < 5) {
+        return error('Invalid row: ' + JSON.stringify(row));
+      }
+      var barcode = row[0];
+      if (!/^\d{18}$/.test(barcode)) {
+        error('Invalid barcode at row ' + idx + ': "' + barcode + '"');
+      }
+      if (typeof row[1] !== 'number' || row[1] <= 0) {
+        error('Invalid quantity at row ' + idx + ': "' + barcode + '"');
+      }
+      if (!isValidAziendaCode(row[2])) {
+        error('Invalid azienda at row ' + idx + ': "' + barcode + '"');
+      }
+      if (row[3] !== 0 && row[3] !== 1) {
+        error('Invalid status at row ' + idx + ': "' + barcode + '"');
+      }
+      if (row[4] !== 1 && row[4] !== 2 && row[4] !== 3) {
+        error('Invalid store type at row ' + idx + ': "' + barcode + '"');
+      }
+    });
+  }
+
+  function hasEquivalentData(fieldA, fieldB) {
+    var valsA = doc[fieldA], valsB = doc[fieldB];
+    if (valsA && valsB && valsA.some(function (objA, idx) {
+        var keyA;
+        for (keyA in objA) {
+          if (objA.hasOwnProperty(keyA)) {
+            return valsB[idx][objA[keyA]] !== keyA;
+          }
+        }
+      })) {
+      error(fieldA + ' and '  + fieldB + ' should be equivalent');
+    }
   }
 
   if (!userCtx.name) {
@@ -114,12 +178,62 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         mustHave('posizioniCodici');
         mustHave('posizioneCodici');
         break;
+      case 'TaglieScalarini':
+        mustHave('descrizioniTaglie', 'array');
+        mustHave('taglie', 'array');
+        mustHave('listeDescrizioni', 'array');
+        mustHave('colonneTaglie', 'array');
+        hasEquivalentData('descrizioniTaglie', 'taglie');
+        hasEquivalentData('taglie', 'descrizioniTaglie');
+        // TODO added `!doc.listeDescrizioni` here for testability, but we should not need it
+        // since we already checked it with mustHave().
+        if (!doc.listeDescrizioni || doc.listeDescrizioni.some(function (listaDescrizioni, scalarino) {
+            if (scalarino === 0) {
+              return !!listaDescrizioni;
+            }
+            var ts = doc.taglie[scalarino];
+            return !ts || typeOf(listaDescrizioni) !== 'array' || listaDescrizioni.some(function (descrizioneTaglia) {
+              return !ts.hasOwnProperty(descrizioneTaglia);
+            });
+          })) {
+          error('listeDescrizioni not valid');
+        }
+        // TODO added `!doc.colonneTaglie` here for testability, but we should not need it
+        // since we already checked it with mustHave().
+        if (!doc.colonneTaglie || doc.colonneTaglie.some(function (colonnaTaglie, scalarino) {
+            if (scalarino === 0) {
+              return !!colonnaTaglie;
+            }
+            var ds = doc.descrizioniTaglie[scalarino];
+            return !ds || typeOf(colonnaTaglie) !== 'object' || Object.keys(colonnaTaglie).some(function (taglia) {
+              return !ds.hasOwnProperty(taglia);
+            });
+          })) {
+          error('colonneTaglie not valid');
+        }
+        break;
       case 'ModelliEScalarini':
         mustHave('lista');
         break;
       case 'Inventari':
         mustHave('data');
         mustHave('inventario');
+        break;
+      case 'Giacenze':
+        //TODO richiedere l'utente 'magazzino'
+        //if (userCtx.name !== 'magazzino') {
+        //  error('Utente non autorizzato');
+        //}
+        if (!doc.columnNames) {
+          error('Required field: columnNames');
+        } else {
+          if (['barcode', 'giacenza', 'azienda', 'stato', 'tipoMagazzino'].some(function (column, idx) {
+              return column !== doc.columnNames[idx];
+            })) {
+            error('Invalid columnNames');
+          }
+        }
+        hasInventario(doc.rows);
         break;
       case 'Inventario':
         hasValidAziendaCode();

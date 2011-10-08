@@ -82,8 +82,8 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
   task('lint', function () {
     var glob = require('glob'),
       patterns = arguments.length > 0 ?
-        [].slice.apply(arguments) :
-        ['*.js', 'lib/*.js', 'config/*.js', 'test/*/*.js', 'test-srv/*/*.js', 'app/js/*.js'];
+          [].slice.apply(arguments) :
+          ['*.js', 'lib/*.js', 'config/*.js', 'test/*/*.js', 'test-srv/*/*.js', 'app/js/*.js'];
 
     function lint(fileName) {
       console_exec('jshint', [fileName, '--config', '.jshintrc'], function () {
@@ -267,6 +267,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         }
       }
       as400.updateCausaliAs400(db, updateReporter);
+      as400.updateTaglieScalariniAs400(db, updateReporter);
       as400.updateModelliEScalariniAs400(db, updateReporter);
       as400.updateAziendeAs400(db, updateReporter);
     });

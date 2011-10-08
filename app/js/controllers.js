@@ -144,7 +144,7 @@ var Ctrl = {};
     Document.aziende(this.setAziende);
     this.aziendeSelezionate = [];
 
-    this.scalarini = Document.get({ id: 'Scalarini' });
+    this.taglieScalarini = Document.get({ id: 'TaglieScalarini' });
     this.modelliEScalarini = Document.get({ id: 'ModelliEScalarini' });
     this.inventari = Document.get({ id: 'Inventari' });
 
@@ -171,92 +171,97 @@ var Ctrl = {};
         filtro = this.getFiltro(),
         desscal, ms = this.modelliEScalarini.lista,
         nodesscal = ['-- senza descrizione --', 'X'],
-        scal, scalarini = this.scalarini.codici,
+        descrizioniTaglia, descrizioniTaglie = this.taglieScalarini.descrizioniTaglie,
         taglia, rows = this.inventari.inventario,
-        n = rows.length, count = 0;
+        n = rows.length, filtrate = [], count = filtrate.length, maxCount = this.limiteRisultati;
 
-      this.filtrate = [];
-
-      for (i = 0; i < n && count < this.limiteRisultati; i += 1) {
+      for (i = 0; i < n && count < maxCount; i += 1) {
         r = rows[i];
         k = filtro.exec(r[0]);
         if (k && (!this.aziendeSelezionate.length || this.aziendeSelezionate.indexOf(r[2]) >= 0)) {
           desscal = ms[k[1] + k[2]] || nodesscal;
-          scal = scalarini[desscal[1]];
-          taglia = scal ? scal[k[5]] : '--';
+          descrizioniTaglia = descrizioniTaglie[desscal[1]];
+          taglia = descrizioniTaglia ? descrizioniTaglia[k[5]] : '--';
 
-          this.filtrate.push([
+          count = filtrate.push([
             k[1], k[2], k[3], k[4], k[5], taglia, r[1], desscal[0], this.aziende[r[2]], (r[3] ? 'PRONTO' : 'IN_PRODUZIONE')
           ]);
-          count += 1;
         }
       }
+
+      this.filtrate = filtrate;
     },
 
     filtraGiacenza: function () {
-      var riga, i, r, k, taglie = new Array(13), qtas, righe = {},
+      var TAGLIE_PER_SCALARINO = 12,
         filtro = this.getFiltro(),
-        desscal, ms = this.modelliEScalarini.lista,
+        desscal,
+        ms = this.modelliEScalarini.lista,
         nn = '--',
-        nodesscal = ['-- senza descrizione --', 'X'],
+        nodesscal = ['-- senza descrizione --', 0],
+        scalarino,
+        taglie = [],
+        colonnaTaglia,
+        colonnaTaglie = {},
+        colonneTaglie = this.taglieScalarini.colonneTaglie,
         rows = this.inventari.inventario,
-        n = rows.length, count = 0,
-        colonneCodiciTaglie = this.scalarini.posizioneCodici,
-        colonnaTaglia, smacazst, smacazstFiltrati = {},
-        scalarino = nn;
+        i = 0,
+        n = rows.length,
+        filtrate = [],
+        count = filtrate.length,
+        maxCount = this.limiteRisultati,
+        r,
+        k,
+        qtas,
+        total,
+        smacazst,
+        currentSmacazst,
+        currentLine;
 
-      this.filtrate = [];
-
-      for (i = 0; i < n; i += 1) {
+      for (; i < n && count < maxCount; i += 1) {
         r = rows[i];
         k = filtro.exec(r[0]);
         if (k && (!this.aziendeSelezionate.length || this.aziendeSelezionate.indexOf(r[2]) >= 0)) {
-          desscal = ms[k[1] + k[2]] || nodesscal;
-          colonnaTaglia = colonneCodiciTaglie[desscal[1]][k[5]];
-          if (typeof colonnaTaglia === 'undefined') {
-            colonnaTaglia = 12;
-          }
           smacazst = r[0].slice(0, -2) + r[2] + r[3];
-          if (righe.hasOwnProperty(smacazst)) {
-            riga = righe[smacazst];
-            riga[8 + colonnaTaglia] += r[1];
-            riga[riga.length - 1] += r[1];
-          } else {
-            qtas = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+          colonnaTaglia = colonnaTaglie[k[5]];
+          if (smacazst === currentSmacazst) {
             qtas[colonnaTaglia] = r[1];
-            righe[smacazst] = [this.aziende[r[2]], desscal[0], k[1], k[2], k[3], k[4], (r[3] ? 'PRONTO' : 'IN_PRODUZIONE'), desscal[1]].concat(qtas, r[1]);
+            total += r[1];
+          } else {
+            if (currentSmacazst) {
+              count = filtrate.push(currentLine.concat(qtas, total));
+              currentSmacazst = undefined;
+            }
+            desscal = ms[k[1] + k[2]] || nodesscal;
+            scalarino = desscal[1];
+            colonnaTaglie = colonneTaglie[scalarino];
+            colonnaTaglia = colonnaTaglie[k[5]];
+            //TODO qtas.length === TAGLIE_PER_SCALARINO
+            qtas = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            total = qtas[colonnaTaglia] = r[1];
+            currentSmacazst = smacazst;
+            currentLine = [this.aziende[r[2]], desscal[0], k[1], k[2], k[3], k[4], (r[3] ? 'PRONTO' : 'IN_PRODUZIONE'), scalarino];
           }
+        } else if (currentSmacazst) {
+          count = filtrate.push(currentLine.concat(qtas, total));
+          currentSmacazst = undefined;
         }
       }
-      for (i = 0; i < n && count < this.limiteRisultati; i += 1) {
-        r = rows[i];
-        k = filtro.exec(r[0]);
-        if (k && (!this.aziendeSelezionate.length || this.aziendeSelezionate.indexOf(r[2]) >= 0)) {
-          smacazst = r[0].slice(0, -2) + r[2] + r[3];
-          if (!smacazstFiltrati.hasOwnProperty(smacazst)) {
-            smacazstFiltrati[smacazst] = true;
-            this.filtrate.push(righe[smacazst]);
-            count += 1;
-          }
-        }
-      }
-      r = this.filtrate[0];
+
+      scalarino = nn;
+      r = filtrate[0];
       if (r) {
-        n = taglie.length;
         desscal = ms[r[2] + r[3]];
         if (desscal) {
           scalarino = desscal[1];
-          for (i = 0; i < n; i += 1) {
-            k = this.scalarini.posizioniCodici[scalarino][i];
-            taglie[i] = typeof k === 'undefined' ? nn : this.scalarini.codici[scalarino][k];
-          }
-        } else {
-          for (i = 0; i < n; i += 1) {
+          taglie = this.taglieScalarini.listeDescrizioni[scalarino];
+          for (i = taglie.length; i < TAGLIE_PER_SCALARINO; i += 1) {
             taglie[i] = nn;
           }
         }
       }
 
+      this.filtrate = filtrate;
       this.scalarino = scalarino;
       this.taglie = taglie;
     }

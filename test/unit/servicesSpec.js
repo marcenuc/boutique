@@ -281,5 +281,99 @@ describe('Services', function () {
         expect(check({ _id: validId, negozio: { "112708995017": 100 }, outlet: { "112708995017": 100 } })).not.toHaveError(msg);
       });
     });
+
+    describe('Giacenze', function () {
+      var validId = 'Giacenze';
+
+      it('should require columnNames equal to barcode, giacenza, azienda, stato, tipoMagazzino', function () {
+        var msg = 'Invalid columnNames';
+        expect(check({ _id: validId })).toHaveError('Required field: columnNames');
+        expect(check({ _id: validId, columnNames: ['barcode', 'giacenza', 'azienda', 'tipoMagazzino', 'stato'] })).toHaveError(msg);
+        expect(check({ _id: validId, columnNames: ['barcode', 'giacenza', 'azienda', 'stato', 'tipoMagazzino'] })).not.toHaveError(msg);
+      });
+
+      it('should require a valid inventory', function () {
+        var msg = 'Inventario vuoto';
+        expect(check({ _id: validId })).toHaveError(msg);
+        expect(check({ _id: validId, rows: [] })).toHaveError(msg);
+        expect(check({ _id: validId, rows: [['12345678901234567', 123, '123456', 1, 1]] })).toHaveError('Invalid barcode at row 0: "12345678901234567"');
+        expect(check({ _id: validId, rows: [['123456789012345678', -123, '123456', 1, 1]] })).toHaveError('Invalid quantity at row 0: "123456789012345678"');
+        expect(check({ _id: validId, rows: [['123456789012345678', '123', '123456', 1, 1]] })).toHaveError('Invalid quantity at row 0: "123456789012345678"');
+        expect(check({ _id: validId, rows: [['123456789012345678', 123, '12345', 1, 1]] })).toHaveError('Invalid azienda at row 0: "123456789012345678"');
+        expect(check({ _id: validId, rows: [['123456789012345678', 123, '123456', 2, 1]] })).toHaveError('Invalid status at row 0: "123456789012345678"');
+        expect(check({ _id: validId, rows: [['123456789012345678', 123, '123456', 1, 0]] })).toHaveError('Invalid store type at row 0: "123456789012345678"');
+        expect(check({ _id: validId, rows: [['123456789012345678', 123, '123456', 1, 1]] })).not.toHaveError(msg);
+      });
+    });
+
+    describe('TaglieScalarini', function () {
+      var id = 'TaglieScalarini',
+        scalarini = [undefined, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+      function expectArrayOfScalarini(field) {
+        //TODO this test is not complete
+        var msg = field + ' must be of type array',
+          doc = { _id: id };
+        doc[field] = { '48': '2', '49': '3' };
+        expect(check(doc)).toHaveError(msg);
+        doc[field] = scalarini;
+        expect(check(doc)).not.toHaveError(msg);
+      }
+
+      describe('descrizioniTaglie and taglie', function () {
+        it('should be required', function () {
+          var xpct = expect(check({ _id: id }));
+          xpct.toHaveError('Required: descrizioniTaglie');
+          xpct.toHaveError('Required: taglie');
+        });
+
+        it('should be an array of 10 elements, with the first one undefined (scalarino 0 is not used)', function () {
+          expectArrayOfScalarini('descrizioniTaglie');
+          expectArrayOfScalarini('taglie');
+        });
+
+        it('should have the same information', function () {
+          var msg = 'taglie and descrizioniTaglie should be equivalent';
+          expect(check({ _id: id, descrizioniTaglie: [{ '01': 'TU' }], taglie: [{ 'TU': '01' }]})).not.toHaveError(msg);
+          expect(check({ _id: id, descrizioniTaglie: [{ '01': 'TU' }], taglie: [{ 'TU': '02' }]})).toHaveError(msg);
+          expect(check({ _id: id, descrizioniTaglie: [{ '01': 'TU' }], taglie: [{ '01': 'TU' }]})).toHaveError(msg);
+        });
+
+      });
+
+      describe('listeDescrizioni', function () {
+        it('should be required', function () {
+          expect(check({ _id: id })).toHaveError('Required: listeDescrizioni');
+        });
+
+        it('should contain the same sizes as in taglie', function () {
+          var msg = 'listeDescrizioni not valid';
+          expect(check({ _id: id, listeDescrizioni: [['42', '43']]})).toHaveError(msg);
+          expect(check({ _id: id, listeDescrizioni: [[], ['42', '43']]})).toHaveError(msg);
+          expect(check({
+            _id: id,
+            listeDescrizioni: [undefined, ['42', '43']],
+            taglie: [undefined, { '42': '42', '43': '43' }]
+          })).not.toHaveError(msg);
+        });
+      });
+
+      describe('colonneTaglie', function () {
+        it('should be required', function () {
+          expect(check({ _id: id })).toHaveError('Required: colonneTaglie');
+        });
+
+        it('should contain the same sizes as in descrizioniTaglie', function () {
+          var msg = 'colonneTaglie not valid';
+          expect(check({ _id: id, colonneTaglie: [{ '42': 0, '43': 1 }]})).toHaveError(msg);
+          expect(check({ _id: id, colonneTaglie: [{}, { '42': 0, '43': 1 }]})).toHaveError(msg);
+          expect(check({
+            _id: id,
+            colonneTaglie: [undefined, { '42': 0, '43': 1 }],
+            descrizioniTaglie: [undefined, { '42': '42', '43': '43' }]
+          })).not.toHaveError(msg);
+        });
+      });
+    });
   });
 });
