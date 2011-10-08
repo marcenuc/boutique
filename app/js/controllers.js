@@ -1,4 +1,4 @@
-/*global angular: false */
+/*global angular: false, CODICI: false */
 
 var Ctrl = {};
 
@@ -162,13 +162,20 @@ var Ctrl = {};
       }, this);
     },
 
-    getFiltro: function () {
-      return new RegExp("^(" + dotPad(this.stagione, 3) + ')(' + dotPad(this.modello, 5) + ')(' + dotPad(this.articolo, 4) + ')(' + dotPad(this.colore, 4) + ')(' + dotPad(this.taglia, 2) + ')(' + ")$");
+    getFiltro: function (dontFilterTaglia) {
+      var toks = [
+        dotPad(this.stagione, CODICI.LEN_STAGIONE),
+        dotPad(this.modello, CODICI.LEN_MODELLO),
+        dotPad(this.articolo, CODICI.LEN_ARTICOLO),
+        dotPad(this.colore, CODICI.LEN_COLORE),
+        dotPad(dontFilterTaglia ? '' : this.taglia, CODICI.LEN_TAGLIA)
+      ];
+      return new RegExp('^(' + toks.join(')(') + ')$');
     },
 
     filtraArticoli: function () {
       var i, r, k,
-        filtro = this.getFiltro(),
+        filtro = this.getFiltro(false),
         desscal, ms = this.modelliEScalarini.lista,
         nodesscal = ['-- senza descrizione --', 'X'],
         descrizioniTaglia, descrizioniTaglie = this.taglieScalarini.descrizioniTaglie,
@@ -194,7 +201,10 @@ var Ctrl = {};
 
     filtraGiacenza: function () {
       var TAGLIE_PER_SCALARINO = 12,
-        filtro = this.getFiltro(),
+        withTaglia = !!this.taglia,
+        colonnaTagliaFiltrata = -1,
+        filtro = this.getFiltro(true),
+        filtroTaglia = new RegExp('^' + dotPad(this.taglia, CODICI.LEN_TAGLIA) + '$'),
         desscal,
         ms = this.modelliEScalarini.lista,
         nn = '--',
@@ -223,19 +233,29 @@ var Ctrl = {};
         k = filtro.exec(r[0]);
         if (k && (!this.aziendeSelezionate.length || this.aziendeSelezionate.indexOf(r[2]) >= 0)) {
           smacazst = r[0].slice(0, -2) + r[2] + r[3];
-          colonnaTaglia = colonnaTaglie[k[5]];
           if (smacazst === currentSmacazst) {
+            colonnaTaglia = colonnaTaglie[k[5]];
+            if (withTaglia && colonnaTagliaFiltrata < 0 && filtroTaglia.test(k[5])) {
+              colonnaTagliaFiltrata = colonnaTaglia;
+            }
             qtas[colonnaTaglia] = r[1];
             total += r[1];
           } else {
             if (currentSmacazst) {
-              count = filtrate.push(currentLine.concat(qtas, total));
               currentSmacazst = undefined;
+              if (!withTaglia || colonnaTagliaFiltrata >= 0) {
+                count = filtrate.push(currentLine.concat(qtas, total));
+              }
+              colonnaTagliaFiltrata = -1;
             }
             desscal = ms[k[1] + k[2]] || nodesscal;
             scalarino = desscal[1];
             colonnaTaglie = colonneTaglie[scalarino];
+
             colonnaTaglia = colonnaTaglie[k[5]];
+            if (withTaglia && colonnaTagliaFiltrata < 0 && filtroTaglia.test(k[5])) {
+              colonnaTagliaFiltrata = colonnaTaglia;
+            }
             //TODO qtas.length === TAGLIE_PER_SCALARINO
             qtas = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
             total = qtas[colonnaTaglia] = r[1];
@@ -243,8 +263,11 @@ var Ctrl = {};
             currentLine = [this.aziende[r[2]], desscal[0], k[1], k[2], k[3], k[4], (r[3] ? 'PRONTO' : 'IN_PRODUZIONE'), scalarino];
           }
         } else if (currentSmacazst) {
-          count = filtrate.push(currentLine.concat(qtas, total));
           currentSmacazst = undefined;
+          if (!withTaglia || colonnaTagliaFiltrata >= 0) {
+            count = filtrate.push(currentLine.concat(qtas, total));
+          }
+          colonnaTagliaFiltrata = -1;
         }
       }
 
