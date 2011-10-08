@@ -235,6 +235,14 @@ describe('Services', function () {
         expect(check({ _id: 'Azienda_1', nome: ' ' })).toHaveError(msg);
         expect(check({ _id: 'Azienda_1', nome: 'n' })).not.toHaveError(msg);
       });
+
+      it('should require tipo', function () {
+        var msg = 'Required: tipo';
+        expect(check({ _id: 'Azienda_1' })).toHaveError(msg);
+        expect(check({ _id: 'Azienda_1', tipo: ' ' })).toHaveError(msg);
+        expect(check({ _id: 'Azienda_1', tipo: 'NEGOZIO' })).not.toHaveError(msg);
+        expect(check({ _id: 'Azienda_1', tipo: 'MAGAZZINO' })).not.toHaveError(msg);
+      });
     });
 
     describe('BollaAs400', function () {

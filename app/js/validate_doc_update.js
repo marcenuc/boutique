@@ -169,6 +169,10 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       case 'Azienda':
         hasValidAziendaCode();
         mustHave('nome');
+        mustHave('tipo');
+        if (doc.tipo && (doc.tipo !== 'NEGOZIO' && doc.tipo !== 'MAGAZZINO')) {
+          error('Invalid tipo: ' + doc.tipo);
+        }
         break;
       case 'Cliente':
         mustHave('nome');

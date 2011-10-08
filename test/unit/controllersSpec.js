@@ -159,8 +159,8 @@ describe('Controller', function () {
           expect(ctrl.flash).toBeUndefined();
           ctrl.azienda = { _id: 'Azienda_000001' };
           expect(ctrl.validate()).toBe(false);
-          expect(ctrl.flash).toEqual({ errors: [{ message: 'Required: nome' }] });
-          ctrl.azienda = { _id: 'Azienda_000001', nome: 'a' };
+          expect(ctrl.flash).toEqual({ errors: [{ message: 'Required: nome' }, { message: 'Required: tipo' }] });
+          ctrl.azienda = { _id: 'Azienda_000001', nome: 'a', tipo: 'NEGOZIO' };
           expect(ctrl.validate()).toBe(true);
           expect(ctrl.flash).toEqual({ errors: [] });
         });
@@ -204,7 +204,7 @@ describe('Controller', function () {
         describe('new document', function () {
 
           beforeEach(function () {
-            ctrl.azienda = { _id: 'Azienda_010101', nome: 'Nuova azienda' };
+            ctrl.azienda = { _id: 'Azienda_010101', nome: 'Nuova azienda', tipo: 'NEGOZIO' };
             doSave();
           });
 
