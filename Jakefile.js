@@ -275,6 +275,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       as400.updateInventarioAs400(db, updateReporter);
     });
 
+    //TODO questo task dobrebbe essere obsoleto con il task aggiorna-listino
     desc('Carica listino');
     task('carica-listino', function (versione, data) {
       requirejs(['lib/listino'], function (listino) {
@@ -319,8 +320,9 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
           if (out) {
             console.log(out);
           }
-          var db = newBoutiqueDbConnection();
-          listino.updateFromCsvFile(csvName + '.' + sheet, db, versione, data, doUpdate, function (err, warns, resp) {
+          var db = newBoutiqueDbConnection(),
+            num = typeof sheet === 'undefined' ? '' : '.' + sheet;
+          listino.updateFromCsvFile(csvName + num, db, versione, data, doUpdate, function (err, warns, resp) {
             if (err) {
               fail(util.inspect(err));
             }
