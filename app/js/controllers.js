@@ -48,8 +48,7 @@ var Ctrl = {};
 
   Ctrl.RicercaBollaAs400.prototype = {
     fetch: function () {
-      var self = this,
-        rexpBarcodeAs400 = /^(\d{3})(\d{5})(\d{4})(\d{4})(\d{2})$/;
+      var self = this;
       /*
        * Save id here to be sure that the data in `bolla`
        * does match the data in `intestazione`.
@@ -68,7 +67,7 @@ var Ctrl = {};
           causale: bolla.causale,
 
           rows: bolla.rows.map(function (r) {
-            var v = [].slice.call(rexpBarcodeAs400.exec(r[0]), 1);
+            var v = [].slice.call(CODICI.rexpBarcodeAs400.exec(r[0]), 1);
             v.push(r[1]);
             return v;
           })
