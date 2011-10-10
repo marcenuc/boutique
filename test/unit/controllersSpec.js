@@ -8,40 +8,42 @@ describe('Controller', function () {
     ctrl = null,
     okResponse = { ok: true, rev: '1' },
     aziende = {
-      "total_rows" : 15,
-      "offset" : 1,
-      "rows" : [ {
-        "id" : "Azienda_019998",
-        "key" : "Azienda_019998",
-        "value" : { "rev" : "1-d6363be2d62ec0f2eb5b961527bdddbf" },
-        "doc" : {
-          "_id" : "Azienda_019998",
-          "_rev" : "1-d6363be2d62ec0f2eb5b961527bdddbf",
-          "tipo" : "MAGAZZINO",
-          "nome" : "Magazzino Disponibile-Tailor S.r.l.",
-          "indirizzo" : "S.S. 275 km. 21,4 Lucugnano",
-          "comune" : "Tricase (LE) ITALY",
-          "provincia" : "LE",
-          "cap" : "73030",
-          "contatti" : [ "0833/706311", "0833/706322 (fax)" ]
+      total_rows: 15,
+      offset: 1,
+      rows: [ {
+        id: "Azienda_019998",
+        key: "Azienda_019998",
+        value: { rev: "1-d6363be2d62ec0f2eb5b961527bdddbf" },
+        doc: {
+          _id: "Azienda_019998",
+          _rev: "1-d6363be2d62ec0f2eb5b961527bdddbf",
+          tipo: "MAGAZZINO",
+          versioneListino: 1,
+          nome: "Mag. Disponibile",
+          indirizzo: "S.S. 275 km. 21,4 Lucugnano",
+          comune: "Tricase (LE) ITALY",
+          provincia: "LE",
+          cap: "73030",
+          contatti: [ "0833/706311", "0833/706322 (fax)" ]
         }
       }, {
-        "id" : "Azienda_099997",
-        "key" : "Azienda_099997",
-        "value" : { "rev" : "2-9415d085eb2ad39b3d7e40cab79cbf5b" },
-        "doc" : {
-          "_id" : "Azienda_099997",
-          "_rev" : "2-9415d085eb2ad39b3d7e40cab79cbf5b",
-          "tipo" : "NEGOZIO",
-          "contatti" : [ "0832 332401" ],
-          "nome" : "Negozio Lecce - Tailor S.r.l.",
-          "indirizzo" : "Via Liborio Romano 73",
-          "comune" : "Lecce",
-          "provincia" : "LE",
-          "cap" : "73100"
+        id: "Azienda_099997",
+        key: "Azienda_099997",
+        value: { "rev" : "2-9415d085eb2ad39b3d7e40cab79cbf5b" },
+        doc: {
+          _id: "Azienda_099997",
+          _rev: "2-9415d085eb2ad39b3d7e40cab79cbf5b",
+          tipo: "NEGOZIO",
+          contatti: [ "0832 332401" ],
+          nome: "Negozio LE",
+          indirizzo: "Via Liborio Romano 73",
+          comune: "Lecce",
+          provincia: "LE",
+          cap: "73100"
         }
       } ]
-    };
+    },
+    URL_AZIENDE = '/boutique_db/_all_docs?endkey=%22Azienda_%EF%BF%B0%22&include_docs=true&startkey=%22Azienda_%22';
 
   beforeEach(function () {
     scope = angular.scope();
@@ -82,7 +84,7 @@ describe('Controller', function () {
     var $routeParams = null;
 
     function newController(status, body) {
-      var xpct = $browser.xhr.expectGET('/boutique_db/_all_docs?endkey=%22Azienda_%EF%BF%B0%22&include_docs=true&startkey=%22Azienda_%22');
+      var xpct = $browser.xhr.expectGET(URL_AZIENDE);
       if (status) {
         xpct.respond(status, body);
       } else {
@@ -377,6 +379,52 @@ describe('Controller', function () {
           ctrl.fetch();
           $browser.xhr.flush();
         });
+      });
+    });
+  });
+
+
+  describe('RicercaArticoli', function () {
+    var baseCode = '7023352152100',
+      rows = [
+        ['102' + baseCode + '48', 1, '019998', 1, 1],
+        ['102' + baseCode + '50', 1, '019998', 1, 1],
+        ['923' + baseCode + '50', 1, '019998', 1, 1],
+        ['102' + baseCode + '52', 1, '019998', 1, 1],
+        ['923' + baseCode + '52', 1, '019998', 1, 1]
+      ],
+      rowsExpected = [
+        ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '102', '70233', '5215', '2100', 1, 'PRONTO', 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 3],
+        ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '923', '70233', '5215', '2100', 1, 'PRONTO', 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2]
+      ],
+      modelliEScalarini = {
+        lista: { '10270233': ['ABITO BOT.FANT.', 1], '92370233': ['ABITO BOT.FANT.', 1] }
+      },
+      taglieScalarini = {
+        colonneTaglie: [null, { '44': 0, '46': 1, '48': 2, '50': 3, '52': 4, '54': 5, '56': 6, '58': 7, '60': 8, '62': 9, '64': 10, '66': 11 }],
+        listeDescrizioni: [null, ['44', '46', '48', '50', '52', '54', '56', '58', '60', '62', '64', 'SM']]
+      },
+      giacenze = { rows: rows };
+
+    function newController() {
+      $browser.xhr.expectGET(URL_AZIENDE).respond(JSON.stringify(aziende));
+      $browser.xhr.expectGET('/boutique_db/TaglieScalarini').respond(JSON.stringify(taglieScalarini));
+      $browser.xhr.expectGET('/boutique_db/ModelliEScalarini').respond(JSON.stringify(modelliEScalarini));
+      $browser.xhr.expectGET('/boutique_db/Giacenze').respond(JSON.stringify(giacenze));
+
+      ctrl = scope.$new(Ctrl.RicercaArticoli);
+    }
+
+    describe('filtraGiacenza', function () {
+      beforeEach(function () {
+        newController();
+        $browser.xhr.flush();
+      });
+
+      it('should group NON consecutive rows', function () {
+        expect(ctrl.filtrate).toEqual([]);
+        ctrl.filtraGiacenza();
+        expect(ctrl.filtrate).toEqual(rowsExpected);
       });
     });
   });

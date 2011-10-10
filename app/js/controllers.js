@@ -222,31 +222,47 @@ var Ctrl = {};
         r,
         k,
         qtas,
-        total,
-        smacazsttm,
-        currentSmacazsttm,
-        currentLine;
+        totals,
+        macazsttm,
+        currentMacazsttm,
+        currentLines = {};
+
+      function addRows() {
+        if (currentMacazsttm) {
+          currentMacazsttm = undefined;
+          if (!withTaglia || colonnaTagliaFiltrata >= 0) {
+            Object.keys(currentLines).sort().forEach(function (stagione) {
+              count = filtrate.push(currentLines[stagione].concat(qtas[stagione], totals[stagione]));
+            });
+          }
+          colonnaTagliaFiltrata = -1;
+        }
+      }
+
+      function newRow(azienda) {
+        qtas[k[1]] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        totals[k[1]] = qtas[k[1]][colonnaTaglia] = r[1];
+        currentLines[k[1]] = [azienda, desscal[0], k[1], k[2], k[3], k[4], r[4], (r[3] ? 'PRONTO' : 'IN_PRODUZIONE'), scalarino];
+      }
 
       for (; i < n && count < maxCount; i += 1) {
         r = rows[i];
         k = filtro.exec(r[0]);
         if (k && (!this.aziendeSelezionate.length || this.aziendeSelezionate.indexOf(r[2]) >= 0)) {
-          smacazsttm = r[0].slice(0, -2) + r[2] + r[3] + r[4];
-          if (smacazsttm === currentSmacazsttm) {
+          macazsttm = r[0].slice(3, -2) + r[2] + r[3] + r[4];
+          if (macazsttm === currentMacazsttm) {
             colonnaTaglia = colonnaTaglie[k[5]];
             if (withTaglia && colonnaTagliaFiltrata < 0 && filtroTaglia.test(k[5])) {
               colonnaTagliaFiltrata = colonnaTaglia;
             }
-            qtas[colonnaTaglia] = r[1];
-            total += r[1];
-          } else {
-            if (currentSmacazsttm) {
-              currentSmacazsttm = undefined;
-              if (!withTaglia || colonnaTagliaFiltrata >= 0) {
-                count = filtrate.push(currentLine.concat(qtas, total));
-              }
-              colonnaTagliaFiltrata = -1;
+            if (!qtas[k[1]]) {
+              newRow(this.aziende[r[2]]);
+            } else {
+              qtas[k[1]][colonnaTaglia] = r[1];
+              totals[k[1]] += r[1];
             }
+          } else {
+            addRows();
             desscal = ms[k[1] + k[2]] || nodesscal;
             scalarino = desscal[1];
             colonnaTaglie = colonneTaglie[scalarino];
@@ -256,19 +272,17 @@ var Ctrl = {};
               colonnaTagliaFiltrata = colonnaTaglia;
             }
             //TODO qtas.length === TAGLIE_PER_SCALARINO
-            qtas = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-            total = qtas[colonnaTaglia] = r[1];
-            currentSmacazsttm = smacazsttm;
-            currentLine = [this.aziende[r[2]], desscal[0], k[1], k[2], k[3], k[4], r[4], (r[3] ? 'PRONTO' : 'IN_PRODUZIONE'), scalarino];
+            qtas = {};
+            totals = {};
+            currentMacazsttm = macazsttm;
+            currentLines = {};
+            newRow(this.aziende[r[2]]);
           }
-        } else if (currentSmacazsttm) {
-          currentSmacazsttm = undefined;
-          if (!withTaglia || colonnaTagliaFiltrata >= 0) {
-            count = filtrate.push(currentLine.concat(qtas, total));
-          }
-          colonnaTagliaFiltrata = -1;
+        } else {
+          addRows();
         }
       }
+      addRows();
 
       scalarino = nn;
       r = filtrate[0];
