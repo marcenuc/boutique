@@ -75,16 +75,19 @@ var CODICI;
   };
 
   CODICI.codiceTaglia = function (stagione, modello, codiciTaglie, listaModelli, descrizioneTaglia) {
-    var codiciTaglia,
-      desscal = listaModelli[stagione + modello],
-      scalarino;
+    var codiciTaglia, scalarino, taglia,
+      desscal = listaModelli[stagione + modello];
     if (desscal) {
       scalarino = desscal[1];
       codiciTaglia = codiciTaglie[scalarino];
       if (codiciTaglia) {
-        return [null, codiciTaglia[descrizioneTaglia]];
+        taglia = codiciTaglia[descrizioneTaglia];
+        if (taglia) {
+          return [null, taglia];
+        }
+        return ['Descrizione taglia (' + descrizioneTaglia + ') non trovata per scalarino ' + scalarino + ': stagione="' + stagione + '", modello="' + modello + '"'];
       }
-      return ['Descrizione taglia (' + descrizioneTaglia + ') non trovata per scalarino ' + scalarino + ': stagione="' + stagione + '", modello="' + modello + '"'];
+      return ['Descrizioni taglia (' + descrizioneTaglia + ') non trovate per scalarino ' + scalarino + ': stagione="' + stagione + '", modello="' + modello + '"'];
     }
     return ['Modello non in anagrafe: stagione="' + stagione + '", modello="' + modello + '"'];
   };
