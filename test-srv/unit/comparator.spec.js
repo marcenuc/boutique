@@ -10,8 +10,7 @@ requirejs.config({
 
 requirejs(['lib/comparator'], function (comparator) {
   'use strict';
-  var firstBarcode = '123123456789012345',
-    secondBarcode = '124123456789012345';
+  var sortedBarcodes = ['123123456789012345', '124123456789012345'];
 
   function checkAll(rows, doCompare, expectation) {
     var i = 0, n = rows.length - 1, j, l = n + 1;
@@ -23,58 +22,67 @@ requirejs(['lib/comparator'], function (comparator) {
   }
 
   describe('string(a, b)', function () {
+    var sortedStrings = ['099999', '199999', 'x'];
     it('should return zero when a==b', function () {
-      expect(comparator.string('099999', '099999')).toBe(0);
+      sortedStrings.forEach(function (a) {
+        expect(comparator.string(a, a)).toBe(0);
+      });
     });
 
     it('should return a negative value when a<b according to modello, articolo, colore, taglia, stagione', function () {
-      expect(comparator.string('099999', '199999')).toBeLessThan(0);
+      checkAll(sortedStrings, comparator.string, 'toBeLessThan');
     });
 
     it('should return a positive value when a>b according to modello, articolo, colore, taglia, stagione', function () {
-      expect(comparator.string('199999', '099999')).toBeGreaterThan(0);
+      checkAll(sortedStrings, function (a, b) {
+        return comparator.string(b, a);
+      }, 'toBeGreaterThan');
     });
   });
 
   describe('barcodeMacts(a, b)', function () {
     it('should return zero when a==b', function () {
-      expect(comparator.barcodeMacts(firstBarcode, firstBarcode)).toBe(0);
-    });
-
-    it('should return a negative value when a<b according to modello, articolo, colore, taglia, stagione', function () {
-      expect(comparator.barcodeMacts(firstBarcode, secondBarcode)).toBeLessThan(0);
-    });
-
-    it('should return a positive value when a>b according to modello, articolo, colore, taglia, stagione', function () {
-      expect(comparator.barcodeMacts(secondBarcode, firstBarcode)).toBeGreaterThan(0);
-    });
-  });
-
-  describe('rigaGiacenze(a, b)', function () {
-    var rows = [
-        [firstBarcode, 1, '099999', 0, 1],
-        [firstBarcode, 1, '199999', 0, 1],
-        [firstBarcode, 1, '199999', 0, 2],
-        [firstBarcode, 1, '199999', 1, 2],
-        [firstBarcode, 2, '199999', 1, 2],
-        [secondBarcode, 1, '099999', 0, 1],
-        [secondBarcode, 1, '199999', 0, 1],
-        [secondBarcode, 1, '199999', 0, 2],
-        [secondBarcode, 1, '199999', 1, 2],
-        [secondBarcode, 2, '199999', 1, 2]
-      ];
-    it('should return zero when a==b', function () {
-      rows.forEach(function (row) {
-        expect(comparator.rigaGiacenze(row, row)).toBe(0);
+      sortedBarcodes.forEach(function (a) {
+        expect(comparator.barcodeMacts(a, a)).toBe(0);
       });
     });
 
     it('should return a negative value when a<b according to modello, articolo, colore, taglia, stagione', function () {
-      checkAll(rows, comparator.rigaGiacenze, 'toBeLessThan');
+      checkAll(sortedBarcodes, comparator.barcodeMacts, 'toBeLessThan');
     });
 
     it('should return a positive value when a>b according to modello, articolo, colore, taglia, stagione', function () {
-      checkAll(rows, function (a, b) {
+      checkAll(sortedBarcodes, function (a, b) {
+        return comparator.barcodeMacts(b, a);
+      }, 'toBeGreaterThan');
+    });
+  });
+
+  describe('rigaGiacenze(a, b)', function () {
+    var sortedRows = [
+        [sortedBarcodes[0], 1, '099999', 0, 1],
+        [sortedBarcodes[0], 1, '199999', 0, 1],
+        [sortedBarcodes[0], 1, '199999', 0, 2],
+        [sortedBarcodes[0], 1, '199999', 1, 2],
+        [sortedBarcodes[0], 2, '199999', 1, 2],
+        [sortedBarcodes[1], 1, '099999', 0, 1],
+        [sortedBarcodes[1], 1, '199999', 0, 1],
+        [sortedBarcodes[1], 1, '199999', 0, 2],
+        [sortedBarcodes[1], 1, '199999', 1, 2],
+        [sortedBarcodes[1], 2, '199999', 1, 2]
+      ];
+    it('should return zero when a==b', function () {
+      sortedRows.forEach(function (a) {
+        expect(comparator.rigaGiacenze(a, a)).toBe(0);
+      });
+    });
+
+    it('should return a negative value when a<b according to modello, articolo, colore, taglia, stagione', function () {
+      checkAll(sortedRows, comparator.rigaGiacenze, 'toBeLessThan');
+    });
+
+    it('should return a positive value when a>b according to modello, articolo, colore, taglia, stagione', function () {
+      checkAll(sortedRows, function (a, b) {
         return comparator.rigaGiacenze(b, a);
       }, 'toBeGreaterThan');
     });
