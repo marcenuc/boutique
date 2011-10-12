@@ -93,6 +93,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       error('Inventario vuoto');
       return;
     }
+    // TODO verificare anche l'ordinamento
     inventario.forEach(function (row, idx) {
       if (typeOf(row) !== 'array' || row.length < 5) {
         return error('Invalid row: ' + JSON.stringify(row));
@@ -112,6 +113,29 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       }
       if (row[4] !== 1 && row[4] !== 2 && row[4] !== 3) {
         error('Invalid store type at row ' + idx + ': "' + barcode + '"');
+      }
+    });
+  }
+
+  function hasInventarioNegozio(inventario) {
+    if (!inventario || !inventario.length) {
+      error('Inventario vuoto');
+      return;
+    }
+    // TODO verificare anche l'ordinamento
+    inventario.forEach(function (row, idx) {
+      if (typeOf(row) !== 'array' || row.length < 3) {
+        return error('Invalid row: ' + JSON.stringify(row));
+      }
+      var barcode = row[0];
+      if (!/^\d{18}$/.test(barcode)) {
+        error('Invalid barcode at row ' + idx + ': "' + barcode + '"');
+      }
+      if (typeof row[1] !== 'number' || row[1] <= 0) {
+        error('Invalid quantity at row ' + idx + ': "' + barcode + '"');
+      }
+      if (typeof row[2] !== 'number' || row[2] <= 0) {
+        error('Invalid costo at row ' + idx + ': "' + barcode + '"');
       }
     });
   }
@@ -177,11 +201,6 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       case 'Cliente':
         mustHave('nome');
         break;
-      case 'Scalarini':
-        mustHave('descrizioni');
-        mustHave('posizioniCodici');
-        mustHave('posizioneCodici');
-        break;
       case 'TaglieScalarini':
         mustHave('descrizioniTaglie', 'array');
         mustHave('taglie', 'array');
@@ -219,10 +238,6 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       case 'ModelliEScalarini':
         mustHave('lista');
         break;
-      case 'Inventari':
-        mustHave('data');
-        mustHave('inventario');
-        break;
       case 'Giacenze':
         //TODO richiedere l'utente 'magazzino'
         //if (userCtx.name !== 'magazzino') {
@@ -240,7 +255,21 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         hasInventario(doc.rows);
         break;
       case 'Inventario':
+        //TODO richiedere l'utente 'negozio'
+        //if (userCtx.name !== typeAndCode[2]) {
+        //  error('Utente non autorizzato');
+        //}
         hasValidAziendaCode();
+        if (!doc.columnNames) {
+          error('Required field: columnNames');
+        } else {
+          if (['barcode', 'giacenza', 'costo'].some(function (column, idx) {
+              return column !== doc.columnNames[idx];
+            })) {
+            error('Invalid columnNames');
+          }
+        }
+        hasInventarioNegozio(doc.rows);
         break;
       case 'CausaliAs400':
         mustHave('1');
