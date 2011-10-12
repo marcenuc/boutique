@@ -15,20 +15,10 @@ var Ctrl = {};
     var s = str.toString(), l = len || 2, p = padder || ' ';
     return new Array(l + 1 - s.length).join(p) + s;
   }
-
-  //TODO DRY copied in lib/as400.js
-  function colNamesToColIndexes(columnNames) {
-    var col = {}, i = 0, n = columnNames.length;
-    for (; i < n; i += 1) {
-      col[columnNames[i]] = i;
-    }
-    return col;
-  }
   //TODO exported for testing... better options?
   Ctrl.utils = {
     dotPad: dotPad,
-    padLeft: padLeft,
-    colNamesToColIndexes: colNamesToColIndexes
+    padLeft: padLeft
   };
 
 
@@ -96,7 +86,7 @@ var Ctrl = {};
 
     buildBolla: function () {
       var r0 = this.bollaAs400.rows[0],
-        col = colNamesToColIndexes(this.bollaAs400.columnNames),
+        col = CODICI.colNamesToColIndexes(this.bollaAs400.columnNames),
         codiceCliente = r0[col.codiceCliente],
         tipoMagazzino = r0[col.tipoMagazzino],
         codiceMagazzino = r0[col.codiceMagazzino],

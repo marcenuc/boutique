@@ -70,13 +70,6 @@ describe('Controller', function () {
         expect(Ctrl.utils.dotPad('..1', 2)).toBe('..1');
       });
     });
-
-    describe('colNamesToColIndexes', function () {
-      it('should return an hash with values equal to index of the column in the given array', function () {
-        var u = Ctrl.utils.colNamesToColIndexes;
-        expect(u(['a', 'b', 'c'])).toEqual({ a: 0, b: 1, c: 2 });
-      });
-    });
   });
 
 

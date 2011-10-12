@@ -9,7 +9,10 @@ var CODICI;
     LEN_COLORE: 4,
     LEN_TAGLIA: 2,
     LEN_DESCRIZIONE_TAGLIA: 3,
-    rexpBarcodeAs400: /^(\d{3})(\d{5})(\d{4})(\d{4})(\d{2})$/
+    rexpBarcodeAs400: /^(\d{3})(\d{5})(\d{4})(\d{4})(\d{2})$/,
+    TIPO_MAGAZZINO_CLIENTI: 1,
+    TIPO_MAGAZZINO_DISPONIBILE: 2,
+    TIPO_MAGAZZINO_NEGOZIO: 3
   };
 
   CODICI.isCode = function (code) {
@@ -43,6 +46,10 @@ var CODICI;
 
   CODICI.idListino = function (versione, dataUso) {
     return ['Listino', versione, dataUso].join('_');
+  };
+
+  CODICI.idInventario = function (azienda) {
+    return 'Inventario_' + azienda;
   };
 
   CODICI.parseBarcodeAs400 = function (code) {
@@ -105,6 +112,15 @@ var CODICI;
     }
     return ['Invalid amount for money: ' + value];
   };
+
+  CODICI.colNamesToColIndexes = function (columnNames) {
+    var col = {}, i = 0, n = columnNames.length;
+    for (; i < n; i += 1) {
+      col[columnNames[i]] = i;
+    }
+    return col;
+  };
+
 }());
 
 /*global define: false*/

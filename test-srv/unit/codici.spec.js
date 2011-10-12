@@ -28,4 +28,11 @@ requirejs(['app/js/codici'], function (codici) {
       expect(codici.parseMoney('12.345')).toEqual(['Invalid amount for money: 12.345']);
     });
   });
+
+  describe('colNamesToColIndexes', function () {
+    it('should return an hash with values equal to index of the column in the given array', function () {
+      var u = codici.colNamesToColIndexes;
+      expect(u(['a', 'b', 'c'])).toEqual({ a: 0, b: 1, c: 2 });
+    });
+  });
 });
