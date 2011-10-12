@@ -257,7 +257,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         db = newBoutiqueDbConnection();
       function updateReporter(err, warnsAndDoc, res) {
         if (err) {
-          fail(util.inspect(err));
+          return fail(util.inspect(err));
         }
         if (warnsAndDoc && warnsAndDoc[0].length) {
           console.warn(warnsAndDoc[0].join('\n'));
@@ -338,6 +338,35 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
     });
   });
 
+  desc('Aggiorna inventario');
+  task('aggiorna-inventario', function (baseName, azienda, doReset, sheet) {
+    requirejs(['lib/inventario'], function (inventario) {
+      var xlsName = baseName + '.xlsx',
+        csvName = baseName + '.csv';
+      xlsToCsv(xlsName, csvName, function (errConvert, out) {
+        if (errConvert) {
+          fail(util.inspect(errConvert));
+        }
+        if (out) {
+          console.log(out);
+        }
+        var db = newBoutiqueDbConnection(),
+          num = typeof sheet === 'undefined' ? '' : '.' + sheet;
+        inventario.loadFromCsvFile(csvName + num, azienda, db, doReset === '1', function (err, warnsAndDoc, resp) {
+          if (err) {
+            return fail(util.inspect(err));
+          }
+          if (warnsAndDoc[0] && warnsAndDoc[0].length) {
+            console.warn(warnsAndDoc[0].join('\n'));
+          }
+          if (typeof resp !== 'undefined') {
+            console.log('Risposta: ' + resp);
+          }
+        });
+      });
+    });
+  });
+
   desc('Produce un file di testo con la stampa delle etichette da un inventario XLS');
   task('stampaEtichetteFromXLS', function (baseName, sheet, comparator) {
     requirejs(['lib/etichette'], function (etichette) {
@@ -353,7 +382,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         var db = newBoutiqueDbConnection();
         etichette.stampaFromCsvFile(csvName + '.' + sheet, db, comparator, function (err, warns, stampa) {
           if (err) {
-            return fail(err);
+            return fail(util.inspect(err));
           }
           if (warns && warns.length) {
             console.warn(warns.join('\n'));
@@ -370,7 +399,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       var db = newBoutiqueDbConnection();
       etichette.stampa(db, docId, comparator, function (err, stampa) {
         if (err) {
-          return fail(err);
+          return fail(util.inspect(err));
         }
         process.stdout.write(stampa);
       });
