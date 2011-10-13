@@ -288,38 +288,8 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       as400.updateInventarioAs400(db, updateReporter);
     });
 
-    //TODO questo task dobrebbe essere obsoleto con il task aggiorna-listino
-    desc('Carica listino');
-    task('carica-listino', function (versione, data) {
-      requirejs(['lib/listino'], function (listino) {
-        var baseName = 'tmp/listino_' + versione + '_' + data,
-          xlsName = baseName + '.xlsx',
-          csvName = baseName + '.csv';
-        xlsToCsv(xlsName, csvName, function (errConvert, out) {
-          if (errConvert) {
-            fail(util.inspect(errConvert));
-          }
-          if (out) {
-            console.log(out);
-          }
-          var db = newBoutiqueDbConnection();
-          listino.loadFromCsvFile(csvName + '.0', db, versione, data, function (err, warns, resp) {
-            if (err) {
-              fail(util.inspect(err));
-            }
-            if (warns && warns.length) {
-              console.warn(warns.join('\n'));
-            }
-            if (resp) {
-              console.log(resp);
-            }
-          });
-        });
-      });
-    });
-
     desc('Aggiorna listino');
-    task('aggiorna-listino', function (versione, data, updateNum, sheet) {
+    task('aggiornaListino', function (versione, data, updateNum, sheet) {
       requirejs(['lib/listino'], function (listino) {
         var doUpdate = parseInt(updateNum, 10) > 0,
           update = doUpdate ? '_' + updateNum : '',
@@ -335,15 +305,15 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
           }
           var db = newBoutiqueDbConnection(),
             num = typeof sheet === 'undefined' ? '' : '.' + sheet;
-          listino.updateFromCsvFile(csvName + num, db, versione, data, doUpdate, function (err, warns, resp) {
+          listino.updateFromCsvFile(csvName + num, db, versione, data, doUpdate, function (err, warnsAndDoc, resp) {
             if (err) {
               fail(util.inspect(err));
             }
-            if (warns && warns.length) {
-              console.warn(warns.join('\n'));
+            if (warnsAndDoc[0] && warnsAndDoc[0].length) {
+              console.warn(warnsAndDoc[0].join('\n'));
             }
             if (resp) {
-              console.log(resp);
+              console.dir(resp);
             }
           });
         });
