@@ -406,6 +406,52 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
     });
   });
 
+  namespace('deps', function () {
+    var hashFileName = 'dependencies.sha1sum',
+      fs = require('fs'),
+      crypto = require('crypto');
+
+    function getCurrentHash() {
+      var sha1sum = crypto.createHash('sha1'),
+        pkgFileName = 'package.json',
+        pkgContents = fs.readFileSync(pkgFileName, 'utf8'),
+        deps = Object.keys(JSON.parse(pkgContents).dependencies).sort();
+      sha1sum.update(pkgContents);
+      deps.forEach(function (dep) {
+        sha1sum.update(fs.readFileSync(path.join('node_modules', dep, pkgFileName), 'utf8'));
+      });
+      return sha1sum.digest('hex');
+    }
+
+    desc('Update hash of dependencies');
+    task('updateHash', function () {
+      fs.writeFileSync(hashFileName, getCurrentHash());
+      console.log('Remember to "git commit ' + hashFileName + '"');
+    });
+
+    desc('Do update dependencies if saved hash does not match');
+    task('sync', function () {
+      var savedHash = fs.readFileSync(hashFileName, 'utf8'),
+        currentHash = getCurrentHash();
+      if (currentHash === savedHash) {
+        console.log('Dependencies already up-to-date.');
+      } else {
+        taskutil.execBuffered('npm', ['update'], function (err, stdout) {
+          if (err) {
+            return fail(err);
+          }
+          console.log(stdout);
+          var newCurrentHash = getCurrentHash();
+          if (newCurrentHash === currentHash) {
+            console.log('Dependencies are now up-to-date.');
+          } else {
+            fail('Update did not produce the expected hash.');
+          }
+        });
+      }
+    });
+  });
+
   namespace('webserver', function () {
 
     desc('Build optimized files for production');
