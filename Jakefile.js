@@ -250,6 +250,19 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       });
     }, true);
 
+    desc('Stampa barcode in giacenza');
+    task('stampaBarcodes', function () {
+      var db = newBoutiqueDbConnection();
+      db.get('Giacenze', function (err, giacenze) {
+        if (err) {
+          return fail(util.inspect(err));
+        }
+        var rows = giacenze.rows, i = 0, n = rows.length;
+        for (; i < n; i += 1) {
+          console.log(rows[i][0]);
+        }
+      });
+    });
 
     desc('Aggiorna dati da As400');
     task('sync-as400', function () {
