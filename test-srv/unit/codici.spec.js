@@ -29,6 +29,12 @@ requirejs(['app/js/codici'], function (codici) {
     });
   });
 
+  describe('parseQta', function () {
+    it('should ignore starting and trailing spaces', function () {
+      expect(codici.parseQta(' 12  ')).toEqual([null, 12]);
+    });
+  });
+
   describe('colNamesToColIndexes', function () {
     it('should return an hash with values equal to index of the column in the given array', function () {
       var u = codici.colNamesToColIndexes;

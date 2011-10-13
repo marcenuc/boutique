@@ -1,7 +1,7 @@
 function validate_doc_update(doc, oldDoc, userCtx, secObj) {
   'use strict';
-  var es = [], i, n, rows, r,
-    typeAndCode = /^([A-Z][a-zA-Z0-9]+)(?:_([0-9A-Z_]+))?$/.exec(doc._id || '');
+  var es = [], i, n, rows, r, m,
+    typeAndCode = /^([A-Z][a-zA-Z0-9]+)(?:_([0-9A-Za-z_]+))?$/.exec(doc._id || '');
 
   function typeOf(value) {
     var s = typeof value;
@@ -47,6 +47,10 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
 
   function isValidAziendaCode(code) {
     return (/^\d{6}$/).test(code);
+  }
+
+  function isValidBarcode(code) {
+    return (/^\d{18}$/).test(code);
   }
 
   function hasValidAziendaCode() {
@@ -99,7 +103,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         return error('Invalid row: ' + JSON.stringify(row));
       }
       var barcode = row[0];
-      if (!/^\d{18}$/.test(barcode)) {
+      if (!isValidBarcode(barcode)) {
         error('Invalid barcode at row ' + idx + ': "' + barcode + '"');
       }
       if (typeof row[1] !== 'number' || row[1] <= 0) {
@@ -113,6 +117,25 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       }
       if (row[4] !== 1 && row[4] !== 2 && row[4] !== 3) {
         error('Invalid store type at row ' + idx + ': "' + barcode + '"');
+      }
+    });
+  }
+
+  function hasElencoArticoli(elenco) {
+    if (!elenco || !elenco.length) {
+      error('Elenco vuoto');
+      return;
+    }
+    elenco.forEach(function (row, idx) {
+      if (typeOf(row) !== 'array' || row.length < 2) {
+        return error('Invalid row: ' + JSON.stringify(row));
+      }
+      var barcode = row[0];
+      if (!isValidBarcode(barcode)) {
+        error('Invalid barcode at row ' + idx + ': "' + barcode + '"');
+      }
+      if (typeof row[1] !== 'number' || row[1] <= 0) {
+        error('Invalid quantity at row ' + idx + ': "' + barcode + '"');
       }
     });
   }
@@ -151,6 +174,19 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         }
       })) {
       error(fieldA + ' and '  + fieldB + ' should be equivalent');
+    }
+  }
+
+  function hasColumnNames(columnNames) {
+    if (!doc.columnNames) {
+      error('Required field: columnNames');
+    } else {
+      if (columnNames.length !== doc.columnNames.length ||
+          columnNames.some(function (column, idx) {
+            return column !== doc.columnNames[idx];
+          })) {
+        error('Invalid columnNames');
+      }
     }
   }
 
@@ -243,15 +279,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         //if (userCtx.name !== 'magazzino') {
         //  error('Utente non autorizzato');
         //}
-        if (!doc.columnNames) {
-          error('Required field: columnNames');
-        } else {
-          if (['barcode', 'giacenza', 'azienda', 'stato', 'tipoMagazzino'].some(function (column, idx) {
-              return column !== doc.columnNames[idx];
-            })) {
-            error('Invalid columnNames');
-          }
-        }
+        hasColumnNames(['barcode', 'giacenza', 'azienda', 'stato', 'tipoMagazzino']);
         hasInventario(doc.rows);
         break;
       case 'Inventario':
@@ -260,16 +288,21 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         //  error('Utente non autorizzato');
         //}
         hasValidAziendaCode();
-        if (!doc.columnNames) {
-          error('Required field: columnNames');
-        } else {
-          if (['barcode', 'giacenza', 'costo'].some(function (column, idx) {
-              return column !== doc.columnNames[idx];
-            })) {
-            error('Invalid columnNames');
-          }
-        }
+        hasColumnNames(['barcode', 'giacenza', 'costo']);
         hasInventarioNegozio(doc.rows);
+        break;
+      case 'ScaricoMagazzino':
+        // TODO l'utente negozio può scaricare solo dal suo magazzino di tipo 3
+        m = typeAndCode[2].split('_');
+        if (m.length !== 2) {
+          error('Invalid code');
+        } else if (!isValidAziendaCode(m[0])) {
+          error('Invalid azienda code');
+        } else if (!/^\d+$/.test(m[1]) || (new Date().getTime() < parseInt(m[1], 10))) {
+          error('Invalid timestamp');
+        }
+        hasColumnNames(['barcode', 'qta']);
+        hasElencoArticoli(doc.rows);
         break;
       case 'CausaliAs400':
         mustHave('1');

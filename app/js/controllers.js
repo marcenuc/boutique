@@ -21,12 +21,86 @@ var Ctrl = {};
     padLeft: padLeft
   };
 
+  // Capitalized because designed for use with angular.bind().
+  function SetAziende(xhrResp) {
+    this.aziende = {};
+    xhrResp.rows.forEach(function (r) {
+      var codice = r.id.split('_', 2)[1];
+      this.aziende[codice] = codice + ' ' + r.doc.nome;
+    }, this);
+  }
+
+
+  Ctrl.ScaricoMagazzino = function (Document) {
+    this.Document = Document;
+
+    Document.aziende(angular.bind(this, SetAziende));
+    this.taglieScalarini = Document.get({ id: 'TaglieScalarini' });
+    this.modelliEScalarini = Document.get({ id: 'ModelliEScalarini' });
+
+    this.scarico = {
+      rows: [{ qta: 1 }]
+    };
+  };
+  Ctrl.ScaricoMagazzino.$inject = ['Document'];
+
+  Ctrl.ScaricoMagazzino.prototype = {
+    buildBolla: function () {
+      return {
+        _id: CODICI.idScaricoMagazzino(this.scarico.azienda),
+        columnNames: ['barcode', 'qta'],
+        causale: this.scarico.causale,
+        rows: this.scarico.rows.map(function (r) {
+          return [r.barcode, r.qta];
+        })
+      };
+    },
+
+    save: function () {
+      var self, r, codes, descs, i = 0, rows = this.scarico.rows, n = rows.length, newRows = {}, qta;
+      for (; i < n; i += 1) {
+        r = rows[i];
+        codes = CODICI.parseBarcodeAs400(r.barcode);
+        if (codes) {
+          qta = CODICI.parseQta(r.qta);
+          if (qta[0]) {
+            this.flash = { errors: [{ message: 'Quantità non valida: "' + r.qta + '"' }] };
+          } else if (newRows.hasOwnProperty(r.barcode)) {
+            newRows[r.barcode].qta += qta[1];
+          } else {
+            descs = CODICI.barcodeDescs(codes, this.taglieScalarini.descrizioniTaglie, this.modelliEScalarini.lista);
+            if (descs[0]) {
+              this.flash = { errors: [{ message: descs[0] + ': "' + r.barcode + '"' }] };
+            } else {
+              r.descrizione = descs[1].descrizione;
+              r.descrizioneTaglia = descs[1].descrizioneTaglia;
+              r.qta = qta[1];
+              newRows[r.barcode] = r;
+            }
+          }
+        } else {
+          this.flash = { errors: [{ message: 'Codice non valido: "' + r.barcode + '"' }] };
+        }
+      }
+      this.scarico.rows = Object.keys(newRows).sort().map(function (barcode) {
+        return newRows[barcode];
+      });
+      if (this.doSave) {
+        self = this;
+        this.Document.save(this.buildBolla(), function (res) {
+          self.flash = { notice: [{ message: 'Salvato ' + JSON.stringify(res) }] };
+        });
+      } else {
+        angular.Array.add(this.scarico.rows, { qta: 1 });
+      }
+    }
+  };
 
   Ctrl.RicercaBollaAs400 = function (As400, Document, userCtx) {
     this.As400 = As400;
     this.Document = Document;
     this.userCtx = userCtx;
-    this.scalarini = Document.get({ id: 'Scalarini' });
+    this.taglieScalarini = Document.get({ id: 'TaglieScalarini' });
     this.causaliAs400 = Document.get({ id: 'CausaliAs400' });
     this.intestazione = {};
     this.bollaAs400 = null;
@@ -91,16 +165,18 @@ var Ctrl = {};
         tipoMagazzino = r0[col.tipoMagazzino],
         codiceMagazzino = r0[col.codiceMagazzino],
         causale = r0[col.causale],
-        posizioniCodiciScalarino = this.scalarini.posizioniCodici,
+        taglie = this.taglieScalarini.taglie,
+        listeDescrizioni = this.taglieScalarini.listeDescrizioni,
         rows = [],
         ok = this.bollaAs400.rows.every(function (row) {
-          var qta, i, barcode, codiceTaglia,
-            pcs = posizioniCodiciScalarino[parseInt(row[col.scalarino], 10)];
+          var qta, i, barcode,
+            scalarino = parseInt(row[col.scalarino], 10),
+            ld = listeDescrizioni[scalarino],
+            ts = taglie[scalarino];
           for (i = 0; i < 12; i += 1) {
             qta = parseInt(row[col['qta' + (i + 1)]], 10);
             if (qta > 0) {
-              codiceTaglia = padLeft(pcs[i], 2, '0');
-              barcode = row[col.stagione] + row[col.modello] + row[col.articolo] + row[col.colore] + codiceTaglia;
+              barcode = CODICI.codiceAs400(row[col.stagione], row[col.modello], row[col.articolo], row[col.colore], ts[ld[i]]);
               rows.push([barcode, qta]);
             }
           }
@@ -130,7 +206,7 @@ var Ctrl = {};
   };
 
   Ctrl.RicercaArticoli = function (Document) {
-    Document.aziende(this.setAziende);
+    Document.aziende(angular.bind(this, SetAziende));
     this.aziendeSelezionate = [];
 
     this.taglieScalarini = Document.get({ id: 'TaglieScalarini' });
@@ -143,14 +219,6 @@ var Ctrl = {};
   Ctrl.RicercaArticoli.$inject = ['Document'];
 
   Ctrl.RicercaArticoli.prototype = {
-    setAziende: function (xhrResp) {
-      this.aziende = {};
-      xhrResp.rows.forEach(function (r) {
-        var codice = r.id.split('_', 2)[1];
-        this.aziende[codice] = codice + ' ' + r.doc.nome;
-      }, this);
-    },
-
     getFiltro: function (dontFilterTaglia) {
       var toks = [
         dotPad(this.stagione, CODICI.LEN_STAGIONE),

@@ -52,6 +52,10 @@ var CODICI;
     return 'Inventario_' + azienda;
   };
 
+  CODICI.idScaricoMagazzino = function (azienda) {
+    return 'ScaricoMagazzino_' + azienda + '_' + (new Date().getTime());
+  };
+
   CODICI.parseBarcodeAs400 = function (code) {
     var m = CODICI.rexpBarcodeAs400.exec(code);
     if (m) {
@@ -68,18 +72,24 @@ var CODICI;
   };
 
   CODICI.barcodeDescs = function (codes, descrizioniTaglie, listaModelli) {
-    var descrizioniTaglia,
+    var descrizioniTaglia, descrizioneTaglia,
       desscal = listaModelli[codes.codiceDescrizioneEScalarino];
     if (desscal) {
       descrizioniTaglia = descrizioniTaglie[desscal[1]];
       if (descrizioniTaglia) {
-        return {
-          descrizione: desscal[0],
-          scalarino: desscal[1],
-          descrizioneTaglia: descrizioniTaglia[codes.taglia]
-        };
+        descrizioneTaglia = descrizioniTaglia[codes.taglia];
+        if (descrizioneTaglia) {
+          return [null, {
+            descrizione: desscal[0],
+            scalarino: desscal[1],
+            descrizioneTaglia: descrizioneTaglia
+          }];
+        }
+        return ['Codice taglia (' + codes.taglia + ') non valido'];
       }
+      return ['Scalarino (' + desscal[1] + ') non trovato'];
     }
+    return ['Modello (' + codes.codiceDescrizioneEScalarino + ') non in anagrafe'];
   };
 
   CODICI.codiceTaglia = function (stagione, modello, codiciTaglie, listaModelli, descrizioneTaglia) {
@@ -111,6 +121,15 @@ var CODICI;
       return [null, parseInt(mp[1] + padCents(mp[2]), 10)];
     }
     return ['Invalid amount for money: ' + value];
+  };
+
+  CODICI.parseQta = function (value) {
+    var mp = /^\s*([1-9][0-9]*)\s*$/.exec(value), qta;
+    if (mp) {
+      qta = parseInt(mp[1], 10);
+      return [null, qta];
+    }
+    return ['Invalid quantity: ' + value];
   };
 
   CODICI.colNamesToColIndexes = function (columnNames) {

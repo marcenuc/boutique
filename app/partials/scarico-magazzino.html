@@ -1,0 +1,26 @@
+<div class="flash">
+  <ul ng:repeat="(class, messages) in flash" ng:class="class">
+    <li ng:repeat="message in messages">{{message.message}}
+  </ul>
+</div>
+<form ng:submit="save()">
+ <label>Azienda:
+ <select name="scarico.azienda"><option>
+   <option ng:repeat="(codice, desc) in aziende" value="{{codice}}">{{desc}}
+ </select></label><br>
+ <label>Causale: <select name="scarico.causale"><option>Vendita<option>Reso</select></label><br>
+ <label>Righe:</label> [&nbsp;<a href="" ng:click="scarico.rows.$add({ qta: 1 })">aggiungi</a>&nbsp;]
+ <table>
+  <thead>
+   <tr><th>Codice a barre<th>Descrizione<th>Taglia<th>Quantità<th>ALTRO
+  <tbody>
+   <tr ng:repeat="row in scarico.rows">
+    <td><input name="row.barcode" size=18 pattern="^\d{18}$">
+    <td>{{row.descrizione}}
+    <td>{{row.descrizioneTaglia}}
+    <td><input name="row.qta" size=3>
+    <td>[&nbsp;<a href="" ng:click="scarico.rows.$remove(row)">X</a>&nbsp;]
+ </table>
+ <input type=submit value=Salva>
+ <label><input type=checkbox name="doSave">&nbsp;Finito</label>
+</form>

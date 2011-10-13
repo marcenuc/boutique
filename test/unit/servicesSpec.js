@@ -1,4 +1,4 @@
-/*global describe: false, beforeEach: false, afterEach: false, it: false, jasmine: false,
+/*global describe: false, beforeEach: false, afterEach: false, it: false, xit: false, jasmine: false,
          expect: false, angular: false */
 
 describe('Services', function () {
@@ -245,6 +245,34 @@ describe('Services', function () {
       });
     });
 
+    describe('ScaricoMagazzino', function () {
+      var validId = 'ScaricoMagazzino_099999_1318509597247';
+
+      it('should require _id with (codice, timestamp)', function () {
+        expect(check({ _id: validId })).not.toHaveError('Invalid type');
+        expect(check({ _id: 'ScaricoMagazzino_12345_1318509597247' })).toHaveError('Invalid azienda code');
+        expect(check({ _id: 'ScaricoMagazzino_123456_' + (new Date().getTime() + 1000) })).toHaveError('Invalid timestamp');
+        expect(check({ _id: 'ScaricoMagazzino_123456_' + (new Date().getTime()) })).not.toHaveError('Invalid timestamp');
+      });
+
+      it('should require columnNames to be barcode, and qta', function () {
+        var msg = 'Invalid columnNames';
+        expect(check({ _id: validId })).toHaveError('Required field: columnNames');
+        expect(check({ _id: validId, columnNames: ['barcode', 'qta', 'other'] })).toHaveError(msg);
+        expect(check({ _id: validId, columnNames: ['barcode', 'qta'] })).not.toHaveError(msg);
+      });
+
+      it('should require a valid list', function () {
+        var msg = 'Elenco vuoto';
+        expect(check({ _id: validId })).toHaveError(msg);
+        expect(check({ _id: validId, rows: [] })).toHaveError(msg);
+        expect(check({ _id: validId, rows: [['12345678901234567', 123]] })).toHaveError('Invalid barcode at row 0: "12345678901234567"');
+        expect(check({ _id: validId, rows: [['123456789012345678', -123]] })).toHaveError('Invalid quantity at row 0: "123456789012345678"');
+        expect(check({ _id: validId, rows: [['123456789012345678', '123']] })).toHaveError('Invalid quantity at row 0: "123456789012345678"');
+        expect(check({ _id: validId, rows: [['123456789012345678', 123]] })).not.toHaveError(msg);
+      });
+    });
+
     describe('BollaAs400', function () {
       var validId = 'BollaAs400_110704_1234_Y_10';
 
@@ -293,7 +321,7 @@ describe('Services', function () {
     describe('Giacenze', function () {
       var validId = 'Giacenze';
 
-      it('should require columnNames equal to barcode, giacenza, azienda, stato, tipoMagazzino', function () {
+      it('should require columnNames to be barcode, giacenza, azienda, stato, and tipoMagazzino', function () {
         var msg = 'Invalid columnNames';
         expect(check({ _id: validId })).toHaveError('Required field: columnNames');
         expect(check({ _id: validId, columnNames: ['barcode', 'giacenza', 'azienda', 'tipoMagazzino', 'stato'] })).toHaveError(msg);
@@ -317,7 +345,7 @@ describe('Services', function () {
     describe('Inventario', function () {
       var validId = 'Inventario_099999';
 
-      it('should require columnNames equal to barcode, giacenza, costo', function () {
+      it('should require columnNames to be barcode, giacenza, and costo', function () {
         var msg = 'Invalid columnNames';
         expect(check({ _id: validId })).toHaveError('Required field: columnNames');
         expect(check({ _id: validId, columnNames: ['barcode', 'costo', 'giacenza'] })).toHaveError(msg);
