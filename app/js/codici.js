@@ -2,6 +2,7 @@ var CODICI;
 
 (function () {
   'use strict';
+  // TODO should be freezed to be guarded against modifications.
   CODICI = {
     LEN_STAGIONE: 3,
     LEN_MODELLO: 5,
@@ -12,7 +13,12 @@ var CODICI;
     rexpBarcodeAs400: /^(\d{3})(\d{5})(\d{4})(\d{4})(\d{2})$/,
     TIPO_MAGAZZINO_CLIENTI: 1,
     TIPO_MAGAZZINO_DISPONIBILE: 2,
-    TIPO_MAGAZZINO_NEGOZIO: 3
+    TIPO_MAGAZZINO_NEGOZIO: 3,
+    CAUSALI_NEGOZIO: {
+      VENDITA: 'Vendita',
+      RESO_VENDITA: 'Reso su vendita',
+      RESO_ACQUISTO: 'Reso su acquisto'
+    }
   };
 
   CODICI.isCode = function (code) {
@@ -52,8 +58,9 @@ var CODICI;
     return 'Inventario_' + azienda;
   };
 
-  CODICI.idScaricoMagazzino = function (azienda) {
-    return 'ScaricoMagazzino_' + azienda + '_' + (new Date().getTime());
+  // TODO si potrebbe usare l'anno invece della data nell'_id
+  CODICI.idMovimentoMagazzino = function (azienda, dataBolla, numeroBolla) {
+    return ['MovimentoMagazzino', azienda, dataBolla, numeroBolla].join('_');
   };
 
   CODICI.parseBarcodeAs400 = function (code) {

@@ -1,0 +1,25 @@
+<div class="flash">
+  <ul ng:repeat="(class, messages) in flash" ng:class="class">
+    <li ng:repeat="message in messages">{{message.message}}
+  </ul>
+</div>
+<form ng:submit="save()">
+ <label>Numero bolla: <input name="numero" size=8></label>
+ <label>Data bolla: <input name="data" size=8></label><br>
+ <label>Origine: <select name="origine" required><option><option ng:repeat="(codice, desc) in aziende" value="{{codice}}">{{desc}}</select></label>
+ <label>Destinazione: <select name="destinazione" required><option><option ng:repeat="(codice, desc) in aziende" value="{{codice}}">{{desc}}</select></label><br>
+ <label>Causale: <select name="causale"><option ng:repeat="(codice, desc) in causali" value="{{codice}}">{{desc}}</select></label><br><br>
+ <label>Righe:</label> [&nbsp;<a href="" ng:click="rows.$add({ qta: 1 })">aggiungi</a>&nbsp;]
+ <table>
+  <thead>
+   <tr><th>Codice a barre<th>Descrizione<th>Taglia<th>Quantità<th>ALTRO
+  <tbody>
+   <tr ng:repeat="row in rows">
+    <td><input name="row.barcode" size=18 pattern="^\d{18}$">
+    <td>{{row.descrizione}}
+    <td>{{row.descrizioneTaglia}}
+    <td><input name="row.qta" size=3>
+    <td>[&nbsp;<a href="" ng:click="rows.$remove(row)" title="Elimina riga">X</a>&nbsp;]
+ </table>
+ <input type=submit value=Salva>
+</form>

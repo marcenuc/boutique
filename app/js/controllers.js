@@ -31,68 +31,77 @@ var Ctrl = {};
   }
 
 
-  Ctrl.ScaricoMagazzino = function (Document) {
+  Ctrl.MovimentoMagazzino = function (Document) {
     this.Document = Document;
+    this.causali = CODICI.CAUSALI_NEGOZIO;
 
     Document.aziende(angular.bind(this, SetAziende));
     this.taglieScalarini = Document.get({ id: 'TaglieScalarini' });
     this.modelliEScalarini = Document.get({ id: 'ModelliEScalarini' });
 
-    this.scarico = {
-      rows: [{ qta: 1 }]
-    };
+    this.causale = 'VENDITA';
+    this.rows = [{ qta: 1 }];
   };
-  Ctrl.ScaricoMagazzino.$inject = ['Document'];
+  Ctrl.MovimentoMagazzino.$inject = ['Document'];
 
-  Ctrl.ScaricoMagazzino.prototype = {
+  Ctrl.MovimentoMagazzino.prototype = {
+    error: function (message, level) {
+      this.flash = {};
+      this.flash[level || 'errors'] = [{ message: message }];
+    },
+
     buildBolla: function () {
-      return {
-        _id: CODICI.idScaricoMagazzino(this.scarico.azienda),
+      var doc = {
+        _id: CODICI.idMovimentoMagazzino(this.origine, this.data, this.numero),
+        destinazione: this.destinazione,
         columnNames: ['barcode', 'qta'],
-        causale: this.scarico.causale,
-        rows: this.scarico.rows.map(function (r) {
+        causale: this.causale,
+        rows: this.rows.map(function (r) {
           return [r.barcode, r.qta];
         })
       };
+      if (this.rev) {
+        doc._rev = this.rev;
+      }
+      return doc;
     },
 
     save: function () {
-      var self, r, codes, descs, i = 0, rows = this.scarico.rows, n = rows.length, newRows = {}, qta;
+      var self, r, codes, descs, i = 0, rows = this.rows, n = rows.length, newRows = {}, qta;
       for (; i < n; i += 1) {
         r = rows[i];
-        codes = CODICI.parseBarcodeAs400(r.barcode);
-        if (codes) {
+        if (r.barcode) {
+          codes = CODICI.parseBarcodeAs400(r.barcode);
+          if (!codes) {
+            return this.error('Codice non valido: "' + r.barcode + '"');
+          }
           qta = CODICI.parseQta(r.qta);
           if (qta[0]) {
-            this.flash = { errors: [{ message: 'Quantità non valida: "' + r.qta + '"' }] };
-          } else if (newRows.hasOwnProperty(r.barcode)) {
+            return this.error('Quantità non valida: "' + r.qta + '"');
+          }
+          if (newRows.hasOwnProperty(r.barcode)) {
             newRows[r.barcode].qta += qta[1];
           } else {
             descs = CODICI.barcodeDescs(codes, this.taglieScalarini.descrizioniTaglie, this.modelliEScalarini.lista);
             if (descs[0]) {
-              this.flash = { errors: [{ message: descs[0] + ': "' + r.barcode + '"' }] };
-            } else {
-              r.descrizione = descs[1].descrizione;
-              r.descrizioneTaglia = descs[1].descrizioneTaglia;
-              r.qta = qta[1];
-              newRows[r.barcode] = r;
+              return this.error(descs[0] + ': "' + r.barcode + '"');
             }
+            r.descrizione = descs[1].descrizione;
+            r.descrizioneTaglia = descs[1].descrizioneTaglia;
+            r.qta = qta[1];
+            newRows[r.barcode] = r;
           }
-        } else {
-          this.flash = { errors: [{ message: 'Codice non valido: "' + r.barcode + '"' }] };
         }
       }
-      this.scarico.rows = Object.keys(newRows).sort().map(function (barcode) {
+      this.rows = Object.keys(newRows).sort().map(function (barcode) {
         return newRows[barcode];
       });
-      if (this.doSave) {
-        self = this;
-        this.Document.save(this.buildBolla(), function (res) {
-          self.flash = { notice: [{ message: 'Salvato ' + JSON.stringify(res) }] };
-        });
-      } else {
-        angular.Array.add(this.scarico.rows, { qta: 1 });
-      }
+      self = this;
+      this.Document.save(this.buildBolla(), function (res) {
+        self.rev = res.rev;
+        self.error('Salvato ' + res.id, 'notices');
+      });
+      angular.Array.add(this.rows, { qta: 1 });
     }
   };
 
@@ -199,7 +208,7 @@ var Ctrl = {};
     save: function () {
       var self = this;
       this.Document.save(this.buildBolla(), function (res) {
-        self.flash = { notice: [{ message: 'Salvato ' + JSON.stringify(res) }] };
+        self.flash = { notices: [{ message: 'Salvato ' + JSON.stringify(res) }] };
         self.fetch();
       });
     }
@@ -408,14 +417,14 @@ var Ctrl = {};
       if (this.validate()) {
         this.Document.save(this.azienda, function (res) {
           var isNew = !self.azienda._rev,
-            notice = { notice: [{ message: 'Salvato' }] };
+            notices = { notices: [{ message: 'Salvato' }] };
           self.azienda._rev = res.rev;
           if (isNew) {
-            self.userCtx.flash = notice;
+            self.userCtx.flash = notices;
             self.aziende.rows.push({ doc: angular.copy(self.azienda) });
             self.$location.path('/Azienda_' + self.Document.toCodice(self.azienda._id)).replace();
           } else {
-            self.flash = notice;
+            self.flash = notices;
             angular.copy(self.azienda, self.aziende.rows[self.aziendaIdx].doc);
           }
         });

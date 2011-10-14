@@ -245,14 +245,17 @@ describe('Services', function () {
       });
     });
 
-    describe('ScaricoMagazzino', function () {
-      var validId = 'ScaricoMagazzino_099999_1318509597247';
+    describe('MovimentoMagazzino', function () {
+      var validId = 'MovimentoMagazzino_099999_20111014_1234';
 
-      it('should require _id with (codice, timestamp)', function () {
+      it('should require _id with (codice, data, numero)', function () {
         expect(check({ _id: validId })).not.toHaveError('Invalid type');
-        expect(check({ _id: 'ScaricoMagazzino_12345_1318509597247' })).toHaveError('Invalid azienda code');
-        expect(check({ _id: 'ScaricoMagazzino_123456_' + (new Date().getTime() + 1000) })).toHaveError('Invalid timestamp');
-        expect(check({ _id: 'ScaricoMagazzino_123456_' + (new Date().getTime()) })).not.toHaveError('Invalid timestamp');
+        expect(check({ _id: validId })).not.toHaveError('Invalid azienda code');
+        expect(check({ _id: validId })).not.toHaveError('Invalid data');
+        expect(check({ _id: validId })).not.toHaveError('Invalid numero');
+        expect(check({ _id: 'MovimentoMagazzino_12345_20111014_1234' })).toHaveError('Invalid code');
+        expect(check({ _id: 'MovimentoMagazzino_123456_20110229_1234' })).toHaveError('Invalid data');
+        expect(check({ _id: 'MovimentoMagazzino_123456_20111014_1234A' })).toHaveError('Invalid code');
       });
 
       it('should require columnNames to be barcode, and qta', function () {
@@ -260,6 +263,18 @@ describe('Services', function () {
         expect(check({ _id: validId })).toHaveError('Required field: columnNames');
         expect(check({ _id: validId, columnNames: ['barcode', 'qta', 'other'] })).toHaveError(msg);
         expect(check({ _id: validId, columnNames: ['barcode', 'qta'] })).not.toHaveError(msg);
+      });
+
+      it('should require destinazione', function () {
+        expect(check({ _id: validId })).toHaveError('Required: destinazione');
+        expect(check({ _id: validId, destinazione: '099991' })).not.toHaveError('Required: destinazione');
+        expect(check({ _id: validId, destinazione: '99991' })).toHaveError('Invalid destinazione code');
+      });
+
+      it('should require causale', function () {
+        expect(check({ _id: validId })).toHaveError('Required: causale');
+        expect(check({ _id: validId, causale: 'VENDITA' })).not.toHaveError('Required: causale');
+        expect(check({ _id: validId, causale: 'NESSUNA' })).toHaveError('Invalid causale');
       });
 
       it('should require a valid list', function () {

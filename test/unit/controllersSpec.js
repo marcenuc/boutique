@@ -291,10 +291,16 @@ describe('Controller', function () {
 
 
   describe('RicercaBollaAs400', function () {
-    var scalarini = { posizioniCodici: {
-        '2': ["44", "46", "48", "50", "52", "54", "56", "58", "60", "62", "64", "66"],
-        '3': ["01"]
-      }},
+    var scalarini = {
+      taglie: {
+        '2': { '44': '44', '46': '46', '48': '48', '50': '50', '52': '52', '56': '56', '58': '58', '60': '60', '62': '62', '64': '64', 'SM': '66' },
+        '3': { 'TU': '01' }
+      },
+      listeDescrizioni: {
+        '2': ["44", "46", "48", "50", "52", "54", "56", "58", "60", "62", "64", "SM"],
+        '3': ['TU']
+      }
+    },
       causaliAs400 = {
         '1': { '98': ['VENDITA', -1] }
       },
@@ -325,7 +331,7 @@ describe('Controller', function () {
     describe('actions', function () {
 
       function newController() {
-        $browser.xhr.expectGET('/boutique_db/Scalarini').respond(JSON.stringify(scalarini));
+        $browser.xhr.expectGET('/boutique_db/TaglieScalarini').respond(JSON.stringify(scalarini));
         $browser.xhr.expectGET('/boutique_db/CausaliAs400').respond(JSON.stringify(causaliAs400));
         ctrl = scope.$new(Ctrl.RicercaBollaAs400);
       }

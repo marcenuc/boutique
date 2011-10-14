@@ -40,7 +40,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
     }
   }
 
-  function validDate(year, month, day) {
+  function isValidDate(year, month, day) {
     var y = parseInt(year, 10), m = parseInt(month, 10), d = parseInt(day, 10);
     return m > 0 && m < 13 && y > 0 && y < 32768 && d > 0 && d <= (new Date(y, m, 0)).getDate();
   }
@@ -61,14 +61,14 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
 
   function hasValidBollaAs400Code() {
     var m = /^(\d\d)(\d\d)(\d\d)_([1-9]\d*)_([A-Z])_(\d+)$/.exec(typeAndCode[2]);
-    if (!m || !validDate(m[1], m[2], m[3])) {
+    if (!m || !isValidDate(m[1], m[2], m[3])) {
       error('Invalid code');
     }
   }
 
   function hasValidListinoCode() {
     var m = /^(\d)_(\d{4})(\d{2})(\d{2})$/.exec(typeAndCode[2]);
-    if (!m || !validDate(m[2], m[3], m[4])) {
+    if (!m || !isValidDate(m[2], m[3], m[4])) {
       error('Invalid code');
     }
   }
@@ -291,17 +291,25 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         hasColumnNames(['barcode', 'giacenza', 'costo']);
         hasInventarioNegozio(doc.rows);
         break;
-      case 'ScaricoMagazzino':
-        // TODO l'utente negozio può scaricare solo dal suo magazzino di tipo 3
-        m = typeAndCode[2].split('_');
-        if (m.length !== 2) {
+      case 'MovimentoMagazzino':
+        // TODO l'utente negozio può scaricare solo dal suo magazzino di tipo 3.
+        // TODO DRY "\d{6}" è il codice azienda.
+        m = /^(\d{6})_(\d{4})(\d\d)(\d\d)_\d+$/.exec(typeAndCode[2]);
+        if (!m) {
           error('Invalid code');
-        } else if (!isValidAziendaCode(m[0])) {
-          error('Invalid azienda code');
-        } else if (!/^\d+$/.test(m[1]) || (new Date().getTime() < parseInt(m[1], 10))) {
-          error('Invalid timestamp');
+        } else if (!isValidDate(m[2], m[3], m[4])) {
+          error('Invalid data');
         }
         hasColumnNames(['barcode', 'qta']);
+        mustHave('destinazione');
+        if (!isValidAziendaCode(doc.destinazione)) {
+          error('Invalid destinazione code');
+        }
+        mustHave('causale');
+        // TODO DRY this should come from CODICI.CAUSALI_NEGOZIO
+        if (['VENDITA', 'RESO_VENDITA', 'RESO_ACQUISTO'].indexOf(doc.causale) < 0) {
+          error('Invalid causale');
+        }
         hasElencoArticoli(doc.rows);
         break;
       case 'CausaliAs400':
