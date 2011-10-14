@@ -63,6 +63,17 @@ var CODICI;
     return ['MovimentoMagazzino', azienda, dataBolla, numeroBolla].join('_');
   };
 
+  CODICI.parseIdMovimentoMagazzino = function (id) {
+    var m = /^MovimentoMagazzino_(\d{6})_(\d{8})_(\d+)$/.exec(id);
+    if (m) {
+      return {
+        origine: m[1],
+        data: m[2],
+        numero: m[3]
+      };
+    }
+  };
+
   CODICI.parseBarcodeAs400 = function (code) {
     var m = CODICI.rexpBarcodeAs400.exec(code);
     if (m) {

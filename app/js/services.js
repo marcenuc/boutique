@@ -13,7 +13,7 @@
     $route.when('/BollaAs400', { template: 'partials/ricerca-bolla-as400.html', controller: Ctrl.RicercaBollaAs400 });
     $route.when('/ricerca-articoli', { template: 'partials/ricerca-articoli.html', controller: Ctrl.RicercaArticoli });
     $route.when('/ricerca-giacenza', { template: 'partials/ricerca-giacenza.html', controller: Ctrl.RicercaArticoli });
-    $route.when('/movimento-magazzino', { template: 'partials/movimento-magazzino.html', controller: Ctrl.MovimentoMagazzino });
+    $route.when('/MovimentoMagazzino', { template: 'partials/movimento-magazzino.html', controller: Ctrl.MovimentoMagazzino });
     $route.otherwise({ redirectTo: '/' });
 
     this.$on('$afterRouteChange', function () {

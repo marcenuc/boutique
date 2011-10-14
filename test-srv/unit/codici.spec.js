@@ -35,6 +35,16 @@ requirejs(['app/js/codici'], function (codici) {
     });
   });
 
+  describe('parseIdMovimentoMagazzino', function () {
+    it('should return origine, data, and numero', function () {
+      expect(codici.parseIdMovimentoMagazzino('MovimentoMagazzino_019998_20111014_22')).toEqual({
+        origine: '019998',
+        data: '20111014',
+        numero: '22'
+      });
+    });
+  });
+
   describe('colNamesToColIndexes', function () {
     it('should return an hash with values equal to index of the column in the given array', function () {
       var u = codici.colNamesToColIndexes;

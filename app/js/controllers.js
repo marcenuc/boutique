@@ -50,6 +50,10 @@ var Ctrl = {};
       this.flash[level || 'errors'] = [{ message: message }];
     },
 
+    submit: function () {
+      this[this.action]();
+    },
+
     buildBolla: function () {
       var doc = {
         _id: CODICI.idMovimentoMagazzino(this.origine, this.data, this.numero),
@@ -58,7 +62,8 @@ var Ctrl = {};
         causale: this.causale,
         rows: this.rows.map(function (r) {
           return [r.barcode, r.qta];
-        })
+        }),
+        accodato: this.accodato
       };
       if (this.rev) {
         doc._rev = this.rev;
@@ -66,15 +71,60 @@ var Ctrl = {};
       return doc;
     },
 
+    buildModel: function (bolla) {
+      // TODO questo non dovrebbe servire perché i dati nell'id sono quelli della ricerca.
+      // Per ora lo lascio.
+      var parsedId = CODICI.parseIdMovimentoMagazzino(bolla._id);
+      if (!parsedId) {
+        return this.error('Id documento non valido');
+      }
+      this.origine = parsedId.origine;
+      this.data = parsedId.data;
+      this.numero = parsedId.numero;
+      this.destinazione = bolla.destinazione;
+      this.causale = bolla.causale;
+      this.rows = bolla.rows.map(function (row) {
+        var descs,
+          r = { barcode: row[0] },
+          codes = CODICI.parseBarcodeAs400(r.barcode);
+        if (!codes) {
+          return this.error('Codice non valido: "' + r.barcode + '"');
+        }
+        descs = CODICI.barcodeDescs(codes, this.taglieScalarini.descrizioniTaglie, this.modelliEScalarini.lista);
+        if (descs[0]) {
+          return this.error(descs[0] + ': "' + r.barcode + '"');
+        }
+        r.descrizione = descs[1].descrizione;
+        r.descrizioneTaglia = descs[1].descrizioneTaglia;
+        r.qta = row[1];
+        return r;
+      }, this);
+      this.accodato = bolla.accodato;
+      this.rev = bolla._rev;
+    },
+
+    find: function () {
+      var self = this;
+      // Avoid unexpected writes on search.
+      delete this.rev;
+      delete this.destinazione;
+      delete this.accodato;
+      this.rows = [{ qta: 1 }];
+      this.Document.get({ id: CODICI.idMovimentoMagazzino(this.origine, this.data, this.numero) }, function (bolla) {
+        self.buildModel(bolla);
+      }, function (status, resp) {
+        if (status === 404) {
+          return self.error('Non trovato');
+        }
+        self.error(status + JSON.stringify(resp));
+      });
+    },
+
     save: function () {
       var self, r, codes, descs, i = 0, rows = this.rows, n = rows.length, newRows = {}, qta;
       for (; i < n; i += 1) {
         r = rows[i];
         if (r.barcode) {
-          codes = CODICI.parseBarcodeAs400(r.barcode);
-          if (!codes) {
-            return this.error('Codice non valido: "' + r.barcode + '"');
-          }
           qta = CODICI.parseQta(r.qta);
           if (qta[0]) {
             return this.error('Quantità non valida: "' + r.qta + '"');
@@ -82,6 +132,10 @@ var Ctrl = {};
           if (newRows.hasOwnProperty(r.barcode)) {
             newRows[r.barcode].qta += qta[1];
           } else {
+            codes = CODICI.parseBarcodeAs400(r.barcode);
+            if (!codes) {
+              return this.error('Codice non valido: "' + r.barcode + '"');
+            }
             descs = CODICI.barcodeDescs(codes, this.taglieScalarini.descrizioniTaglie, this.modelliEScalarini.lista);
             if (descs[0]) {
               return this.error(descs[0] + ': "' + r.barcode + '"');

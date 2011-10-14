@@ -3,12 +3,12 @@
     <li ng:repeat="message in messages">{{message.message}}
   </ul>
 </div>
-<form ng:submit="save()">
- <label>Numero bolla: <input name="numero" size=8></label>
- <label>Data bolla: <input name="data" size=8></label><br>
- <label>Origine: <select name="origine" required><option><option ng:repeat="(codice, desc) in aziende" value="{{codice}}">{{desc}}</select></label>
- <label>Destinazione: <select name="destinazione" required><option><option ng:repeat="(codice, desc) in aziende" value="{{codice}}">{{desc}}</select></label><br>
- <label>Causale: <select name="causale"><option ng:repeat="(codice, desc) in causali" value="{{codice}}">{{desc}}</select></label><br><br>
+<form ng:submit="submit()">
+ <label>Numero bolla: <input name=numero size=8></label>
+ <label>Data bolla: <input name=data size=8></label><br>
+ <label>Origine: <select name=origine required><option><option ng:repeat="(codice, desc) in aziende" value="{{codice}}">{{desc}}</select></label>
+ <label>Destinazione: <select name=destinazione><option><option ng:repeat="(codice, desc) in aziende" value="{{codice}}">{{desc}}</select></label><br>
+ <label>Causale: <select name=causale><option ng:repeat="(codice, desc) in causali" value="{{codice}}">{{desc}}</select></label><br><br>
  <label>Righe:</label> [&nbsp;<a href="" ng:click="rows.$add({ qta: 1 })">aggiungi</a>&nbsp;]
  <table>
   <thead>
@@ -21,5 +21,6 @@
     <td><input name="row.qta" size=3>
     <td>[&nbsp;<a href="" ng:click="rows.$remove(row)" title="Elimina riga">X</a>&nbsp;]
  </table>
- <input type=submit value=Salva>
+ <label><input type=checkbox name=approvato value=1>&nbsp;Accodato</label><br>
+ <button ng:click="action = 'save'">Salva</button> <button ng:click="action = 'find'">Cerca</button>
 </form>
