@@ -1,4 +1,5 @@
 #!/bin/sh -ex
+git pull
 restartWebserver="${1:-1}"
 [ "$restartWebserver" = "1" ] && sudo service boutique-webserver stop
 ./jake --trace deps:sync
