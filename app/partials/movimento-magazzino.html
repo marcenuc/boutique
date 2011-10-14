@@ -4,13 +4,13 @@
   </ul>
 </div>
 <form ng:submit="submit()">
- <label>Numero bolla: <input name=numero size=8></label>
- <label>Data bolla: <input name=data size=8></label><br>
+ <label>Numero bolla: <input name=numero size=8 required></label>
+ <label>Data bolla (AAAAMMGG): <input name=data size=8 required></label><p>
  <label>Origine: <select name=origine required><option><option ng:repeat="(codice, desc) in aziende" value="{{codice}}">{{desc}}</select></label>
- <label>Destinazione: <select name=destinazione><option><option ng:repeat="(codice, desc) in aziende" value="{{codice}}">{{desc}}</select></label><br>
- <label>Causale: <select name=causale><option ng:repeat="(codice, desc) in causali" value="{{codice}}">{{desc}}</select></label><br><br>
- <label>Righe:</label> [&nbsp;<a href="" ng:click="rows.$add({ qta: 1 })">aggiungi</a>&nbsp;]
+ <label>Destinazione: <select name=destinazione ng:disabled="{{!causali[causale][1]}}"><option><option ng:repeat="(codice, desc) in aziende" value="{{codice}}">{{desc}}</select></label><p>
+ <label>Causale: <select name=causale><option ng:repeat="(causale, segno) in causali">{{causale}}</select></label>&nbsp;&nbsp;Segno origine:&nbsp;"{{causali[causale][0]}}";&nbsp;&nbsp;Segno destinazione:&nbsp;"{{causali[causale][1]||' '}}"<p>
  <table>
+  <caption>Righe</caption>
   <thead>
    <tr><th>Codice a barre<th>Descrizione<th>Taglia<th>Quantità<th>ALTRO
   <tbody>
@@ -21,6 +21,6 @@
     <td><input name="row.qta" size=3>
     <td>[&nbsp;<a href="" ng:click="rows.$remove(row)" title="Elimina riga">X</a>&nbsp;]
  </table>
- <label><input type=checkbox name=approvato value=1>&nbsp;Accodato</label><br>
+ <label><input type=checkbox name=approvato value=1>&nbsp;Accodato</label><p>
  <button ng:click="action = 'save'">Salva</button> <button ng:click="action = 'find'">Cerca</button>
 </form>
