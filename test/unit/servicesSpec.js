@@ -1,5 +1,5 @@
 /*global describe: false, beforeEach: false, afterEach: false, it: false, xit: false, jasmine: false,
-         expect: false, angular: false */
+         expect: false, angular: false, CODICI: false */
 
 describe('Services', function () {
   'use strict';
@@ -189,14 +189,18 @@ describe('Services', function () {
   });
 
   describe('Validator', function () {
-    var check = null;
+    var check = null, check099999 = null, ctx123456 = { name: '123456', roles: ['azienda'] };
     beforeEach(function () {
       check = scope.$service('Validator').check;
+      check099999 = angular.service('Validator')({
+        name: '099999',
+        roles: ['azienda']
+      }).check;
     });
 
     it('should require an authenticated user', function () {
-      expect(angular.service('Validator')({}).check({})).toHaveError('Non autorizzato');
-      expect(angular.service('Validator')({}).check({ _deleted: true })).toHaveError('Non autorizzato');
+      expect(angular.service('Validator')({}).check({})).toHaveError('Not authorized');
+      expect(angular.service('Validator')({}).check({ _deleted: true })).toHaveError('Not authorized');
     });
 
     it('should forbid change of _id', function () {
@@ -246,16 +250,35 @@ describe('Services', function () {
     });
 
     describe('MovimentoMagazzino', function () {
-      var validId = 'MovimentoMagazzino_099999_20111014_1234';
+      var validId = 'MovimentoMagazzino_099999_20111014_1234',
+        check123456 = angular.service('Validator')(ctx123456).check;
+
+      it('should require owner user for writes', function () {
+        expect(check({ _id: validId })).not.toHaveError('Not authorized');
+        expect(check099999({ _id: validId })).not.toHaveError('Not authorized');
+        expect(check123456({ _id: validId })).toHaveError('Not authorized');
+      });
+
+      it('should require admin user for "accodato"', function () {
+        var accodato = { _id: validId, accodato: true },
+          nonAccodato = { _id: validId };
+        expect(check(accodato)).not.toHaveError('Not authorized');
+        expect(check(accodato, nonAccodato)).not.toHaveError('Not authorized');
+        expect(check099999(accodato)).toHaveError('Not authorized');
+        expect(check099999(nonAccodato, accodato)).toHaveError('Not authorized');
+        expect(check099999(accodato, nonAccodato)).toHaveError('Not authorized');
+        expect(check099999(accodato, accodato)).toHaveError('Not authorized');
+        expect(check123456(accodato)).toHaveError('Not authorized');
+      });
 
       it('should require _id with (codice, data, numero)', function () {
         expect(check({ _id: validId })).not.toHaveError('Invalid type');
         expect(check({ _id: validId })).not.toHaveError('Invalid azienda code');
         expect(check({ _id: validId })).not.toHaveError('Invalid data');
         expect(check({ _id: validId })).not.toHaveError('Invalid numero');
-        expect(check({ _id: 'MovimentoMagazzino_12345_20111014_1234' })).toHaveError('Invalid code');
+        expect(check({ _id: 'MovimentoMagazzino_12345_20111014_1234' })).toHaveError('Invalid azienda code');
         expect(check({ _id: 'MovimentoMagazzino_123456_20110229_1234' })).toHaveError('Invalid data');
-        expect(check({ _id: 'MovimentoMagazzino_123456_20111014_1234A' })).toHaveError('Invalid code');
+        expect(check({ _id: 'MovimentoMagazzino_123456_20111014_1234A' })).toHaveError('Invalid numero');
       });
 
       it('should require columnNames to be barcode, and qta', function () {
@@ -265,16 +288,30 @@ describe('Services', function () {
         expect(check({ _id: validId, columnNames: ['barcode', 'qta'] })).not.toHaveError(msg);
       });
 
-      it('should require destinazione', function () {
-        expect(check({ _id: validId })).toHaveError('Required: destinazione');
-        expect(check({ _id: validId, destinazione: '099991' })).not.toHaveError('Required: destinazione');
-        expect(check({ _id: validId, destinazione: '99991' })).toHaveError('Invalid destinazione code');
+      it('should require causale', function () {
+        var xpct, causali = Object.keys(CODICI.CAUSALI_MOVIMENTO_MAGAZZINO);
+        expect(check({ _id: validId })).toHaveError('Required: causale');
+        causali.forEach(function (causale) {
+          xpct = expect(check({ _id: validId, causale: causale }));
+          xpct.not.toHaveError('Required: causale');
+          xpct.not.toHaveError('Invalid causale');
+        });
+        expect(check({ _id: validId, causale: causali[0] + 'DUMMY' })).toHaveError('Invalid causale');
       });
 
-      it('should require causale', function () {
-        expect(check({ _id: validId })).toHaveError('Required: causale');
-        expect(check({ _id: validId, causale: 'VENDITA' })).not.toHaveError('Required: causale');
-        expect(check({ _id: validId, causale: 'NESSUNA' })).toHaveError('Invalid causale');
+      it('should require destinazione if required by causale', function () {
+        var segni, xpct, causali = Object.keys(CODICI.CAUSALI_MOVIMENTO_MAGAZZINO);
+        causali.forEach(function (causale) {
+          segni = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO[causale];
+          xpct = expect(check({ _id: validId, causale: causale }));
+          if (segni.length === 2) {
+            expect(check({ _id: validId, causale: causale, destinazione: '099999' })).not.toHaveError('Invalid destinazione');
+            expect(check({ _id: validId, causale: causale, destinazione: '99999' })).toHaveError('Invalid destinazione');
+          } else {
+            xpct = xpct.not;
+          }
+          xpct.toHaveError('Required: destinazione');
+        });
       });
 
       it('should require a valid list', function () {
@@ -312,6 +349,11 @@ describe('Services', function () {
     describe('Listino', function () {
       var validId = 'Listino_1_20111003';
 
+      it('should require admin user for writes', function () {
+        expect(check({ _id: validId })).not.toHaveError('Not authorized');
+        expect(check099999({ _id: validId })).toHaveError('Not authorized');
+      });
+
       it('should require valid _id with (versione, dataUso)', function () {
         var msg = 'Invalid code';
         expect(check({ _id: validId })).not.toHaveError('Invalid type');
@@ -335,6 +377,11 @@ describe('Services', function () {
 
     describe('Giacenze', function () {
       var validId = 'Giacenze';
+
+      it('should require admin user for writes', function () {
+        expect(check({ _id: validId })).not.toHaveError('Not authorized');
+        expect(check099999({ _id: validId })).toHaveError('Not authorized');
+      });
 
       it('should require columnNames to be barcode, giacenza, azienda, stato, and tipoMagazzino', function () {
         var msg = 'Invalid columnNames';

@@ -14,10 +14,14 @@ var CODICI;
     TIPO_MAGAZZINO_CLIENTI: 1,
     TIPO_MAGAZZINO_DISPONIBILE: 2,
     TIPO_MAGAZZINO_NEGOZIO: 3,
-    CAUSALI_NEGOZIO: {
-      VENDITA: 'Vendita',
-      RESO_VENDITA: 'Reso su vendita',
-      RESO_ACQUISTO: 'Reso su acquisto'
+    //TODO DRY copied in validate_doc_update.js
+    CAUSALI_MOVIMENTO_MAGAZZINO: {
+      'VENDITA': [-1],
+      'ACQUISTO': [1],
+      'RESO SU ACQUISTO': [-1],
+      'TRASFERIMENTO': [-1, 1],
+      'RETTIFICA INVENTARIO +': [1],
+      'RETTIFICA INVENTARIO -': [-1]
     }
   };
 

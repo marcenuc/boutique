@@ -33,7 +33,7 @@ var Ctrl = {};
 
   Ctrl.MovimentoMagazzino = function (Document) {
     this.Document = Document;
-    this.causali = CODICI.CAUSALI_NEGOZIO;
+    this.causali = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO;
 
     Document.aziende(angular.bind(this, SetAziende));
     this.taglieScalarini = Document.get({ id: 'TaglieScalarini' });
@@ -99,6 +99,7 @@ var Ctrl = {};
         r.qta = row[1];
         return r;
       }, this);
+      this.rows.push({ qta: 1 });
       this.accodato = bolla.accodato;
       this.rev = bolla._rev;
     },
