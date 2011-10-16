@@ -300,7 +300,7 @@ var Ctrl = {};
         desscal, ms = this.modelliEScalarini.lista,
         nodesscal = ['-- senza descrizione --', 'X'],
         descrizioniTaglia, descrizioniTaglie = this.taglieScalarini.descrizioniTaglie,
-        taglia, rows = this.giacenze.rows,
+        descrizioneTaglia, rows = this.giacenze.rows,
         n = rows.length, filtrate = [], count = filtrate.length, maxCount = this.limiteRisultati;
 
       for (i = 0; i < n && count < maxCount; i += 1) {
@@ -309,10 +309,10 @@ var Ctrl = {};
         if (k && (!this.aziendeSelezionate.length || this.aziendeSelezionate.indexOf(r[2]) >= 0)) {
           desscal = ms[k[1] + k[2]] || nodesscal;
           descrizioniTaglia = descrizioniTaglie[desscal[1]];
-          taglia = descrizioniTaglia ? descrizioniTaglia[k[5]] : '--';
+          descrizioneTaglia = descrizioniTaglia ? descrizioniTaglia[k[5]] : '--';
 
           count = filtrate.push([
-            k[1], k[2], k[3], k[4], k[5], taglia, r[1], desscal[0], this.aziende[r[2]], r[4], (r[3] ? 'PRONTO' : 'IN_PRODUZIONE')
+            k[1], k[2], k[3], k[4], k[5], descrizioneTaglia, r[1], desscal[0], this.aziende[r[2]], r[4], (r[3] ? 'PRONTO' : 'IN_PRODUZIONE')
           ]);
         }
       }
