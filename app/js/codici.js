@@ -1,28 +1,38 @@
+// TODO CODICI should be freezed to be guarded against modifications.
 var CODICI;
 
 (function () {
   'use strict';
-  // TODO should be freezed to be guarded against modifications.
-  CODICI = {
-    LEN_STAGIONE: 3,
-    LEN_MODELLO: 5,
-    LEN_ARTICOLO: 4,
-    LEN_COLORE: 4,
-    LEN_TAGLIA: 2,
-    LEN_DESCRIZIONE_TAGLIA: 3,
-    rexpBarcodeAs400: /^(\d{3})(\d{5})(\d{4})(\d{4})(\d{2})$/,
-    TIPO_MAGAZZINO_CLIENTI: 1,
-    TIPO_MAGAZZINO_DISPONIBILE: 2,
-    TIPO_MAGAZZINO_NEGOZIO: 3,
-    //TODO DRY copied in validate_doc_update.js
-    CAUSALI_MOVIMENTO_MAGAZZINO: {
-      'VENDITA': [-1],
-      'ACQUISTO': [1],
-      'RESO SU ACQUISTO': [-1],
-      'TRASFERIMENTO': [-1, 1],
-      'RETTIFICA INVENTARIO +': [1],
-      'RETTIFICA INVENTARIO -': [-1]
-    }
+  /*global define: false, exports: false*/
+  if (typeof define === 'function') {
+    CODICI = {};
+    define(function () {
+      return CODICI;
+    });
+  } else if (typeof exports === 'object') {
+    CODICI = exports;
+  } else {
+    CODICI = {};
+  }
+
+  CODICI.LEN_STAGIONE = 3;
+  CODICI.LEN_MODELLO = 5;
+  CODICI.LEN_ARTICOLO = 4;
+  CODICI.LEN_COLORE = 4;
+  CODICI.LEN_TAGLIA = 2;
+  CODICI.LEN_DESCRIZIONE_TAGLIA = 3;
+  CODICI.rexpBarcodeAs400 = /^(\d{3})(\d{5})(\d{4})(\d{4})(\d{2})$/;
+  CODICI.TIPO_MAGAZZINO_CLIENTI = 1;
+  CODICI.TIPO_MAGAZZINO_DISPONIBILE = 2;
+  CODICI.TIPO_MAGAZZINO_NEGOZIO = 3;
+  //TODO DRY copied in validate_doc_update.js
+  CODICI.CAUSALI_MOVIMENTO_MAGAZZINO = {
+    'VENDITA': [-1],
+    'ACQUISTO': [1],
+    'RESO SU ACQUISTO': [-1],
+    'TRASFERIMENTO': [-1, 1],
+    'RETTIFICA INVENTARIO +': [1],
+    'RETTIFICA INVENTARIO -': [-1]
   };
 
   CODICI.isCode = function (code) {
@@ -68,6 +78,7 @@ var CODICI;
   };
 
   CODICI.parseIdMovimentoMagazzino = function (id) {
+    // TODO DRY '\d{6}' è il codice azienda, '\d{8}' la data
     var m = /^MovimentoMagazzino_(\d{6})_(\d{8})_(\d+)$/.exec(id);
     if (m) {
       return {
@@ -163,11 +174,3 @@ var CODICI;
   };
 
 }());
-
-/*global define: false*/
-if (typeof define !== 'undefined') {
-  define(function () {
-    'use strict';
-    return CODICI;
-  });
-}

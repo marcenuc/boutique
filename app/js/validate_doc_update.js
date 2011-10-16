@@ -1,17 +1,10 @@
+/*global define: false, exports: false, require: false, CODICI: false*/
 function validate_doc_update(doc, oldDoc, userCtx, secObj) {
   'use strict';
   var es = [], i, n, rows, r,
     typeAndCode = /^([A-Z][a-zA-Z0-9]+)(?:_([0-9A-Za-z_]+))?$/.exec(doc._id || ''),
     codes = typeAndCode && typeAndCode[2] ? typeAndCode[2].split('_') : null,
-    // TODO DRY cut&past from codici.js
-    CAUSALI_MOVIMENTO_MAGAZZINO = {
-      'VENDITA': [-1],
-      'ACQUISTO': [1],
-      'RESO SU ACQUISTO': [-1],
-      'TRASFERIMENTO': [-1, 1],
-      'RETTIFICA INVENTARIO +': [1],
-      'RETTIFICA INVENTARIO -': [-1]
-    };
+    codici = typeof require === 'function' ? require('codici') : CODICI;
 
   // TODO CouchDB has isArray() function: use it.
   function typeOf(value) {
@@ -42,12 +35,14 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
   }
 
   function isAdmin() {
+    // TODO DRY 'boutique' is repeated in couchdbs.js
     return userCtx.name === 'boutique' ||
       userCtx.roles.indexOf('boutique') >= 0 ||
       userCtx.roles.indexOf('_admin') >= 0;
   }
 
   function isDocOwner() {
+    // TODO DRY 'azienda' is repeated in couchdbs.js
     return userCtx.name === codes[0] && userCtx.roles.indexOf('azienda') >= 0;
   }
 
@@ -96,8 +91,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
   }
 
   function isValidBarcode(c) {
-    //TODO DRY taken from CODICI
-    return c && (/^\d{18}$/).test(c);
+    return c && codici.rexpBarcodeAs400.test(c);
   }
 
   function hasValidAziendaCode() {
@@ -351,9 +345,9 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         }
         hasColumnNames(['barcode', 'qta']);
         mustHave('causale');
-        if (!CAUSALI_MOVIMENTO_MAGAZZINO.hasOwnProperty(doc.causale)) {
+        if (!codici.CAUSALI_MOVIMENTO_MAGAZZINO.hasOwnProperty(doc.causale)) {
           error('Invalid causale');
-        } else if (CAUSALI_MOVIMENTO_MAGAZZINO[doc.causale][1]) {
+        } else if (codici.CAUSALI_MOVIMENTO_MAGAZZINO[doc.causale][1]) {
           mustHave('destinazione');
           if (!isValidAziendaCode(doc.destinazione)) {
             error('Invalid destinazione');
@@ -386,4 +380,13 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
   if (!secObj) {
     return { errors: es };
   }
+}
+
+if (typeof define === 'function') {
+  define(function () {
+    'use strict';
+    return validate_doc_update;
+  });
+} else if (typeof exports === 'object') {
+  exports.validate_doc_update = validate_doc_update;
 }
