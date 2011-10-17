@@ -127,7 +127,7 @@ var Ctrl = {};
     },
 
     save: function () {
-      var self, r, codes, descs, i = 0, rows = this.rows, n = rows.length, newRows = {}, qta;
+      var self, r, codes, descs, i = 0, rows = this.rows, n = rows.length, newRows = [], rowPos = {}, qta;
       for (; i < n; i += 1) {
         r = rows[i];
         if (r.barcode) {
@@ -135,8 +135,8 @@ var Ctrl = {};
           if (qta[0]) {
             return this.error('Quantità non valida: "' + r.qta + '"');
           }
-          if (newRows.hasOwnProperty(r.barcode)) {
-            newRows[r.barcode].qta += qta[1];
+          if (rowPos.hasOwnProperty(r.barcode)) {
+            newRows[rowPos[r.barcode]].qta += qta[1];
           } else {
             codes = CODICI.parseBarcodeAs400(r.barcode);
             if (!codes) {
@@ -149,13 +149,11 @@ var Ctrl = {};
             r.descrizione = descs[1].descrizione;
             r.descrizioneTaglia = descs[1].descrizioneTaglia;
             r.qta = qta[1];
-            newRows[r.barcode] = r;
+            rowPos[r.barcode] = (newRows.push(r) - 1);
           }
         }
       }
-      this.rows = Object.keys(newRows).sort().map(function (barcode) {
-        return newRows[barcode];
-      });
+      this.rows = newRows;
       self = this;
       this.Document.save(this.buildBolla(), function (res) {
         self.rev = res.rev;
