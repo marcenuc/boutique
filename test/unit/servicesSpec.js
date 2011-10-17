@@ -250,7 +250,7 @@ describe('Services', function () {
     });
 
     describe('MovimentoMagazzino', function () {
-      var validId = 'MovimentoMagazzino_099999_20111014_1234',
+      var validId = 'MovimentoMagazzino_099999_2011_1234',
         check123456 = angular.service('Validator')(ctx123456).check;
 
       it('should require owner user for writes', function () {
@@ -260,7 +260,7 @@ describe('Services', function () {
       });
 
       describe('accodato', function () {
-        it('should allow non owner only if admin', function () {
+        it('should allow non owner, only if admin', function () {
 
         });
 
@@ -297,14 +297,14 @@ describe('Services', function () {
         });
       });
 
-      it('should require _id with (codice, data, numero)', function () {
+      it('should require _id with (codice, anno, numero)', function () {
         expect(check({ _id: validId })).not.toHaveError('Invalid type');
         expect(check({ _id: validId })).not.toHaveError('Invalid azienda code');
-        expect(check({ _id: validId })).not.toHaveError('Invalid data');
+        expect(check({ _id: validId })).not.toHaveError('Invalid year');
         expect(check({ _id: validId })).not.toHaveError('Invalid numero');
-        expect(check({ _id: 'MovimentoMagazzino_12345_20111014_1234' })).toHaveError('Invalid azienda code');
-        expect(check({ _id: 'MovimentoMagazzino_123456_20110229_1234' })).toHaveError('Invalid data');
-        expect(check({ _id: 'MovimentoMagazzino_123456_20111014_1234A' })).toHaveError('Invalid numero');
+        expect(check({ _id: 'MovimentoMagazzino_12345_2011_1234' })).toHaveError('Invalid azienda code');
+        expect(check({ _id: 'MovimentoMagazzino_123456_201I_1234' })).toHaveError('Invalid year');
+        expect(check({ _id: 'MovimentoMagazzino_123456_2011_1234A' })).toHaveError('Invalid numero');
       });
 
       it('should require columnNames to be barcode, and qta', function () {
@@ -312,6 +312,21 @@ describe('Services', function () {
         expect(check({ _id: validId })).toHaveError('Required field: columnNames');
         expect(check({ _id: validId, columnNames: ['barcode', 'qta', 'other'] })).toHaveError(msg);
         expect(check({ _id: validId, columnNames: ['barcode', 'qta'] })).not.toHaveError(msg);
+      });
+
+      describe('data', function () {
+        var msg = 'Invalid data';
+
+        it('should require it to be valid', function () {
+          expect(check({ _id: validId })).toHaveError(msg);
+          expect(check({ _id: validId, data: '20111017' })).not.toHaveError(msg);
+          expect(check({ _id: validId, data: '20110229' })).toHaveError(msg);
+        });
+
+        it('should have the same year as in _id', function () {
+          expect(check({ _id: validId, data: '20111017' })).not.toHaveError(msg);
+          expect(check({ _id: validId, data: '20101017' })).toHaveError(msg);
+        });
       });
 
       it('should require causale', function () {

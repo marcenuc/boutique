@@ -75,14 +75,18 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
     }
   }
 
+  function isValidYear(year) {
+    return year && (/^\d{4}$/).test(year) && parseInt(year, 10) > 2010;
+  }
+
   function isValidDate(year, month, day) {
     var y = parseInt(year, 10), m = parseInt(month, 10), d = parseInt(day, 10);
     return m > 0 && m < 13 && y > 0 && y < 32768 && d > 0 && d <= (new Date(y, m, 0)).getDate();
   }
 
-  function isValidYyyyMmDdDate(yyyymmdd) {
+  function isValidYyyyMmDdDate(yyyymmdd, validYear) {
     var m = /^(\d{4})(\d\d)(\d\d)$/.exec(yyyymmdd);
-    return m && isValidDate(m[1], m[2], m[3]);
+    return m && (!validYear || validYear === m[1]) && isValidDate(m[1], m[2], m[3]);
   }
 
   function isValidAziendaCode(c) {
@@ -108,6 +112,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
   }
 
   function hasValidListinoCode() {
+    // TODO DRY usare codes[] e isValidYyyyMmDdDate()
     var m = /^(\d)_(\d{4})(\d{2})(\d{2})$/.exec(typeAndCode[2]);
     if (!m || !isValidDate(m[2], m[3], m[4])) {
       error('Invalid code');
@@ -339,12 +344,16 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         // TODO l'utente negozio può scaricare solo dal suo magazzino di tipo 3.
         if (codes.length !== 3) {
           error('Invalid code');
-        } else if (!isValidYyyyMmDdDate(codes[1])) {
-          error('Invalid data');
+        } else if (!isValidYear(codes[1])) {
+          error('Invalid year');
         } else if (!/^\d+$/.test(codes[2])) {
           error('Invalid numero');
         }
+        if (!isValidYyyyMmDdDate(doc.data, codes[1])) {
+          error('Invalid data');
+        }
         hasColumnNames(['barcode', 'qta']);
+        // TODO mustHave('causale') non serve perché controllo se ha valori validi.
         mustHave('causale');
         if (!codici.CAUSALI_MOVIMENTO_MAGAZZINO.hasOwnProperty(doc.causale)) {
           error('Invalid causale');

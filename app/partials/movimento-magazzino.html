@@ -15,7 +15,7 @@
    <tr><th>Codice a barre<th>Descrizione<th>Taglia<th>Quantità<th>ALTRO
   <tbody>
    <tr ng:repeat="row in rows">
-    <td><input name="row.barcode" size=18 pattern="^\d{18}$">
+    <td><input name="row.barcode" size=20 pattern="^\d{18}$">
     <td>{{row.descrizione}}
     <td>{{row.descrizioneTaglia}}
     <td><input name="row.qta" size=3>

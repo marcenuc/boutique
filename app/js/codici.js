@@ -72,18 +72,17 @@ var CODICI;
     return 'Inventario_' + azienda;
   };
 
-  // TODO si potrebbe usare l'anno invece della data nell'_id
-  CODICI.idMovimentoMagazzino = function (azienda, dataBolla, numeroBolla) {
-    return ['MovimentoMagazzino', azienda, dataBolla, numeroBolla].join('_');
+  CODICI.idMovimentoMagazzino = function (azienda, anno, numeroBolla) {
+    return ['MovimentoMagazzino', azienda, anno, numeroBolla].join('_');
   };
 
   CODICI.parseIdMovimentoMagazzino = function (id) {
-    // TODO DRY '\d{6}' è il codice azienda, '\d{8}' la data
-    var m = /^MovimentoMagazzino_(\d{6})_(\d{8})_(\d+)$/.exec(id);
+    // TODO DRY '\d{6}' è il codice azienda, '\d{4}' l'anno
+    var m = /^MovimentoMagazzino_(\d{6})_(\d{4})_(\d+)$/.exec(id);
     if (m) {
       return {
         origine: m[1],
-        data: m[2],
+        anno: m[2],
         numero: m[3]
       };
     }

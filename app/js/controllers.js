@@ -54,9 +54,14 @@ var Ctrl = {};
       this[this.action]();
     },
 
+    getYear: function () {
+      return this.data ? this.data.substring(0, 4) : null;
+    },
+
     buildBolla: function () {
       var doc = {
-        _id: CODICI.idMovimentoMagazzino(this.origine, this.data, this.numero),
+        _id: CODICI.idMovimentoMagazzino(this.origine, this.getYear(), this.numero),
+        data: this.data,
         destinazione: this.destinazione,
         columnNames: ['barcode', 'qta'],
         causale: this.causale,
@@ -79,8 +84,8 @@ var Ctrl = {};
         return this.error('Id documento non valido');
       }
       this.origine = parsedId.origine;
-      this.data = parsedId.data;
       this.numero = parsedId.numero;
+      this.data = bolla.data;
       this.destinazione = bolla.destinazione;
       this.causale = bolla.causale;
       this.rows = bolla.rows.map(function (row) {
@@ -111,7 +116,7 @@ var Ctrl = {};
       delete this.destinazione;
       delete this.accodato;
       this.rows = [{ qta: 1 }];
-      this.Document.get({ id: CODICI.idMovimentoMagazzino(this.origine, this.data, this.numero) }, function (bolla) {
+      this.Document.get({ id: CODICI.idMovimentoMagazzino(this.origine, this.getYear(), this.numero) }, function (bolla) {
         self.buildModel(bolla);
       }, function (status, resp) {
         if (status === 404) {
