@@ -369,15 +369,14 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
           error('Invalid data');
         }
         hasColumnNames(['barcode', 'qta']);
-        // TODO mustHave('causale') non serve perché controllo se ha valori validi.
-        mustHave('causale');
-        if (!codici.CAUSALI_MOVIMENTO_MAGAZZINO.hasOwnProperty(doc.causale)) {
+        if (typeOf(doc.causale) !== 'array' || doc.causale.length !== 3 ||
+            typeof doc.causale[0] !== 'string' ||
+            !codici.CAUSALI_MOVIMENTO_MAGAZZINO.hasOwnProperty(doc.causale[0]) ||
+            doc.causale[1] !== codici.CAUSALI_MOVIMENTO_MAGAZZINO[doc.causale[0]][0] ||
+            doc.causale[2] !== codici.CAUSALI_MOVIMENTO_MAGAZZINO[doc.causale[0]][1]) {
           error('Invalid causale');
-        } else if (codici.CAUSALI_MOVIMENTO_MAGAZZINO[doc.causale][1]) {
-          mustHave('destinazione');
-          if (!isValidAziendaCode(doc.destinazione)) {
-            error('Invalid destinazione');
-          }
+        } else if (codici.CAUSALI_MOVIMENTO_MAGAZZINO[doc.causale[0]][1] && !isValidAziendaCode(doc.destinazione)) {
+          error('Invalid destinazione');
         }
         hasElencoArticoli(doc.rows);
         break;

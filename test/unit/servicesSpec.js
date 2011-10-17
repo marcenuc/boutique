@@ -261,7 +261,7 @@ describe('Services', function () {
 
       describe('accodato', function () {
         it('should allow non owner, only if admin', function () {
-
+          //TODO
         });
 
         describe('causale "VENDITA"', function () {
@@ -330,28 +330,30 @@ describe('Services', function () {
       });
 
       it('should require causale', function () {
-        var xpct, causali = Object.keys(CODICI.CAUSALI_MOVIMENTO_MAGAZZINO);
-        expect(check({ _id: validId })).toHaveError('Required: causale');
+        var xpct, causali = Object.keys(CODICI.CAUSALI_MOVIMENTO_MAGAZZINO), msg = 'Invalid causale';
+        expect(check({ _id: validId })).toHaveError(msg);
         causali.forEach(function (causale) {
-          xpct = expect(check({ _id: validId, causale: causale }));
-          xpct.not.toHaveError('Required: causale');
-          xpct.not.toHaveError('Invalid causale');
+          var causaleMovimento = [causale].concat(CODICI.CAUSALI_MOVIMENTO_MAGAZZINO[causale]);
+          xpct = expect(check({ _id: validId, causale: causaleMovimento }));
+          xpct.not.toHaveError(msg);
         });
-        expect(check({ _id: validId, causale: causali[0] + 'DUMMY' })).toHaveError('Invalid causale');
+        expect(check({ _id: validId, causale: [CODICI.CAUSALI_MOVIMENTO_MAGAZZINO[causali[0]], 0, 1] })).toHaveError(msg);
       });
 
       it('should require destinazione if required by causale', function () {
-        var segni, xpct, causali = Object.keys(CODICI.CAUSALI_MOVIMENTO_MAGAZZINO);
+        var causali = Object.keys(CODICI.CAUSALI_MOVIMENTO_MAGAZZINO),
+          msg = 'Invalid destinazione';
         causali.forEach(function (causale) {
-          segni = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO[causale];
-          xpct = expect(check({ _id: validId, causale: causale }));
-          if (segni.length === 2) {
-            expect(check({ _id: validId, causale: causale, destinazione: '099999' })).not.toHaveError('Invalid destinazione');
-            expect(check({ _id: validId, causale: causale, destinazione: '99999' })).toHaveError('Invalid destinazione');
+          var segni = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO[causale],
+            causaleMovimento = [causale].concat(CODICI.CAUSALI_MOVIMENTO_MAGAZZINO[causale]),
+            xpct = expect(check({ _id: validId, causale: causaleMovimento }));
+          if (segni[1]) {
+            expect(check({ _id: validId, causale: causaleMovimento, destinazione: '099999' })).not.toHaveError(msg);
+            expect(check({ _id: validId, causale: causaleMovimento, destinazione: '99999' })).toHaveError(msg);
           } else {
             xpct = xpct.not;
           }
-          xpct.toHaveError('Required: destinazione');
+          xpct.toHaveError(msg);
         });
       });
 
