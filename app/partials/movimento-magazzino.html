@@ -7,7 +7,7 @@
  <label>Numero bolla: <input name=numero size=8 required></label>
  <label>Data bolla (AAAAMMGG): <input name=data size=8 required></label><p>
  <label>Origine: <select name=origine required><option><option ng:repeat="(codice, desc) in aziende" value="{{codice}}">{{desc}}</select></label>
- <label>Destinazione: <select name=destinazione ng:disabled="{{!causali[causale][1]}}"><option><option ng:repeat="(codice, desc) in aziende" value="{{codice}}">{{desc}}</select></label><p>
+ <label>Destinazione: <select name=destinazione><option><option ng:repeat="(codice, desc) in aziende" value="{{codice}}">{{desc}}</select></label><p>
  <label>Causale: <select name=causale><option ng:repeat="(causale, segno) in causali">{{causale}}</select></label>&nbsp;&nbsp;Segno origine:&nbsp;"{{causali[causale][0]}}";&nbsp;&nbsp;Segno destinazione:&nbsp;"{{causali[causale][1]||' '}}"<p>
  <table>
   <caption>Righe</caption>
