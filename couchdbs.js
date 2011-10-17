@@ -1,4 +1,5 @@
-/*global define: false*/
+//TODO eliminare `emit` e fare minify delle view.
+/*global define: false, emit: false*/
 
 define(['fs', 'uglify-js', 'app/js/validate_doc_update'], function (fs, uglifyJs, validate) {
   'use strict';
@@ -22,7 +23,16 @@ define(['fs', 'uglify-js', 'app/js/validate_doc_update'], function (fs, uglifyJs
     '_design/boutique_db': {
       codici: codici,
       validate_doc_update: validate_doc_update,
-      views: {}
+      views: {
+        movimenti: {
+          map: function (doc) {
+            var ids = doc._id.split('_');
+            if (ids[0] === 'MovimentoMagazzino' && doc.accodato) {
+              emit([ids[1], parseInt(ids[2], 10), parseInt(ids[3], 10)], 1);
+            }
+          }
+        }
+      }
     }
   };
 

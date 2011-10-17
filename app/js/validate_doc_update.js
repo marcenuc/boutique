@@ -119,23 +119,39 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
     }
   }
 
-  function checkListino(prezzi) {
-    var count = 0, codice;
+  function hasValidListino(prezzi) {
+    if (!prezzi) {
+      return error('Listino vuoto');
+    }
+    var codice, j, l, vuoto = true;
     for (codice in prezzi) {
       if (prezzi.hasOwnProperty(codice)) {
+        vuoto = false;
+        // TODO DRY '\d{12}' è codiceListino
         if (/^\d{12}$/.test(codice)) {
           r = prezzi[codice];
-          if (typeof r !== 'number') {
-            error('Invalid price for "' + codice + '"');
+          if (typeOf(r) !== 'array') {
+            error('Invalid row at: "' + codice + '"');
           } else {
-            count += 1;
+            l = typeof r[r.length - 1] === 'string' ? r.length - 1 : r.length;
+            if (l < 1) {
+              error('Invalid row at: "' + codice + '"');
+            } else {
+              for (j = 0; j < l; j += 1) {
+                if (typeof r[j] !== 'number') {
+                  error('Invalid row at: "' + codice + '"');
+                }
+              }
+            }
           }
         } else {
           error('Invalid code: "' + codice + '"');
         }
       }
     }
-    return count;
+    if (vuoto) {
+      return error('Listino vuoto');
+    }
   }
 
   function hasInventario(inventario) {
@@ -373,12 +389,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       case 'Listino':
         mustBeAdmin();
         hasValidListinoCode();
-        if (!doc.negozio) {
-          error('Listino vuoto');
-        } else if (checkListino(doc.negozio) === 0) {
-          error('Listino senza righe valide');
-        }
-        checkListino(doc.outlet);
+        hasValidListino(doc.prezzi);
         break;
       default:
         error('Unknown type');

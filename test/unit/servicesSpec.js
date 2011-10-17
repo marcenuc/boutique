@@ -401,18 +401,28 @@ describe('Services', function () {
         expect(check({ _id: 'Listino_1_20110229' })).toHaveError(msg);
       });
 
-      it('should require an article', function () {
-        var msg = 'Listino senza righe valide';
-        expect(check({ _id: validId })).toHaveError('Listino vuoto');
-        expect(check({ _id: validId, negozio: {} })).toHaveError(msg);
-        expect(check({ _id: validId, negozio: { "112708995017": "100" } })).toHaveError(msg);
-        expect(check({ _id: validId, negozio: { "112708995017": 100 } })).not.toHaveError(msg);
+      it('should not be empty', function () {
+        var msg = 'Listino vuoto';
+        expect(check({ _id: validId })).toHaveError(msg);
+        expect(check({ _id: validId, prezzi: {} })).toHaveError(msg);
+        expect(check({ _id: validId, prezzi: { '112708995017': [100] } })).not.toHaveError(msg);
       });
 
-      it('should check listino outlet when present', function () {
-        var msg = 'Invalid price for "112708995017"';
-        expect(check({ _id: validId, negozio: { "112708995017": 100 }, outlet: { "112708995017": "100" } })).toHaveError(msg);
-        expect(check({ _id: validId, negozio: { "112708995017": 100 }, outlet: { "112708995017": 100 } })).not.toHaveError(msg);
+      describe('valid row', function () {
+        it('should have a valid code', function () {
+          var msg = 'Invalid code: "11270899501"';
+          expect(check({ _id: validId, prezzi: { '11270899501': [100] } })).toHaveError(msg);
+          expect(check({ _id: validId, prezzi: { '112708995017': [100] } })).not.toHaveError(msg);
+        });
+
+        it('should be an array with [priceN, priceN-1, ..., price1, offerta] (offerta is optional string)', function () {
+          var msg = 'Invalid row at: "112708995017"';
+          expect(check({ _id: validId, prezzi: { '112708995017': ['100'] } })).toHaveError(msg);
+          expect(check({ _id: validId, prezzi: { '112708995017': ['100', '*'] } })).toHaveError(msg);
+          expect(check({ _id: validId, prezzi: { '112708995017': [100, '*'] } })).not.toHaveError(msg);
+          expect(check({ _id: validId, prezzi: { '112708995017': [100, 90, '*'] } })).not.toHaveError(msg);
+          expect(check({ _id: validId, prezzi: { '112708995017': [100] } })).not.toHaveError(msg);
+        });
       });
     });
 
