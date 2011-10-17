@@ -259,16 +259,42 @@ describe('Services', function () {
         expect(check123456({ _id: validId })).toHaveError('Not authorized');
       });
 
-      it('should require admin user for "accodato"', function () {
-        var accodato = { _id: validId, accodato: true },
-          nonAccodato = { _id: validId };
-        expect(check(accodato)).not.toHaveError('Not authorized');
-        expect(check(accodato, nonAccodato)).not.toHaveError('Not authorized');
-        expect(check099999(accodato)).toHaveError('Not authorized');
-        expect(check099999(nonAccodato, accodato)).toHaveError('Not authorized');
-        expect(check099999(accodato, nonAccodato)).toHaveError('Not authorized');
-        expect(check099999(accodato, accodato)).toHaveError('Not authorized');
-        expect(check123456(accodato)).toHaveError('Not authorized');
+      describe('accodato', function () {
+        it('should allow non owner only if admin', function () {
+
+        });
+
+        describe('causale "VENDITA"', function () {
+          var accodatoTrue = { _id: validId, accodato: true, causale: 'VENDITA' },
+            accodatoFalse = { _id: validId, accodato: false, causale: 'VENDITA' },
+            accodatoUndefined = { _id: validId, causale: 'VENDITA' };
+
+          it('should allow setting it by owner if new document', function () {
+            expect(check099999(accodatoTrue)).not.toHaveError('Not authorized');
+          });
+          it('should allow setting it by owner if not already accodato', function () {
+            expect(check099999(accodatoTrue, accodatoFalse)).not.toHaveError('Not authorized');
+            expect(check099999(accodatoTrue, accodatoUndefined)).not.toHaveError('Not authorized');
+          });
+          it('should not allow any change by owner if aready accodato', function () {
+            expect(check099999(accodatoFalse, accodatoTrue)).toHaveError('Not authorized');
+            expect(check099999(accodatoUndefined, accodatoTrue)).toHaveError('Not authorized');
+            expect(check099999(accodatoTrue, accodatoTrue)).toHaveError('Not authorized');
+          });
+        });
+        describe('causale NOT "VENDITA"', function () {
+          it('should require admin user', function () {
+            var accodatoTrue = { _id: validId, accodato: true },
+              accodatoUndefined = { _id: validId };
+            expect(check(accodatoTrue)).not.toHaveError('Not authorized');
+            expect(check(accodatoTrue, accodatoUndefined)).not.toHaveError('Not authorized');
+            expect(check099999(accodatoTrue)).toHaveError('Not authorized');
+            expect(check099999(accodatoUndefined, accodatoTrue)).toHaveError('Not authorized');
+            expect(check099999(accodatoTrue, accodatoUndefined)).toHaveError('Not authorized');
+            expect(check099999(accodatoTrue, accodatoTrue)).toHaveError('Not authorized');
+            expect(check123456(accodatoTrue)).toHaveError('Not authorized');
+          });
+        });
       });
 
       it('should require _id with (codice, data, numero)', function () {

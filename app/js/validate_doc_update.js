@@ -329,7 +329,8 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         hasInventarioNegozio(doc.rows);
         break;
       case 'MovimentoMagazzino':
-        if ((oldDoc && oldDoc.hasOwnProperty('accodato')) || doc.hasOwnProperty('accodato')) {
+        if ((oldDoc && oldDoc.accodato) ||
+            (doc.accodato && doc.causale !== 'VENDITA')) {
           mustBeAdmin();
         } else {
           mustBeOwner();
