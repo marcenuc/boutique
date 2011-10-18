@@ -5,6 +5,7 @@ define({
     protocol: 'http',
     host: 'localhost',
     port: 12000,
+    db: 'boutique_db',
     admin: {
       username: 'USERNAME',
       password: 'PASSWORD'

@@ -1,7 +1,7 @@
 //TODO eliminare `emit` e fare minify delle view.
 /*global define: false, emit: false*/
 
-define(['fs', 'uglify-js', 'app/js/validate_doc_update'], function (fs, uglifyJs, validate) {
+define(['fs', 'uglify-js', 'app/js/validate_doc_update', 'lib/servers'], function (fs, uglifyJs, validate, servers) {
   'use strict';
   var minify = function (src) {
       var pro = uglifyJs.uglify;
@@ -14,7 +14,7 @@ define(['fs', 'uglify-js', 'app/js/validate_doc_update'], function (fs, uglifyJs
     codici = minify(fs.readFileSync('app/js/codici.js', 'utf8')),
     couchdbs = {};
 
-  couchdbs.boutique_db = {
+  couchdbs[servers.couchdb.db] = {
     _security: {
       // TODO DRY 'boutique' and 'azienda' are repeated in validate_doc_update.js
       admins: { names: ['boutique'], roles: [] },

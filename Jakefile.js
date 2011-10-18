@@ -23,7 +23,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
   }
 
   function newBoutiqueDbConnection() {
-    return newConnection().database('boutique_db');
+    return newConnection().database(servers.couchdb.db);
   }
 
   function console_exec(command, args, success) {
@@ -118,9 +118,9 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         Object.keys(docs).forEach(function (docId) {
           db.save(docId, docs[docId], function (err, res) {
             if (err) {
-              fail('Error creating ' + docId + ': (' + util.inspect(err) + ') ' + res);
+              fail('Error creating "' + docId + '": (' + util.inspect(err) + ') ' + res);
             }
-            console.log('Pushed "' + docId + '"');
+            console.log(' - ' + docId);
           });
         });
       }
@@ -139,8 +139,9 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         }
         db.exists(function (err, exists) {
           if (err) {
-            fail('Error querying ' + dbName + ': ' + err);
+            fail('Error querying "' + dbName + '": ' + util.inspect(err));
           }
+          console.log('Pushing to "' + dbName + '":');
           if (!exists) {
             db.create(function () {
               createDocs(db, docs);
