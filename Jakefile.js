@@ -264,6 +264,31 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       });
     });
 
+    desc('Add or update CouchDB user');
+    task('setupUser', function (newName, newPassword, newRole) {
+      requirejs(['app/js/sha1'], function (sha1) {
+        function buildUser(name, password, role) {
+          var salt = String((new Date()).getTime());
+          return {
+            _id: 'org.couchdb.user:' + name,
+            type: 'user',
+            name: name,
+            roles: role ? [role] : [],
+            salt: salt,
+            password_sha: sha1.hex(password + salt)
+          };
+        }
+        var db = newConnection().database('_users'),
+          user = buildUser(newName, newPassword, newRole);
+        db.save(user._id, user, function (err, resp) {
+          if (err) {
+            fail(util.inspect(err));
+          }
+          console.dir(resp);
+        });
+      });
+    });
+
     desc('Aggiorna dati da As400');
     task('sync-as400', function () {
       var as400 = requirejs('lib/as400'),
