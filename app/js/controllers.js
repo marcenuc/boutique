@@ -159,6 +159,7 @@ var Ctrl = {};
             r.descrizione = descs[1].descrizione;
             r.descrizioneTaglia = descs[1].descrizioneTaglia;
             r.qta = qta[1];
+            r.codes = codes;
             rowPos[r.barcode] = (newRows.push(r) - 1);
           }
         }
