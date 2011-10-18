@@ -36,10 +36,10 @@ requirejs(['app/js/codici'], function (codici) {
   });
 
   describe('parseIdMovimentoMagazzino', function () {
-    it('should return origine, data, and numero', function () {
-      expect(codici.parseIdMovimentoMagazzino('MovimentoMagazzino_019998_20111014_22')).toEqual({
+    it('should return origine, anno, and numero', function () {
+      expect(codici.parseIdMovimentoMagazzino('MovimentoMagazzino_019998_2011_22')).toEqual({
         origine: '019998',
-        data: '20111014',
+        anno: '2011',
         numero: '22'
       });
     });
