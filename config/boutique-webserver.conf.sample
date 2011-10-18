@@ -14,5 +14,5 @@ pre-start script
 end script
 
 script
-  exec su -c 'cd /home/marcenuc/boutique && ./jake webserver:start' marcenuc
+  exec su -c 'cd /home/marcenuc/boutique && exec ./jake webserver:start' marcenuc
 end script
