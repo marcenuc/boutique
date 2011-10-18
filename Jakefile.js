@@ -459,7 +459,11 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         deps = Object.keys(JSON.parse(pkgContents).dependencies).sort();
       sha1sum.update(pkgContents);
       deps.forEach(function (dep) {
-        sha1sum.update(fs.readFileSync(path.join('node_modules', dep, pkgFileName), 'utf8'));
+        try {
+          sha1sum.update(fs.readFileSync(path.join('node_modules', dep, pkgFileName), 'utf8'));
+        } catch (ex) {
+          console.dir(ex);
+        }
       });
       return sha1sum.digest('hex');
     }
