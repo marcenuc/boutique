@@ -290,28 +290,57 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       });
     });
 
+    function updateReporter(err, warnsAndDoc, res) {
+      if (err) {
+        return fail(util.inspect(err));
+      }
+      if (warnsAndDoc && warnsAndDoc[0].length) {
+        console.warn(warnsAndDoc[0].join('\n'));
+      }
+      if (res) {
+        console.log(util.inspect(res));
+      }
+    }
+
     desc('Aggiorna dati da As400');
     task('sync-as400', function () {
       var as400 = requirejs('lib/as400'),
         db = newBoutiqueDbConnection();
-      function updateReporter(err, warnsAndDoc, res) {
-        if (err) {
-          return fail(util.inspect(err));
-        }
-        if (warnsAndDoc && warnsAndDoc[0].length) {
-          console.warn(warnsAndDoc[0].join('\n'));
-        }
-        if (res) {
-          console.log(util.inspect(res));
-        }
-      }
-
       // FIXME: questi aggiornamenti devono essere seriali, non asincroni.
       as400.updateCausaliAs400(db, updateReporter);
       as400.updateTaglieScalariniAs400(db, updateReporter);
       as400.updateModelliEScalariniAs400(db, updateReporter);
       as400.updateAziendeAs400(db, updateReporter);
       as400.updateInventarioAs400(db, updateReporter);
+    });
+
+    desc('Monitor CouchDB for MovimentoMagazzino to keep Giacenze updated');
+    task('follow', function () {
+      requirejs(['follow', 'lib/as400'], function (follow, as400) {
+        var feed = new follow.Feed({
+          db: servers.couchdb.authUrl() + '/' + servers.couchdb.db,
+          since: 'now',
+          inactivity_ms: 86400 * 1000,
+          filter: function (doc) {
+            var ids = doc._id.split('_');
+            return ids[0] === 'MovimentoMagazzino' && doc.accodato;
+          }
+        });
+
+        feed.on('change', function (change) {
+          var db = newBoutiqueDbConnection();
+          console.dir(change);
+          as400.updateInventarioAs400(db, updateReporter);
+        });
+
+        feed.on('error', function (err) {
+          console.error('Since Follow always retries on errors, this must be serious:');
+          fail(util.inspect(err));
+          throw err;
+        });
+
+        feed.follow();
+      });
     });
 
     desc('Aggiorna listino');

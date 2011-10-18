@@ -97,6 +97,7 @@ var Ctrl = {};
       this.data = bolla.data;
       this.destinazione = bolla.destinazione;
       this.causale = this.findCausale(bolla.causale);
+      //TODO DRY questo codice è duplicato in save()
       this.rows = bolla.rows.map(function (row) {
         var descs,
           r = { barcode: row[0] },
@@ -145,6 +146,7 @@ var Ctrl = {};
           if (qta[0]) {
             return this.error('Quantità non valida: "' + r.qta + '"');
           }
+          //TODO DRY questo codice è duplicato in buildModel()
           if (rowPos.hasOwnProperty(r.barcode)) {
             newRows[rowPos[r.barcode]].qta += qta[1];
           } else {
