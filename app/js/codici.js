@@ -25,14 +25,14 @@ var CODICI;
   CODICI.TIPO_MAGAZZINO_CLIENTI = 1;
   CODICI.TIPO_MAGAZZINO_DISPONIBILE = 2;
   CODICI.TIPO_MAGAZZINO_NEGOZIO = 3;
-  CODICI.CAUSALI_MOVIMENTO_MAGAZZINO = {
-    'VENDITA': [-1, 0],
-    'ACQUISTO': [1, 0],
-    'RESO SU ACQUISTO': [-1, 0],
-    'TRASFERIMENTO': [-1, 1],
-    'RETTIFICA INVENTARIO +': [1, 0],
-    'RETTIFICA INVENTARIO -': [-1, 0]
-  };
+  CODICI.CAUSALI_MOVIMENTO_MAGAZZINO = [
+    ['VENDITA', -1, 0],
+    ['ACQUISTO', 1, 0],
+    ['RESO SU ACQUISTO', -1, 0],
+    ['TRASFERIMENTO', -1, 1],
+    ['RETTIFICA INVENTARIO +', 1, 0],
+    ['RETTIFICA INVENTARIO -', -1, 0]
+  ];
 
   CODICI.isCode = function (code) {
     return (/^\d+$/).test(code);

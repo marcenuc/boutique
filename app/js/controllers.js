@@ -39,7 +39,7 @@ var Ctrl = {};
     this.taglieScalarini = Document.get({ id: 'TaglieScalarini' });
     this.modelliEScalarini = Document.get({ id: 'ModelliEScalarini' });
 
-    this.causale = 'VENDITA';
+    this.causale = 0;
     this.rows = [{ qta: 1 }];
   };
   Ctrl.MovimentoMagazzino.$inject = ['Document'];
@@ -64,7 +64,7 @@ var Ctrl = {};
         data: this.data,
         destinazione: this.destinazione,
         columnNames: ['barcode', 'qta'],
-        causale: this.causale,
+        causale: this.causali[this.causale],
         rows: this.rows.map(function (r) {
           return [r.barcode, r.qta];
         }),
@@ -74,6 +74,15 @@ var Ctrl = {};
         doc._rev = this.rev;
       }
       return doc;
+    },
+
+    findCausale: function (causale) {
+      var i = 0, n = this.causali.length;
+      for (; i < n; i += 1) {
+        if (causale[0] === this.causali[i][0]) {
+          return i;
+        }
+      }
     },
 
     buildModel: function (bolla) {
@@ -87,7 +96,7 @@ var Ctrl = {};
       this.numero = parsedId.numero;
       this.data = bolla.data;
       this.destinazione = bolla.destinazione;
-      this.causale = bolla.causale;
+      this.causale = this.findCausale(bolla.causale);
       this.rows = bolla.rows.map(function (row) {
         var descs,
           r = { barcode: row[0] },

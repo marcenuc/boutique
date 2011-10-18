@@ -265,9 +265,10 @@ describe('Services', function () {
         });
 
         describe('causale "VENDITA"', function () {
-          var accodatoTrue = { _id: validId, accodato: true, causale: 'VENDITA' },
-            accodatoFalse = { _id: validId, accodato: false, causale: 'VENDITA' },
-            accodatoUndefined = { _id: validId, causale: 'VENDITA' };
+          var vendita = ['VENDITA', -1, 0],
+            accodatoTrue = { _id: validId, accodato: true, causale: vendita },
+            accodatoFalse = { _id: validId, accodato: false, causale: vendita },
+            accodatoUndefined = { _id: validId, causale: vendita };
 
           it('should allow setting it by owner if new document', function () {
             expect(check099999(accodatoTrue)).not.toHaveError('Not authorized');
@@ -330,26 +331,23 @@ describe('Services', function () {
       });
 
       it('should require causale', function () {
-        var xpct, causali = Object.keys(CODICI.CAUSALI_MOVIMENTO_MAGAZZINO), msg = 'Invalid causale';
+        var xpct, causali = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO, msg = 'Invalid causale';
         expect(check({ _id: validId })).toHaveError(msg);
         causali.forEach(function (causale) {
-          var causaleMovimento = [causale].concat(CODICI.CAUSALI_MOVIMENTO_MAGAZZINO[causale]);
-          xpct = expect(check({ _id: validId, causale: causaleMovimento }));
+          xpct = expect(check({ _id: validId, causale: causale }));
           xpct.not.toHaveError(msg);
         });
-        expect(check({ _id: validId, causale: [CODICI.CAUSALI_MOVIMENTO_MAGAZZINO[causali[0]], 0, 1] })).toHaveError(msg);
+        expect(check({ _id: validId, causale: [causali[0][0], 0, 1] })).toHaveError(msg);
       });
 
       it('should require destinazione if required by causale', function () {
-        var causali = Object.keys(CODICI.CAUSALI_MOVIMENTO_MAGAZZINO),
+        var causali = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO,
           msg = 'Invalid destinazione';
         causali.forEach(function (causale) {
-          var segni = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO[causale],
-            causaleMovimento = [causale].concat(CODICI.CAUSALI_MOVIMENTO_MAGAZZINO[causale]),
-            xpct = expect(check({ _id: validId, causale: causaleMovimento }));
-          if (segni[1]) {
-            expect(check({ _id: validId, causale: causaleMovimento, destinazione: '099999' })).not.toHaveError(msg);
-            expect(check({ _id: validId, causale: causaleMovimento, destinazione: '99999' })).toHaveError(msg);
+          var xpct = expect(check({ _id: validId, causale: causale }));
+          if (causale[2]) {
+            expect(check({ _id: validId, causale: causale, destinazione: '099999' })).not.toHaveError(msg);
+            expect(check({ _id: validId, causale: causale, destinazione: '99999' })).toHaveError(msg);
           } else {
             xpct = xpct.not;
           }

@@ -351,7 +351,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         break;
       case 'MovimentoMagazzino':
         if ((oldDoc && oldDoc.accodato) ||
-            (doc.accodato && doc.causale !== 'VENDITA')) {
+            (doc.accodato && (typeOf(doc.causale) !== 'array' || doc.causale[0] !== 'VENDITA'))) {
           mustBeAdmin();
         } else {
           mustBeOwner();
@@ -369,13 +369,19 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
           error('Invalid data');
         }
         hasColumnNames(['barcode', 'qta']);
-        if (typeOf(doc.causale) !== 'array' || doc.causale.length !== 3 ||
-            typeof doc.causale[0] !== 'string' ||
-            !codici.CAUSALI_MOVIMENTO_MAGAZZINO.hasOwnProperty(doc.causale[0]) ||
-            doc.causale[1] !== codici.CAUSALI_MOVIMENTO_MAGAZZINO[doc.causale[0]][0] ||
-            doc.causale[2] !== codici.CAUSALI_MOVIMENTO_MAGAZZINO[doc.causale[0]][1]) {
+        // TODO questo codice è illeggibile
+        if (typeOf(doc.causale) !== 'array' ||
+            !codici.CAUSALI_MOVIMENTO_MAGAZZINO.some(function (causale) {
+              var ret = doc.causale.length === causale.length && causale.every(function (v, k) {
+                return doc.causale[k] === v;
+              });
+              if (ret) {
+                r = causale;
+              }
+              return ret;
+            })) {
           error('Invalid causale');
-        } else if (codici.CAUSALI_MOVIMENTO_MAGAZZINO[doc.causale[0]][1] && !isValidAziendaCode(doc.destinazione)) {
+        } else if (r[2] && !isValidAziendaCode(doc.destinazione)) {
           error('Invalid destinazione');
         }
         hasElencoArticoli(doc.rows);
