@@ -12,10 +12,11 @@
  <table>
   <caption>Righe</caption>
   <thead>
-   <tr><th>Codice a barre<th>Descrizione<th>Taglia<th>Quantità<th>ALTRO
+   <tr><th>Codice a barre<th>Codici<th>Descrizione<th>Taglia<th>Quantità<th>ALTRO
   <tbody>
    <tr ng:repeat="row in rows">
     <td><input name="row.barcode" size=21 pattern="^\d{18}$">
+    <td>{{row.codes.stagione}}&nbsp;{{row.codes.modello}}&nbsp;{{row.codes.articolo}}&nbsp;{{row.codes.colore}}
     <td>{{row.descrizione}}
     <td>{{row.descrizioneTaglia}}
     <td><input name="row.qta" size=3>

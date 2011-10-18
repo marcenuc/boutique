@@ -111,6 +111,7 @@ var Ctrl = {};
         r.descrizione = descs[1].descrizione;
         r.descrizioneTaglia = descs[1].descrizioneTaglia;
         r.qta = row[1];
+        r.codes = codes;
         return r;
       }, this);
       this.rows.push({ qta: 1 });
