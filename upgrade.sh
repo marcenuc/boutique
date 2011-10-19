@@ -5,5 +5,7 @@ git submodule update
 (cd lib/As400Querier && mvn package)
 ./jake --trace couchdb:push
 ./jake --trace webserver:build
-sudo service boutique-webserver restart
-sudo service boutique-follow restart
+sudo service boutique-webserver stop
+sudo service boutique-webserver start
+sudo service boutique-follow stop
+sudo service boutique-follow start
