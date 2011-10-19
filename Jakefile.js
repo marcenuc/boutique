@@ -339,6 +339,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
           throw err;
         });
 
+        console.log('Starting to follow ' + servers.couchdb.url() + '/' + servers.couchdb.db);
         feed.follow();
       });
     });
@@ -513,6 +514,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
     task('start', function (environment) {
       var connect = require('connect'),
         cmdExec = require('connect-exec').exec,
+        port = servers.couchdb.webserver.port,
         server = connect.createServer()
           .use(connect.logger())
           .use('/as400',
@@ -527,7 +529,8 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         server.use('/app', connect['static'](path.join(__dirname, 'build')));
       }
 
-      server.listen(servers.couchdb.webserver.port);
+      console.log('Listening on port ' + port + '.');
+      server.listen(port);
     });
   });
 });
