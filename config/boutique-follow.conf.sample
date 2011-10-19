@@ -14,5 +14,5 @@ pre-start script
 end script
 
 script
-  exec su -c 'cd /home/marcenuc/boutique && exec ./jake couchdb:follow' marcenuc
+  exec su -c 'cd /home/marcenuc/boutique && exec ./jake couchdb:follow 2>&1 | logger -t boutique-follow -p local0.error' marcenuc
 end script
