@@ -165,9 +165,9 @@ describe('Services', function () {
   });
 
   describe('userCtx', function () {
-    it('should have "name" === "boutique"', function () {
+    it('should have "roles" === ["boutique"]', function () {
       var userCtx = scope.$service('userCtx');
-      expect(userCtx.name).toEqual('boutique');
+      expect(userCtx.roles).toEqual(['boutique']);
     });
   });
 

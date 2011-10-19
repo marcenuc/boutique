@@ -18,7 +18,7 @@ define(['fs', 'uglify-js', 'app/js/validate_doc_update', 'lib/servers'], functio
     _security: {
       // TODO DRY 'boutique' and 'azienda' are repeated in validate_doc_update.js
       admins: { names: ['boutique'], roles: [] },
-      readers: { names: [], roles: ['azienda'] }
+      readers: { names: [], roles: ['azienda', 'boutique'] }
     },
     '_design/boutique_db': {
       codici: codici,

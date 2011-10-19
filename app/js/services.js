@@ -100,7 +100,8 @@
 
   angular.service('userCtx', function () {
     return {
-      name: 'boutique'
+      name: 'commerciale',
+      roles: ['boutique']
     };
   });
 
