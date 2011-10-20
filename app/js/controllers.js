@@ -141,7 +141,7 @@ var Ctrl = {};
     },
 
     save: function () {
-      var self, r, codes, descs, i = 0, rows = this.rows, n = rows.length, newRows = [], rowPos = {}, qta, qtaTotale = 0;
+      var self, r, codes, descs, i = 0, rows = this.rows, n = rows.length, newRows = [], qta, qtaTotale = 0;
       for (; i < n; i += 1) {
         r = rows[i];
         if (r.barcode) {
@@ -150,24 +150,20 @@ var Ctrl = {};
             return this.error('Quantità non valida: "' + r.qta + '"');
           }
           //TODO DRY questo codice è duplicato in buildModel()
-          if (rowPos.hasOwnProperty(r.barcode)) {
-            newRows[rowPos[r.barcode]].qta += qta[1];
-          } else {
-            codes = CODICI.parseBarcodeAs400(r.barcode);
-            if (!codes) {
-              return this.error('Codice non valido: "' + r.barcode + '"');
-            }
-            descs = CODICI.barcodeDescs(codes, this.taglieScalarini.descrizioniTaglie, this.modelliEScalarini.lista);
-            if (descs[0]) {
-              return this.error(descs[0] + ': "' + r.barcode + '"');
-            }
-            r.descrizione = descs[1].descrizione;
-            r.descrizioneTaglia = descs[1].descrizioneTaglia;
-            r.qta = qta[1];
-            qtaTotale += r.qta;
-            r.codes = codes;
-            rowPos[r.barcode] = (newRows.push(r) - 1);
+          codes = CODICI.parseBarcodeAs400(r.barcode);
+          if (!codes) {
+            return this.error('Codice non valido: "' + r.barcode + '"');
           }
+          descs = CODICI.barcodeDescs(codes, this.taglieScalarini.descrizioniTaglie, this.modelliEScalarini.lista);
+          if (descs[0]) {
+            return this.error(descs[0] + ': "' + r.barcode + '"');
+          }
+          r.descrizione = descs[1].descrizione;
+          r.descrizioneTaglia = descs[1].descrizioneTaglia;
+          r.qta = qta[1];
+          qtaTotale += r.qta;
+          r.codes = codes;
+          newRows.push(r);
         }
       }
       this.rows = newRows;
