@@ -51,4 +51,37 @@ requirejs(['app/js/codici'], function (codici) {
       expect(u(['a', 'b', 'c'])).toEqual({ a: 0, b: 1, c: 2 });
     });
   });
+
+  describe('typeAndCodeFromId', function () {
+    it('should return "010101" for id "Azienda_010101', function () {
+      var tac = codici.typeAndCodeFromId('Azienda_010101');
+      expect(tac[1]).toBe('Azienda');
+      expect(tac[2]).toBe('010101');
+    });
+
+    it('should return "010101_10" for id "cliente_010101_10', function () {
+      var tac = codici.typeAndCodeFromId('Cliente_010101_10');
+      expect(tac[1]).toBe('Cliente');
+      expect(tac[2]).toBe('010101_10');
+    });
+
+    it('should return undefined, null, or "", for undefined, null, or blank id', function () {
+      expect(codici.typeAndCodeFromId()).toBeUndefined();
+      expect(codici.typeAndCodeFromId(null)).toBe(null);
+      expect(codici.typeAndCodeFromId('')).toBe('');
+    });
+  });
+
+
+  describe('idAzienda', function () {
+    it('should return "Azienda_010101" for codice "010101"', function () {
+      expect(codici.idAzienda('010101')).toBe('Azienda_010101');
+    });
+
+    it('should return undefined for undefined, null, or blank codice', function () {
+      expect(codici.idAzienda()).toBeUndefined();
+      expect(codici.idAzienda(null)).toBeUndefined();
+      expect(codici.idAzienda('')).toBeUndefined();
+    });
+  });
 });

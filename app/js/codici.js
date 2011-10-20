@@ -43,6 +43,11 @@ var CODICI;
   }
   CODICI.padZero = padZero;
 
+
+  CODICI.typeAndCodeFromId = function (id) {
+    return id && /^([A-Z][a-zA-Z0-9]+)(?:_([0-9A-Za-z_]+))?$/.exec(id);
+  };
+
   CODICI.codiceListino = function (stagione, modello, articolo) {
     var s = padZero(stagione, CODICI.LEN_STAGIONE),
       m = padZero(modello, CODICI.LEN_MODELLO),
@@ -63,16 +68,29 @@ var CODICI;
     }
   };
 
+
+  CODICI.idAzienda = function (codice) {
+    if (codice) {
+      return 'Azienda_' + codice;
+    }
+  };
+
   CODICI.idListino = function (versione, dataUso) {
-    return ['Listino', versione, dataUso].join('_');
+    if (versione && dataUso) {
+      return ['Listino', versione, dataUso].join('_');
+    }
   };
 
   CODICI.idInventario = function (azienda) {
-    return 'Inventario_' + azienda;
+    if (azienda) {
+      return 'Inventario_' + azienda;
+    }
   };
 
   CODICI.idMovimentoMagazzino = function (azienda, anno, numeroBolla) {
-    return ['MovimentoMagazzino', azienda, anno, numeroBolla].join('_');
+    if (azienda && anno && numeroBolla) {
+      return ['MovimentoMagazzino', azienda, anno, numeroBolla].join('_');
+    }
   };
 
   CODICI.parseIdMovimentoMagazzino = function (id) {

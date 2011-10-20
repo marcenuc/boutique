@@ -1,7 +1,7 @@
 /*global describe: false, beforeEach: false, afterEach: false, it: false, xit: false, jasmine: false,
          expect: false, angular: false, CODICI: false */
 
-describe('Services', function () {
+describe('Service', function () {
   'use strict';
 
   var scope = null;
@@ -102,38 +102,6 @@ describe('Services', function () {
             expect(resp).toEqualData(response);
           });
           $browser.xhr.flush();
-        });
-      });
-
-
-      describe('toAziendaId', function () {
-
-        it('should return "Azienda_010101" for codice "010101"', function () {
-          expect(Document.toAziendaId('010101')).toBe('Azienda_010101');
-        });
-
-        it('should return undefined for undefined, null, or blank codice', function () {
-          expect(Document.toAziendaId()).toBeUndefined();
-          expect(Document.toAziendaId(null)).toBeUndefined();
-          expect(Document.toAziendaId('')).toBeUndefined();
-        });
-      });
-
-
-      describe('toCodice', function () {
-
-        it('should return "010101" for id "Azienda_010101', function () {
-          expect(Document.toCodice('Azienda_010101')).toBe('010101');
-        });
-
-        it('should return "010101_10" for id "cliente_010101_10', function () {
-          expect(Document.toCodice('Cliente_010101_10')).toBe('010101_10');
-        });
-
-        it('should return undefined for undefined, null, or blank id', function () {
-          expect(Document.toCodice()).toBeUndefined();
-          expect(Document.toCodice(null)).toBeUndefined();
-          expect(Document.toCodice('')).toBeUndefined();
         });
       });
     });

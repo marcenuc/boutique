@@ -2,9 +2,9 @@
 function validate_doc_update(doc, oldDoc, userCtx, secObj) {
   'use strict';
   var es = [], i, n, rows, r,
-    typeAndCode = /^([A-Z][a-zA-Z0-9]+)(?:_([0-9A-Za-z_]+))?$/.exec(doc._id || ''),
-    codes = typeAndCode && typeAndCode[2] ? typeAndCode[2].split('_') : null,
-    codici = typeof require === 'function' ? require('codici') : CODICI;
+    codici = typeof require === 'function' ? require('codici') : CODICI,
+    typeAndCode = codici.typeAndCodeFromId(doc._id),
+    codes = typeAndCode && typeAndCode[2] ? typeAndCode[2].split('_') : null;
 
   // TODO CouchDB has isArray() function: use it.
   function typeOf(value) {

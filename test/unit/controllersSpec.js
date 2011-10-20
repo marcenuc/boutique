@@ -1,4 +1,4 @@
-/*global describe: false, beforeEach: false, afterEach: false, it: false, xit: false, expect: false, angular: false, Ctrl: false */
+/*global describe: false, beforeEach: false, afterEach: false, it: false, xit: false, expect: false, angular: false, Ctrl: false, CODICI: false */
 
 describe('Controller', function () {
   'use strict';
@@ -6,7 +6,14 @@ describe('Controller', function () {
   var scope = null,
     $browser = null,
     ctrl = null,
-    okResponse = { ok: true, rev: '1' },
+    modelliEScalarini = {
+      lista: { '10270233': ['ABITO BOT.FANT.', 1], '92370233': ['ABITO BOT.FANT.', 1] }
+    },
+    taglieScalarini = {
+      colonneTaglie: [null, { '44': 0, '46': 1, '48': 2, '50': 3, '52': 4, '54': 5, '56': 6, '58': 7, '60': 8, '62': 9, '64': 10, '66': 11 }],
+      descrizioniTaglie: [null, { '44': '44', '46': '46', '48': '48', '50': '50', '52': '52', '54': '54', '56': '56', '58': '58', '60': '60', '62': '62', '64': '64', '66': 'SM' }],
+      listeDescrizioni: [null, ['44', '46', '48', '50', '52', '54', '56', '58', '60', '62', '64', 'SM']]
+    },
     aziende = {
       total_rows: 15,
       offset: 1,
@@ -42,8 +49,47 @@ describe('Controller', function () {
           cap: "73100"
         }
       } ]
-    },
-    URL_AZIENDE = '/boutique_db/_all_docs?endkey=%22Azienda_%EF%BF%B0%22&include_docs=true&startkey=%22Azienda_%22';
+    };
+
+  function okResponse(id, rev) {
+    return { ok: true, id: id, rev: rev || '1' };
+  }
+
+  function getUrl(id) {
+    var u;
+    if (id === 'AZIENDE') {
+      u = '_all_docs?endkey=%22Azienda_%EF%BF%B0%22&include_docs=true&startkey=%22Azienda_%22';
+    } else {
+      u = id;
+    }
+    return '/boutique_db/' + u;
+  }
+
+  function expectGET(urlId, response200, errStatus, errBody) {
+    //TODO DRY questa è praticamente identica a expectPUT;
+    var xpct = $browser.xhr.expectGET(getUrl(urlId)), response;
+    if (errStatus) {
+      response = errBody;
+      xpct.respond(errStatus, errBody);
+    } else {
+      response = response200 || okResponse(urlId);
+      xpct.respond(JSON.stringify(response));
+    }
+    return response;
+  }
+
+  function expectPUT(urlId, data, response200, errStatus, errBody) {
+    //TODO DRY questa è praticamente identica a expectGET;
+    var xpct = $browser.xhr.expectPUT(getUrl(urlId), data), response;
+    if (errStatus) {
+      response = errBody;
+      xpct.respond(errStatus, response);
+    } else {
+      response = response200 || okResponse(urlId);
+      xpct.respond(JSON.stringify(response));
+    }
+    return response;
+  }
 
   beforeEach(function () {
     scope = angular.scope();
@@ -77,12 +123,7 @@ describe('Controller', function () {
     var $routeParams = null;
 
     function newController(status, body) {
-      var xpct = $browser.xhr.expectGET(URL_AZIENDE);
-      if (status) {
-        xpct.respond(status, body);
-      } else {
-        xpct.respond(JSON.stringify(aziende));
-      }
+      expectGET('AZIENDE', aziende, status, body);
       ctrl = scope.$new(Ctrl.Azienda);
     }
 
@@ -121,9 +162,8 @@ describe('Controller', function () {
       });
 
       it('should set azienda and aziendaIdx according to $routeParams.codice', function () {
-        var azienda = aziende.rows[1].doc,
-          Document = scope.$service('Document');
-        $routeParams.codice = Document.toCodice(azienda._id);
+        var azienda = aziende.rows[1].doc;
+        $routeParams.codice = CODICI.typeAndCodeFromId(azienda._id)[2];
         newController();
         expect(ctrl.azienda._id).toBe(azienda._id);
         $browser.xhr.flush();
@@ -162,9 +202,10 @@ describe('Controller', function () {
       });
 
       describe('save', function () {
+        var response = null;
 
         function doSave() {
-          $browser.xhr.expectPUT('/boutique_db/' + ctrl.azienda._id, ctrl.azienda).respond(JSON.stringify(okResponse));
+          response = expectPUT(ctrl.azienda._id, ctrl.azienda);
           ctrl.save();
           $browser.xhr.flush();
         }
@@ -189,7 +230,7 @@ describe('Controller', function () {
           ctrl.azienda._id = 'Azienda_000000';
           var az = angular.copy(ctrl.azienda);
           delete az._rev;
-          $browser.xhr.expectPUT('/boutique_db/Azienda_000000', az).respond(JSON.stringify(okResponse));
+          expectPUT('Azienda_000000', az);
           ctrl.save();
           $browser.xhr.flush();
           expectAppendedAzienda();
@@ -204,7 +245,7 @@ describe('Controller', function () {
           });
 
           it('should set _rev field to the returned revision', function () {
-            expect(ctrl.azienda._rev).toBe(okResponse.rev);
+            expect(ctrl.azienda._rev).toBe(response.rev);
           });
 
           it('should append azienda to aziende', function () {
@@ -212,7 +253,7 @@ describe('Controller', function () {
           });
 
           it('should redirect to azienda page', function () {
-            expect(scope.$service('$location').path()).toBe('/Azienda_010101');
+            expect(scope.$service('$location').path()).toBe('/' + ctrl.azienda._id);
           });
 
         });
@@ -225,7 +266,7 @@ describe('Controller', function () {
           });
 
           it('should update _rev field to the returned revision', function () {
-            expect(ctrl.azienda._rev).toBe(okResponse.rev);
+            expect(ctrl.azienda._rev).toBe(response.rev);
           });
 
           it('should update aziende when saving updates to azienda', function () {
@@ -290,6 +331,144 @@ describe('Controller', function () {
   });
 
 
+  describe('MovimentoMagazzino', function () {
+    var $routeParams = null,
+      movimenti = [
+        {
+          _id: 'MovimentoMagazzino_099999_2011_12',
+          _rev: "1-d6363be2d62ec0f2eb5b961527bdddbf",
+          columnNames: ['barcode', 'qta'],
+          data: '20111010',
+          causale: ['VENDITA', -1, 0],
+          rows: [
+            ['102702335017800044', 1]
+          ]
+        }
+      ];
+
+    function newController(status, body) {
+      expectGET('AZIENDE', aziende, status, body);
+      expectGET('TaglieScalarini', taglieScalarini);
+      expectGET('ModelliEScalarini', modelliEScalarini);
+      ctrl = scope.$new(Ctrl.MovimentoMagazzino);
+    }
+
+    beforeEach(function () {
+      $routeParams = scope.$service('$routeParams');
+    });
+
+    describe('inizialization', function () {
+      it('should set causale to 0', function () {
+        newController();
+        $browser.xhr.flush();
+        expect(ctrl.causale).toBe(0);
+      });
+
+      it('should fetch all aziende', function () {
+        newController();
+        $browser.xhr.flush();
+        expect(ctrl.aziende).toEqual({ '019998': '019998 Mag. Disponibile', '099997': '099997 Negozio LE' });
+      });
+
+      it('should flash fetch errors', function () {
+        var $route = scope.$service('$route');
+        newController(500, 'No service');
+        $route.reload();
+        scope.$digest();
+        $route.current.scope = ctrl;
+        $browser.xhr.flush();
+        expect(ctrl.flash).toEqual({ errors: [{ message: 'ERROR 500: No service' }] });
+      });
+
+      it('should set origine, data, and numero according to $routeParams.codice', function () {
+        var movimento = movimenti[0],
+          codice = CODICI.typeAndCodeFromId(movimento._id)[2],
+          codes = codice.split('_');
+        $routeParams.codice = codice;
+        newController();
+        $browser.xhr.flush();
+        expect(ctrl.origine).toBe(codes[0]);
+        expect(ctrl.data).toBe(codes[1]);
+        expect(ctrl.numero).toBe(codes[2]);
+      });
+
+      it('should set flash to userCtx.flash and reset the latter', function () {
+        var userCtx = scope.$service('userCtx'),
+          flash = { errors: [{ message: 'sample error' }] };
+        userCtx.flash = flash;
+        newController();
+        $browser.xhr.flush();
+        expect(ctrl.flash).toEqual(flash);
+        expect(userCtx.flash).toEqual({});
+      });
+    });
+
+
+    describe('actions', function () {
+      beforeEach(function () {
+        newController();
+        $browser.xhr.flush();
+      });
+
+      describe('save', function () {
+        var response = null;
+
+        function doSave() {
+          var bolla = ctrl.buildBolla();
+          // buildBolla() adds an empty row at the end: remove it.
+          bolla.rows.pop();
+          response = expectPUT(bolla._id, bolla, { ok: true, rev: '1', id: bolla._id });
+          ctrl.save();
+          $browser.xhr.flush();
+        }
+
+        it('should create new document if data changed', function () {
+          ctrl.buildModel(movimenti[0]);
+          ctrl.data = '20100102';
+          var r, mm = angular.copy(movimenti[0]), id = CODICI.idMovimentoMagazzino('099999', '2010', '12');
+          delete mm._rev;
+          mm._id = id;
+          mm.data = ctrl.data;
+          r = expectPUT(id, mm);
+          ctrl.save();
+          $browser.xhr.flush();
+          expect(ctrl.rev).toBe(r.rev);
+        });
+
+
+        describe('new document', function () {
+          beforeEach(function () {
+            var mm = angular.copy(movimenti[0]);
+            delete mm._rev;
+            ctrl.buildModel(mm);
+            doSave();
+          });
+
+          it('should set rev field to the returned revision', function () {
+            expect(ctrl.rev).toBe(response.rev);
+          });
+
+          it('should redirect to movimento page', function () {
+            expect(scope.$service('$location').path()).toBe('/' + movimenti[0]._id);
+          });
+
+        });
+
+        describe('existing document', function () {
+          beforeEach(function () {
+            ctrl.buildModel(movimenti[0]);
+            doSave();
+          });
+
+          it('should update _rev field to the returned revision', function () {
+            expect(ctrl.rev).toBe(response.rev);
+          });
+        });
+      });
+    });
+  });
+
+
   describe('RicercaBollaAs400', function () {
     var scalarini = {
       taglie: {
@@ -331,8 +510,8 @@ describe('Controller', function () {
     describe('actions', function () {
 
       function newController() {
-        $browser.xhr.expectGET('/boutique_db/TaglieScalarini').respond(JSON.stringify(scalarini));
-        $browser.xhr.expectGET('/boutique_db/CausaliAs400').respond(JSON.stringify(causaliAs400));
+        expectGET('TaglieScalarini', scalarini);
+        expectGET('CausaliAs400', causaliAs400);
         ctrl = scope.$new(Ctrl.RicercaBollaAs400);
       }
 
@@ -372,7 +551,7 @@ describe('Controller', function () {
 
       describe('fetch', function () {
         it('should GET bolla only from CouchDB if already present', function () {
-          $browser.xhr.expectGET('/boutique_db/' + bollaDoc._id).respond(JSON.stringify(bollaDoc));
+          expectGET(bollaDoc._id, bollaDoc);
           $browser.xhr.expectGET('/boutique_app/as400/bolla/data=110704/numero=1234/enteNumerazione=Y/codiceNumerazione=10').respond(JSON.stringify(bollaAs400));
           ctrl.intestazione = intestazione;
           ctrl.fetch();
@@ -396,21 +575,13 @@ describe('Controller', function () {
         ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '102', '70233', '5215', '2100', 1, 'PRONTO', 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 3],
         ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '923', '70233', '5215', '2100', 1, 'PRONTO', 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2]
       ],
-      modelliEScalarini = {
-        lista: { '10270233': ['ABITO BOT.FANT.', 1], '92370233': ['ABITO BOT.FANT.', 1] }
-      },
-      taglieScalarini = {
-        colonneTaglie: [null, { '44': 0, '46': 1, '48': 2, '50': 3, '52': 4, '54': 5, '56': 6, '58': 7, '60': 8, '62': 9, '64': 10, '66': 11 }],
-        listeDescrizioni: [null, ['44', '46', '48', '50', '52', '54', '56', '58', '60', '62', '64', 'SM']]
-      },
       giacenze = { rows: rows };
 
     function newController() {
-      $browser.xhr.expectGET(URL_AZIENDE).respond(JSON.stringify(aziende));
-      $browser.xhr.expectGET('/boutique_db/TaglieScalarini').respond(JSON.stringify(taglieScalarini));
-      $browser.xhr.expectGET('/boutique_db/ModelliEScalarini').respond(JSON.stringify(modelliEScalarini));
-      $browser.xhr.expectGET('/boutique_db/Giacenze').respond(JSON.stringify(giacenze));
-
+      expectGET('AZIENDE', aziende);
+      expectGET('TaglieScalarini', taglieScalarini);
+      expectGET('ModelliEScalarini', modelliEScalarini);
+      expectGET('Giacenze', giacenze);
       ctrl = scope.$new(Ctrl.RicercaArticoli);
     }
 

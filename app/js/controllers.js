@@ -22,27 +22,46 @@ var Ctrl = {};
   };
 
   // Capitalized because designed for use with angular.bind().
-  function SetAziende(xhrResp) {
+  function SetAziende(callback, xhrResp) {
     this.aziende = {};
     xhrResp.rows.forEach(function (r) {
       var codice = r.id.split('_', 2)[1];
       this.aziende[codice] = codice + ' ' + r.doc.nome;
     }, this);
+    if (callback) {
+      callback();
+    }
   }
 
 
-  Ctrl.MovimentoMagazzino = function (Document) {
+  Ctrl.MovimentoMagazzino = function ($routeParams, userCtx, $location, Document) {
+    var self = this, codes = ($routeParams.codice || '').split('_'), docCount = 3;
+    this.origine = codes[0];
+    this.data = codes[1];
+    this.numero = codes[2];
+    this.$location = $location;
     this.Document = Document;
+
     this.causali = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO;
 
-    Document.aziende(angular.bind(this, SetAziende));
-    this.taglieScalarini = Document.get({ id: 'TaglieScalarini' });
-    this.modelliEScalarini = Document.get({ id: 'ModelliEScalarini' });
+    function doFind() {
+      docCount -= 1;
+      if (docCount === 0 && $routeParams.codice) {
+        self.find();
+      }
+    }
+
+    Document.aziende(angular.bind(this, SetAziende, doFind));
+    this.taglieScalarini = Document.get({ id: 'TaglieScalarini' }, doFind);
+    this.modelliEScalarini = Document.get({ id: 'ModelliEScalarini' }, doFind);
 
     this.causale = 0;
     this.rows = [{ qta: 1 }];
+
+    this.flash = userCtx.flash;
+    userCtx.flash = {};
   };
-  Ctrl.MovimentoMagazzino.$inject = ['Document'];
+  Ctrl.MovimentoMagazzino.$inject = ['$routeParams', 'userCtx', '$location', 'Document'];
 
   Ctrl.MovimentoMagazzino.prototype = {
     error: function (message, level) {
@@ -62,16 +81,22 @@ var Ctrl = {};
       var doc = {
         _id: CODICI.idMovimentoMagazzino(this.origine, this.getYear(), this.numero),
         data: this.data,
-        destinazione: this.destinazione,
         columnNames: ['barcode', 'qta'],
         causale: this.causali[this.causale],
         rows: this.rows.map(function (r) {
           return [r.barcode, r.qta];
-        }),
-        accodato: this.accodato
+        })
       };
-      if (this.rev) {
+      if (this.accodato) {
+        doc.accodato = this.accodato;
+      }
+      if (this.destinazione) {
+        doc.destinazione = this.destinazione;
+      }
+      if (this.id === doc._id && this.rev) {
         doc._rev = this.rev;
+      } else {
+        delete this.rev;
       }
       return doc;
     },
@@ -102,13 +127,18 @@ var Ctrl = {};
       this.rows = bolla.rows.map(function (row) {
         var descs,
           r = { barcode: row[0] },
-          codes = CODICI.parseBarcodeAs400(r.barcode);
+          codes = CODICI.parseBarcodeAs400(r.barcode),
+          msg;
         if (!codes) {
-          return this.error('Codice non valido: "' + r.barcode + '"');
+          msg = 'Codice non valido: "' + r.barcode + '"';
+          this.error(msg);
+          return msg;
         }
         descs = CODICI.barcodeDescs(codes, this.taglieScalarini.descrizioniTaglie, this.modelliEScalarini.lista);
         if (descs[0]) {
-          return this.error(descs[0] + ': "' + r.barcode + '"');
+          msg = descs[0] + ': "' + r.barcode + '"';
+          this.error(msg);
+          return msg;
         }
         r.descrizione = descs[1].descrizione;
         r.descrizioneTaglia = descs[1].descrizioneTaglia;
@@ -120,6 +150,7 @@ var Ctrl = {};
       this.qtaTotale = qtaTotale;
       this.rows.push({ qta: 1 });
       this.accodato = bolla.accodato;
+      this.id = bolla._id;
       this.rev = bolla._rev;
     },
 
@@ -170,6 +201,9 @@ var Ctrl = {};
       this.qtaTotale = qtaTotale;
       self = this;
       this.Document.save(this.buildBolla(), function (res) {
+        if (!self.rev) {
+          self.$location.path(res.id).replace();
+        }
         self.rev = res.rev;
         self.error('Salvato ' + res.id, 'notices');
       });
@@ -287,7 +321,7 @@ var Ctrl = {};
   };
 
   Ctrl.RicercaArticoli = function (Document) {
-    Document.aziende(angular.bind(this, SetAziende));
+    Document.aziende(angular.bind(this, SetAziende, null));
     this.aziendeSelezionate = [];
 
     this.taglieScalarini = Document.get({ id: 'TaglieScalarini' });
@@ -451,7 +485,7 @@ var Ctrl = {};
 
     this.aziende = Document.aziende(this.cbAziendeLoaded);
     //FIXME i contatti non vengono salvati.
-    this.azienda = { _id: Document.toAziendaId($routeParams.codice) };
+    this.azienda = { _id: CODICI.idAzienda($routeParams.codice) };
 
     this.flash = userCtx.flash;
     userCtx.flash = {};
@@ -494,7 +528,7 @@ var Ctrl = {};
           if (isNew) {
             self.userCtx.flash = notices;
             self.aziende.rows.push({ doc: angular.copy(self.azienda) });
-            self.$location.path('/Azienda_' + self.Document.toCodice(self.azienda._id)).replace();
+            self.$location.path('/' + self.azienda._id).replace();
           } else {
             self.flash = notices;
             angular.copy(self.azienda, self.aziende.rows[self.aziendaIdx].doc);
@@ -509,7 +543,7 @@ var Ctrl = {};
     },
 
     selectCodice: function (codice) {
-      var id = this.Document.toAziendaId(codice);
+      var id = CODICI.idAzienda(codice);
       return this.aziende.rows.some(function (row, idx) {
         if (row.id === id) {
           this.select(idx);

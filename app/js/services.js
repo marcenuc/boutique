@@ -14,6 +14,7 @@
     $route.when('/ricerca-articoli', { template: 'partials/ricerca-articoli.html', controller: Ctrl.RicercaArticoli });
     $route.when('/ricerca-giacenza', { template: 'partials/ricerca-giacenza.html', controller: Ctrl.RicercaArticoli });
     $route.when('/MovimentoMagazzino', { template: 'partials/movimento-magazzino.html', controller: Ctrl.MovimentoMagazzino });
+    $route.when('/MovimentoMagazzino_:codice', { template: 'partials/movimento-magazzino.html', controller: Ctrl.MovimentoMagazzino });
     $route.otherwise({ redirectTo: '/' });
 
     this.$on('$afterRouteChange', function () {
@@ -64,19 +65,6 @@
     r.clienti = function (azienda, success) {
       var baseId = azienda.replace(/^Azienda_/, 'Cliente_');
       return r.query(range(baseId), success);
-    };
-
-    r.toAziendaId = function (codice) {
-      if (codice) {
-        return 'Azienda_' + codice;
-      }
-    };
-
-    r.toCodice = function (id) {
-      var ids = /^[A-Z][a-zA-Z]+_([0-9][0-9_]*)$/.exec(id);
-      if (ids) {
-        return ids[1];
-      }
     };
 
     return r;
