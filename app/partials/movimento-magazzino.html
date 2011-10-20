@@ -22,6 +22,8 @@
     <td>{{row.descrizioneTaglia}}
     <td><input name="row.qta" size=3>
     <td>[&nbsp;<a href="" ng:click="rows.$remove(row)" title="Elimina riga">X</a>&nbsp;]
+  <tfoot>
+    <tr><th colspan="5" style="text-align:right">Quantità totale:<th>{{qtaTotale}}<th>&nbsp;
  </table>
  <label><input type=checkbox name=accodato value=1>&nbsp;Accodato</label><p>
  <button ng:click="action = 'save'">Salva</button> <button ng:click="action = 'find'">Cerca</button>

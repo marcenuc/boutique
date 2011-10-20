@@ -88,7 +88,8 @@ var Ctrl = {};
     buildModel: function (bolla) {
       // TODO questo non dovrebbe servire perché i dati nell'id sono quelli della ricerca.
       // Per ora lo lascio.
-      var parsedId = CODICI.parseIdMovimentoMagazzino(bolla._id);
+      var parsedId = CODICI.parseIdMovimentoMagazzino(bolla._id),
+        qtaTotale = 0;
       if (!parsedId) {
         return this.error('Id documento non valido');
       }
@@ -112,9 +113,11 @@ var Ctrl = {};
         r.descrizione = descs[1].descrizione;
         r.descrizioneTaglia = descs[1].descrizioneTaglia;
         r.qta = row[1];
+        qtaTotale += r.qta;
         r.codes = codes;
         return r;
       }, this);
+      this.qtaTotale = qtaTotale;
       this.rows.push({ qta: 1 });
       this.accodato = bolla.accodato;
       this.rev = bolla._rev;
@@ -138,7 +141,7 @@ var Ctrl = {};
     },
 
     save: function () {
-      var self, r, codes, descs, i = 0, rows = this.rows, n = rows.length, newRows = [], rowPos = {}, qta;
+      var self, r, codes, descs, i = 0, rows = this.rows, n = rows.length, newRows = [], rowPos = {}, qta, qtaTotale = 0;
       for (; i < n; i += 1) {
         r = rows[i];
         if (r.barcode) {
@@ -161,12 +164,14 @@ var Ctrl = {};
             r.descrizione = descs[1].descrizione;
             r.descrizioneTaglia = descs[1].descrizioneTaglia;
             r.qta = qta[1];
+            qtaTotale += r.qta;
             r.codes = codes;
             rowPos[r.barcode] = (newRows.push(r) - 1);
           }
         }
       }
       this.rows = newRows;
+      this.qtaTotale = qtaTotale;
       self = this;
       this.Document.save(this.buildBolla(), function (res) {
         self.rev = res.rev;
