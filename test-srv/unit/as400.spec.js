@@ -40,8 +40,8 @@ requirejs(['underscore', 'lib/as400'], function (_, as400) {
         expect(as400.buildCausaliAs400({ MC: causaliCliente, MD: causaliDisponibile })).toEqual([
           [], {
             _id : 'CausaliAs400',
-            '1': { '01': ['CARICO DA PROD.', -1], '02': ['RESO A PRODUZ.', 1] },
-            '2': { '01': ['CARICO DA PROD.', -1], '02': ['RESO A PRODUZ.', 1] }
+            '1': { '01': ['CARICO DA PROD.', 1], '02': ['RESO A PRODUZ.', -1] },
+            '2': { '01': ['CARICO DA PROD.', 1], '02': ['RESO A PRODUZ.', -1] }
           }
         ]);
       });
