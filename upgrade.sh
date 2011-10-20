@@ -6,6 +6,6 @@ git submodule update
 ./jake --trace couchdb:push
 ./jake --trace webserver:build
 sudo service boutique-webserver stop
-sudo service boutique-webserver start
 sudo service boutique-follow stop
 sudo service boutique-follow start
+sudo service boutique-webserver start
