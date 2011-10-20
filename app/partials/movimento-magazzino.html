@@ -8,14 +8,15 @@
  <label>Data bolla (AAAAMMGG): <input name=data size=8 required></label><p>
  <label>Origine: <select name=origine required><option><option ng:repeat="(codice, desc) in aziende" value="{{codice}}">{{desc}}</select></label>
  <label>Destinazione: <select name=destinazione><option><option ng:repeat="(codice, desc) in aziende" value="{{codice}}">{{desc}}</select></label><p>
- <label>Causale: <select name=causale><option ng:repeat="(idx, causa) in causali" value="{{idx}}">{{causa[0]}}</select></label>&nbsp;&nbsp;Segno origine:&nbsp;"{{causali[causale][1]}}";&nbsp;&nbsp;Segno destinazione:&nbsp;"{{causali[causale][2]}}"<p>
+ <label>Causale: <select name=causale><option ng:repeat="causa in causali" value="{{$index}}">{{causa[0]}}</select></label>&nbsp;&nbsp;Segno origine:&nbsp;"{{causali[causale][1]}}";&nbsp;&nbsp;Segno destinazione:&nbsp;"{{causali[causale][2]}}"<p>
  <table>
   <caption>Righe</caption>
   <thead>
-   <tr><th>Codice a barre<th>Codici<th>Descrizione<th>Taglia<th>Quantità<th>ALTRO
+   <tr><th>#<th>Codice a barre<th>Codici<th>Descrizione<th>Taglia<th>Quantità<th>ALTRO
   <tbody>
    <tr ng:repeat="row in rows">
-    <td><input name="row.barcode" size=21 pattern="^\d{18}$">
+    <td>{{$index + 1}}
+    <td><ng:switch on="$position"><input ng:switch-when="last" my:focus="" name="row.barcode" size=21 pattern="^\d{18}$"><input ng:switch-default name="row.barcode" size=21 pattern="^\d{18}$"></ng:switch>
     <td>{{row.codes.stagione}}&nbsp;{{row.codes.modello}}&nbsp;{{row.codes.articolo}}&nbsp;{{row.codes.colore}}
     <td>{{row.descrizione}}
     <td>{{row.descrizioneTaglia}}
