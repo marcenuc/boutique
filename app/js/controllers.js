@@ -163,6 +163,7 @@ var Ctrl = {};
       this.rows = [{ qta: 1 }];
       this.Document.get({ id: CODICI.idMovimentoMagazzino(this.origine, this.getYear(), this.numero) }, function (bolla) {
         self.buildModel(bolla);
+        self.$location.path(self.id).replace();
       }, function (status, resp) {
         if (status === 404) {
           return self.error('Non trovato');
