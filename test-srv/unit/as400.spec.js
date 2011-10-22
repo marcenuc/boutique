@@ -8,8 +8,20 @@ requirejs.config({
   nodeRequire: require
 });
 
-requirejs(['underscore', 'lib/as400'], function (_, as400) {
+requirejs(['underscore', 'lib/as400', 'app/js/codici'], function (_, as400, codici) {
   'use strict';
+
+  beforeEach(function () {
+    this.addMatchers({
+      toHaveSortedRows: function (expected) {
+        var obj = this.actual,
+          sortedRows = Object.keys(obj).sort().map(function (k) {
+            return obj[k];
+          });
+        return _.isEqual(sortedRows, expected);
+      }
+    });
+  });
 
   describe('As400', function () {
     var causaliDisponibile = {
@@ -62,6 +74,152 @@ requirejs(['underscore', 'lib/as400'], function (_, as400) {
             }
           }
         ]);
+      });
+    });
+
+    describe('updateGiacenzeWithInventarioAndMovimentiMagazzino', function () {
+      var inProduzione = 0, codiceAzienda = '099999', tipoMagazzino = codici.TIPO_MAGAZZINO_NEGOZIO,
+        idInventario = codici.idInventario(codiceAzienda, tipoMagazzino),
+        warns = null, giacenze = null, inventario = null, movimenti = null;
+
+      beforeEach(function () {
+        warns = [];
+        giacenze = {};
+        inventario = {
+          _id: idInventario,
+          columnNames: ['barcode', 'giacenza', 'costo'],
+          rows: []
+        };
+        movimenti = { rows: [] };
+      });
+
+      function doUpdateGiacenze() {
+        as400.updateGiacenzeWithInventarioAndMovimentiMagazzino(warns, giacenze, inventario, movimenti);
+      }
+
+      describe('empty giacenze', function () {
+        it('should append inventario to giacenze', function () {
+          inventario.rows = [['123123451234123401', 12]];
+          doUpdateGiacenze();
+          expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 12 }]]);
+        });
+
+        it('should update inventario with movimenti magazzino +', function () {
+          inventario.rows = [['123123451234123401', 12]];
+          movimenti.rows = [{ doc: { causale: ['c', 1, 0], rows: [['123123451234123401', 3]] } }];
+          doUpdateGiacenze();
+          expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 15 }]]);
+        });
+
+        it('should update inventario with movimenti magazzino -', function () {
+          inventario.rows = [['123123451234123401', 12]];
+          movimenti.rows = [{ doc: { causale: ['c', -1, 0], rows: [['123123451234123401', 3]] } }];
+          doUpdateGiacenze();
+          expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 9 }]]);
+        });
+
+        it('should remove from inventario when movimenti magazzino - greater than inventario and issue warning', function () {
+          inventario.rows = [['123123451234123401', 2]];
+          movimenti.rows = [{ doc: { causale: ['c', -1, 0], rows: [['123123451234123401', 3]] } }];
+          doUpdateGiacenze();
+          expect(giacenze).toHaveSortedRows([]);
+          expect(warns).toEqual(['Giacenza negativa (-1) per "123123451234123401" di "' + codiceAzienda + '"']);
+        });
+
+        it('should remove from inventario when movimenti magazzino - equal to inventario', function () {
+          inventario.rows = [['123123451234123401', 2]];
+          movimenti.rows = [{ doc: { causale: ['c', -1, 0], rows: [['123123451234123401', 2]] } }];
+          doUpdateGiacenze();
+          expect(giacenze).toHaveSortedRows([]);
+          expect(warns).toEqual([]);
+        });
+
+        it('should append movimenti magazzino to giacenze', function () {
+          movimenti.rows = [{ doc: { causale: ['c', 1, 0], rows: [['123123451234123401', 4]] } }];
+          doUpdateGiacenze();
+          expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 4 }]]);
+        });
+
+        it('should warn on negative values', function () {
+          movimenti.rows = [{ doc: { causale: ['c', 1, 0], rows: [['123123451234123401', -4]] } }];
+          doUpdateGiacenze();
+          expect(giacenze).toHaveSortedRows([]);
+          expect(warns).toEqual(['Giacenza negativa (-4) per "123123451234123401" di "' + codiceAzienda + '"']);
+        });
+
+        describe('when an article has multiple entries in inventario', function () {
+          it('should merge data when different costo', function () {
+            inventario.rows = [['123123451234123401', 2, 100], ['123123451234123401', 3, 200]];
+            movimenti.rows = [{ doc: { causale: ['c', 1, 0], rows: [['123123451234123401', 4]] } }];
+            doUpdateGiacenze();
+            expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 9 }]]);
+          });
+
+          it('should merge data when different taglia', function () {
+            inventario.rows = [['123123451234123401', 2, 100], ['123123451234123402', 3, 200]];
+            movimenti.rows = [{ doc: { causale: ['c', 1, 0], rows: [['123123451234123401', 4], ['123123451234123403', 5]] } }];
+            doUpdateGiacenze();
+            expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 6, '02': 3, '03': 5 }]]);
+          });
+        });
+      });
+
+      describe('NOT empty giacenze', function () {
+        function setGiacenza(r) {
+          var macsAzStTm = [r[1], r[2], r[3], r[0], r[4], r[5], r[6]].join('');
+          giacenze[macsAzStTm] = r;
+        }
+
+        it('should append inventario to giacenze', function () {
+          var otherAzienda = '010101';
+          setGiacenza(['123', '12345', '1234', '1234', otherAzienda, inProduzione, tipoMagazzino, { '01': 12 }]);
+          inventario.rows = [['123123451234123401', 12]];
+          doUpdateGiacenze();
+          expect(giacenze).toHaveSortedRows([
+            ['123', '12345', '1234', '1234', otherAzienda, inProduzione, tipoMagazzino, { '01': 12 }],
+            ['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 12 }]
+          ]);
+        });
+
+        it('should update giacenze with inventario', function () {
+          setGiacenza(['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 12 }]);
+          inventario.rows = [['123123451234123401', 12]];
+          doUpdateGiacenze();
+          expect(giacenze).toHaveSortedRows([
+            ['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 24 }]
+          ]);
+        });
+
+        it('should update giacenze with movimenti magazzino', function () {
+          setGiacenza(['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 12 }]);
+          movimenti.rows = [{ doc: { causale: ['c', 1, 0], rows: [['123123451234123401', 3]] } }];
+          doUpdateGiacenze();
+          expect(giacenze).toHaveSortedRows([
+            ['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 15 }]
+          ]);
+        });
+
+        describe('when an article has multiple entries in inventario', function () {
+          it('should merge data when different costo', function () {
+            setGiacenza(['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 12 }]);
+            inventario.rows = [['123123451234123401', 2, 100], ['123123451234123401', 3, 200]];
+            movimenti.rows = [{ doc: { causale: ['c', 1, 0], rows: [['123123451234123401', 4]] } }];
+            doUpdateGiacenze();
+            expect(giacenze).toHaveSortedRows([
+              ['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 21 }]
+            ]);
+          });
+
+          it('should merge data when different taglia', function () {
+            setGiacenza(['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 12 }]);
+            inventario.rows = [['123123451234123401', 2, 100], ['123123451234123402', 3, 200]];
+            movimenti.rows = [{ doc: { causale: ['c', 1, 0], rows: [['123123451234123401', 4], ['123123451234123403', 5]] } }];
+            doUpdateGiacenze();
+            expect(giacenze).toHaveSortedRows([
+              ['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 18, '02': 3, '03': 5 }]
+            ]);
+          });
+        });
       });
     });
 

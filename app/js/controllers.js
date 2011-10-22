@@ -345,119 +345,42 @@ var Ctrl = {};
       ];
       return new RegExp('^(' + toks.join(')(') + ')$');
     },
-
-    filtraArticoli: function () {
-      var i, r, k,
-        filtro = this.getFiltro(false),
-        desscal, ms = this.modelliEScalarini.lista,
-        nodesscal = ['-- senza descrizione --', 'X'],
-        descrizioniTaglia, descrizioniTaglie = this.taglieScalarini.descrizioniTaglie,
-        descrizioneTaglia, rows = this.giacenze.rows,
-        n = rows.length, filtrate = [], count = filtrate.length, maxCount = this.limiteRisultati;
-
-      for (i = 0; i < n && count < maxCount; i += 1) {
-        r = rows[i];
-        k = filtro.exec(r[0]);
-        if (k && (!this.aziendeSelezionate.length || this.aziendeSelezionate.indexOf(r[2]) >= 0)) {
-          desscal = ms[k[1] + k[2]] || nodesscal;
-          descrizioniTaglia = descrizioniTaglie[desscal[1]];
-          descrizioneTaglia = descrizioniTaglia ? descrizioniTaglia[k[5]] : '--';
-
-          count = filtrate.push([
-            k[1], k[2], k[3], k[4], k[5], descrizioneTaglia, r[1], desscal[0], this.aziende[r[2]], r[4], (r[3] ? 'PRONTO' : 'IN_PRODUZIONE')
-          ]);
-        }
-      }
-
-      this.filtrate = filtrate;
+    getFiltroSmacAz: function () {
+      var toks = [
+        dotPad(this.stagione, CODICI.LEN_STAGIONE),
+        dotPad(this.modello, CODICI.LEN_MODELLO),
+        dotPad(this.articolo, CODICI.LEN_ARTICOLO),
+        dotPad(this.colore, CODICI.LEN_COLORE)
+      ], azs = this.aziendeSelezionate.length ? '(?:' + this.aziendeSelezionate.join('|') + ')' : '\\d{6}';
+      return new RegExp('^' + toks.join('') + azs + '$');
     },
 
     filtraGiacenza: function () {
-      var TAGLIE_PER_SCALARINO = 12,
-        withTaglia = !!this.taglia,
-        colonnaTagliaFiltrata = -1,
-        filtro = this.getFiltro(true),
-        filtroTaglia = new RegExp('^' + dotPad(this.taglia, CODICI.LEN_TAGLIA) + '$'),
-        desscal,
-        ms = this.modelliEScalarini.lista,
-        nn = '--',
+      var giacenze, taglia, qta, totale, r, riga, scalarino, taglie = [], nn = '--', TAGLIE_PER_SCALARINO = 12,
+        rows = this.giacenze.rows, i = 0, n = rows.length, count = 0, filtrate = [], maxCount = this.limiteRisultati,
+        desscal, ms = this.modelliEScalarini.lista,
         nodesscal = ['-- senza descrizione --', 0],
-        scalarino,
-        taglie = [],
-        colonnaTaglia,
-        colonnaTaglie = {},
-        colonneTaglie = this.taglieScalarini.colonneTaglie,
-        rows = this.giacenze.rows,
-        i = 0,
-        n = rows.length,
-        filtrate = [],
-        count = filtrate.length,
-        maxCount = this.limiteRisultati,
-        r,
-        k,
-        qtas,
-        totals,
-        macazsttm,
-        currentMacazsttm,
-        currentLines = {};
-
-      function addRows() {
-        if (currentMacazsttm) {
-          currentMacazsttm = undefined;
-          if (!withTaglia || colonnaTagliaFiltrata >= 0) {
-            Object.keys(currentLines).sort().forEach(function (stagione) {
-              count = filtrate.push(currentLines[stagione].concat(qtas[stagione], totals[stagione]));
-            });
-          }
-          colonnaTagliaFiltrata = -1;
-        }
-      }
-
-      function newRow(azienda) {
-        qtas[k[1]] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        totals[k[1]] = qtas[k[1]][colonnaTaglia] = r[1];
-        currentLines[k[1]] = [azienda, desscal[0], k[1], k[2], k[3], k[4], r[4], (r[3] ? 'PRONTO' : 'IN_PRODUZIONE'), scalarino];
-      }
-
+        colonnaTaglia, colonneTaglie = this.taglieScalarini.colonneTaglie,
+        filtro = this.getFiltroSmacAz();
       for (; i < n && count < maxCount; i += 1) {
         r = rows[i];
-        k = filtro.exec(r[0]);
-        if (k && (!this.aziendeSelezionate.length || this.aziendeSelezionate.indexOf(r[2]) >= 0)) {
-          macazsttm = r[0].slice(3, -2) + r[2] + r[3] + r[4];
-          if (macazsttm === currentMacazsttm) {
-            colonnaTaglia = colonnaTaglie[k[5]];
-            if (withTaglia && colonnaTagliaFiltrata < 0 && filtroTaglia.test(k[5])) {
-              colonnaTagliaFiltrata = colonnaTaglia;
+        if (filtro.test(r.slice(0, 5).join(''))) {
+          totale = 0;
+          desscal = ms[r[0] + r[1]] || nodesscal;
+          giacenze = r[7];
+          riga = [r[4], desscal[0], r[0], r[1], r[2], r[3], r[6], r[5], desscal[1], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+          for (taglia in giacenze) {
+            if (giacenze.hasOwnProperty(taglia)) {
+              qta = giacenze[taglia];
+              totale += qta;
+              colonnaTaglia = 9 + colonneTaglie[desscal[1]][taglia];
+              riga[colonnaTaglia] = qta;
             }
-            if (!qtas[k[1]]) {
-              newRow(this.aziende[r[2]]);
-            } else {
-              qtas[k[1]][colonnaTaglia] = r[1];
-              totals[k[1]] += r[1];
-            }
-          } else {
-            addRows();
-            desscal = ms[k[1] + k[2]] || nodesscal;
-            scalarino = desscal[1];
-            colonnaTaglie = colonneTaglie[scalarino];
-
-            colonnaTaglia = colonnaTaglie[k[5]];
-            if (withTaglia && colonnaTagliaFiltrata < 0 && filtroTaglia.test(k[5])) {
-              colonnaTagliaFiltrata = colonnaTaglia;
-            }
-            //TODO qtas.length === TAGLIE_PER_SCALARINO
-            qtas = {};
-            totals = {};
-            currentMacazsttm = macazsttm;
-            currentLines = {};
-            newRow(this.aziende[r[2]]);
           }
-        } else {
-          addRows();
+          riga.push(totale);
+          count = filtrate.push(riga);
         }
       }
-      addRows();
-
       scalarino = nn;
       r = filtrate[0];
       if (r) {
@@ -474,6 +397,7 @@ var Ctrl = {};
       this.filtrate = filtrate;
       this.scalarino = scalarino;
       this.taglie = taglie;
+
     }
   };
 

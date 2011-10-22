@@ -15,17 +15,19 @@ var CODICI;
     CODICI = {};
   }
 
-  CODICI.LEN_STAGIONE = 3;
-  CODICI.LEN_MODELLO = 5;
-  CODICI.LEN_ARTICOLO = 4;
-  CODICI.LEN_COLORE = 4;
-  CODICI.LEN_TAGLIA = 2;
-  CODICI.LEN_DESCRIZIONE_TAGLIA = 3;
-  CODICI.rexpBarcodeAs400 = /^(\d{3})(\d{5})(\d{4})(\d{4})(\d{2})$/;
-  CODICI.TIPO_MAGAZZINO_CLIENTI = 1;
-  CODICI.TIPO_MAGAZZINO_DISPONIBILE = 2;
-  CODICI.TIPO_MAGAZZINO_NEGOZIO = 3;
-  CODICI.CAUSALI_MOVIMENTO_MAGAZZINO = [
+  var codici = CODICI;
+
+  codici.LEN_STAGIONE = 3;
+  codici.LEN_MODELLO = 5;
+  codici.LEN_ARTICOLO = 4;
+  codici.LEN_COLORE = 4;
+  codici.LEN_TAGLIA = 2;
+  codici.LEN_DESCRIZIONE_TAGLIA = 3;
+  codici.rexpBarcodeAs400 = /^(\d{3})(\d{5})(\d{4})(\d{4})(\d{2})$/;
+  codici.TIPO_MAGAZZINO_CLIENTI = 1;
+  codici.TIPO_MAGAZZINO_DISPONIBILE = 2;
+  codici.TIPO_MAGAZZINO_NEGOZIO = 3;
+  codici.CAUSALI_MOVIMENTO_MAGAZZINO = [
     ['VENDITA', -1, 0],
     ['ACQUISTO', 1, 0],
     ['RESO SU ACQUISTO', -1, 0],
@@ -34,67 +36,113 @@ var CODICI;
     ['RETTIFICA INVENTARIO -', -1, 0]
   ];
 
-  CODICI.isCode = function (code) {
-    return (/^\d+$/).test(code);
+  codici.isNumero = function (numero) {
+    return numero && (/^\d+$/).test(numero);
+  };
+
+  codici.isInt = function (num) {
+    return typeof num === 'number' && (/^-?\d+$/).test(num);
+  };
+
+  codici.isCode = function (code, len) {
+    return typeof code === 'string' && code.length <= len && (/^\d+$/).test(code);
   };
 
   function padZero(code, len) {
-    return CODICI.isCode(code) ? new Array(len + 1 - code.length).join('0') + code : null;
+    if (codici.isCode(code, len)) {
+      return new Array(len + 1 - code.length).join('0') + code;
+    }
   }
-  CODICI.padZero = padZero;
+  codici.padZero = padZero;
 
 
-  CODICI.typeAndCodeFromId = function (id) {
+  codici.typeAndCodeFromId = function (id) {
     return id && /^([A-Z][a-zA-Z0-9]+)(?:_([0-9A-Za-z_]+))?$/.exec(id);
   };
 
-  CODICI.codiceListino = function (stagione, modello, articolo) {
-    var s = padZero(stagione, CODICI.LEN_STAGIONE),
-      m = padZero(modello, CODICI.LEN_MODELLO),
-      a = padZero(articolo, CODICI.LEN_ARTICOLO);
+  codici.codiceListino = function (stagione, modello, articolo) {
+    var s = padZero(stagione, codici.LEN_STAGIONE),
+      m = padZero(modello, codici.LEN_MODELLO),
+      a = padZero(articolo, codici.LEN_ARTICOLO);
     if (s && m && a) {
       return s + m + a;
     }
   };
 
-  CODICI.codiceAs400 = function (stagione, modello, articolo, colore, taglia) {
-    var s = padZero(stagione, CODICI.LEN_STAGIONE),
-      m = padZero(modello, CODICI.LEN_MODELLO),
-      a = padZero(articolo, CODICI.LEN_ARTICOLO),
-      c = padZero(colore, CODICI.LEN_COLORE),
-      t = padZero(taglia, CODICI.LEN_TAGLIA);
+  codici.codiceAs400 = function (stagione, modello, articolo, colore, taglia) {
+    var s = padZero(stagione, codici.LEN_STAGIONE),
+      m = padZero(modello, codici.LEN_MODELLO),
+      a = padZero(articolo, codici.LEN_ARTICOLO),
+      c = padZero(colore, codici.LEN_COLORE),
+      t = padZero(taglia, codici.LEN_TAGLIA);
     if (s && m && a && c && t) {
       return s + m + a + c + t;
     }
   };
 
+  codici.isYear = function (year, startingFrom) {
+    return year && (/^\d{4}$/).test(year) && (!startingFrom || parseInt(year, 10) > startingFrom);
+  };
 
-  CODICI.idAzienda = function (codice) {
-    if (codice) {
-      return 'Azienda_' + codice;
+  codici.isDate = function (year, month, day) {
+    var y = parseInt(year, 10), m = parseInt(month, 10), d = parseInt(day, 10);
+    return m > 0 && m < 13 && y > 0 && y < 32768 && d > 0 && d <= (new Date(y, m, 0)).getDate();
+  };
+
+  codici.isYyyyMmDdDate = function (yyyymmdd, validYear) {
+    var m = /^(\d{4})(\d\d)(\d\d)$/.exec(yyyymmdd);
+    return m && (!validYear || validYear === m[1]) && codici.isDate(m[1], m[2], m[3]);
+  };
+
+  codici.isCodiceAzienda = function (codice) {
+    return typeof codice === 'string' && (/^\d{6}$/).test(codice);
+  };
+
+  codici.isBarcodeAs400 = function (c) {
+    return typeof c === 'string' && codici.rexpBarcodeAs400.test(c);
+  };
+
+  codici.isTipoMagazzino = function (tm) {
+    return tm && (/^[123]$/).test(tm);
+  };
+
+  codici.idAzienda = function (codice) {
+    if (codici.isCodiceAzienda(codice)) {
+      return ['Azienda', codice].join('_');
     }
   };
 
-  CODICI.idListino = function (versione, dataUso) {
-    if (versione && dataUso) {
+  codici.idListino = function (versione, dataUso) {
+    if (codici.isNumero(versione) && codici.isDate(dataUso)) {
       return ['Listino', versione, dataUso].join('_');
     }
   };
 
-  CODICI.idInventario = function (azienda) {
-    if (azienda) {
-      return 'Inventario_' + azienda;
+  codici.idInventario = function (codiceAzienda, tipoMagazzino) {
+    if (codici.isCodiceAzienda(codiceAzienda) && codici.isTipoMagazzino(tipoMagazzino)) {
+      return ['Inventario', codiceAzienda, tipoMagazzino].join('_');
     }
   };
 
-  CODICI.idMovimentoMagazzino = function (azienda, anno, numeroBolla) {
-    if (azienda && anno && numeroBolla) {
-      return ['MovimentoMagazzino', azienda, anno, numeroBolla].join('_');
+  codici.parseIdInventario = function (id) {
+    // TODO DRY '\d{6}' è il codice azienda, '[123]' il tipoMagazzino
+    var m = /^Inventario_(\d{6})_([123])$/.exec(id);
+    if (m) {
+      return {
+        codiceAzienda: m[1],
+        tipoMagazzino: parseInt(m[2], 10)
+      };
     }
   };
 
-  CODICI.parseIdMovimentoMagazzino = function (id) {
-    // TODO DRY '\d{6}' è il codice azienda, '\d{4}' l'anno
+  codici.idMovimentoMagazzino = function (codiceAzienda, anno, numeroBolla) {
+    if (codici.isCodiceAzienda(codiceAzienda) && codici.isYear(anno) && codici.isNumero(numeroBolla)) {
+      return ['MovimentoMagazzino', codiceAzienda, anno, numeroBolla].join('_');
+    }
+  };
+
+  codici.parseIdMovimentoMagazzino = function (id) {
+    // TODO DRY '\d{6}' è il codice azienda, '\d{4}' l'anno, '\d+' il numero
     var m = /^MovimentoMagazzino_(\d{6})_(\d{4})_(\d+)$/.exec(id);
     if (m) {
       return {
@@ -105,8 +153,8 @@ var CODICI;
     }
   };
 
-  CODICI.parseBarcodeAs400 = function (code) {
-    var m = CODICI.rexpBarcodeAs400.exec(code);
+  codici.parseBarcodeAs400 = function (code) {
+    var m = codici.rexpBarcodeAs400.exec(code);
     if (m) {
       return {
         stagione: m[1],
@@ -120,7 +168,7 @@ var CODICI;
     }
   };
 
-  CODICI.barcodeDescs = function (codes, descrizioniTaglie, listaModelli) {
+  codici.barcodeDescs = function (codes, descrizioniTaglie, listaModelli) {
     var descrizioniTaglia, descrizioneTaglia,
       desscal = listaModelli[codes.codiceDescrizioneEScalarino];
     if (desscal) {
@@ -141,7 +189,7 @@ var CODICI;
     return ['Modello (' + codes.codiceDescrizioneEScalarino + ') non in anagrafe'];
   };
 
-  CODICI.codiceTaglia = function (stagione, modello, codiciTaglie, listaModelli, descrizioneTaglia) {
+  codici.codiceTaglia = function (stagione, modello, codiciTaglie, listaModelli, descrizioneTaglia) {
     var codiciTaglia, scalarino, taglia,
       desscal = listaModelli[stagione + modello];
     if (desscal) {
@@ -164,7 +212,7 @@ var CODICI;
     return n ? (n.length < 2 ? n + '0' : n) : '00';
   }
 
-  CODICI.parseMoney = function (value) {
+  codici.parseMoney = function (value) {
     var mp = /^([0-9]+)(?:\.([0-9]{1,2}))?$/.exec(value);
     if (mp) {
       return [null, parseInt(mp[1] + padCents(mp[2]), 10)];
@@ -172,7 +220,7 @@ var CODICI;
     return ['Invalid amount for money: ' + value];
   };
 
-  CODICI.parseQta = function (value) {
+  codici.parseQta = function (value) {
     var mp = /^\s*([1-9][0-9]*)\s*$/.exec(value), qta;
     if (mp) {
       qta = parseInt(mp[1], 10);
@@ -181,7 +229,7 @@ var CODICI;
     return ['Invalid quantity: ' + value];
   };
 
-  CODICI.colNamesToColIndexes = function (columnNames) {
+  codici.colNamesToColIndexes = function (columnNames) {
     var col = {}, i = 0, n = columnNames.length;
     for (; i < n; i += 1) {
       col[columnNames[i]] = i;

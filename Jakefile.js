@@ -311,7 +311,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       as400.updateTaglieScalariniAs400(db, updateReporter);
       as400.updateModelliEScalariniAs400(db, updateReporter);
       as400.updateAziendeAs400(db, updateReporter);
-      as400.updateInventarioAs400(db, updateReporter);
+      as400.updateGiacenze(db, updateReporter);
     });
 
     desc('Monitor CouchDB for MovimentoMagazzino to keep Giacenze updated');
@@ -330,7 +330,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         feed.on('change', function (change) {
           var db = newBoutiqueDbConnection();
           console.dir(change);
-          as400.updateInventarioAs400(db, updateReporter);
+          as400.updateGiacenze(db, updateReporter);
         });
 
         feed.on('error', function (err) {

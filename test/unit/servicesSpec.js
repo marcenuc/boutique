@@ -402,35 +402,48 @@ describe('Service', function () {
         expect(check099999({ _id: validId })).toHaveError('Not authorized');
       });
 
-      it('should require columnNames to be barcode, giacenza, azienda, stato, and tipoMagazzino', function () {
+      it('should require columnNames to be stagione, modello, articolo, colore, codiceAzienda, inProduzione, tipoMagazzino, giacenze', function () {
         var msg = 'Invalid columnNames';
         expect(check({ _id: validId })).toHaveError('Required field: columnNames');
         expect(check({ _id: validId, columnNames: ['barcode', 'giacenza', 'azienda', 'tipoMagazzino', 'stato'] })).toHaveError(msg);
-        expect(check({ _id: validId, columnNames: ['barcode', 'giacenza', 'azienda', 'stato', 'tipoMagazzino'] })).not.toHaveError(msg);
+        expect(check({ _id: validId, columnNames: ['stagione', 'modello', 'articolo', 'colore', 'codiceAzienda', 'inProduzione', 'tipoMagazzino', 'giacenze'] })).not.toHaveError(msg);
       });
 
       it('should require a valid inventory', function () {
-        var msg = 'Inventario vuoto';
+        var msg = 'Inventario vuoto', msg2 = 'Invalid barcode at row 0: ';
         expect(check({ _id: validId })).toHaveError(msg);
         expect(check({ _id: validId, rows: [] })).toHaveError(msg);
-        expect(check({ _id: validId, rows: [['12345678901234567', 123, '123456', 1, 1]] })).toHaveError('Invalid barcode at row 0: "12345678901234567"');
-        expect(check({ _id: validId, rows: [['123456789012345678', -123, '123456', 1, 1]] })).toHaveError('Invalid quantity at row 0: "123456789012345678"');
-        expect(check({ _id: validId, rows: [['123456789012345678', '123', '123456', 1, 1]] })).toHaveError('Invalid quantity at row 0: "123456789012345678"');
-        expect(check({ _id: validId, rows: [['123456789012345678', 123, '12345', 1, 1]] })).toHaveError('Invalid azienda at row 0: "123456789012345678"');
-        expect(check({ _id: validId, rows: [['123456789012345678', 123, '123456', 2, 1]] })).toHaveError('Invalid status at row 0: "123456789012345678"');
-        expect(check({ _id: validId, rows: [['123456789012345678', 123, '123456', 1, 0]] })).toHaveError('Invalid store type at row 0: "123456789012345678"');
-        expect(check({ _id: validId, rows: [['123456789012345678', 123, '123456', 1, 1]] })).not.toHaveError(msg);
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 2, { '01': 1 }]] })).not.toHaveError(msg);
+        expect(check({ _id: validId, rows: [['', '45678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).toHaveError(msg2 + '["","45678","9012","3456","123456",1,1,{"01":1}]');
+        expect(check({ _id: validId, rows: [['123', '345678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).toHaveError(msg2 + '["123","345678","9012","3456","123456",1,1,{"01":1}]');
+        expect(check({ _id: validId, rows: [['123', '45678', '0a', '3456', '123456', 1, 1, { '01': 1 }]] })).toHaveError(msg2 + '["123","45678","0a","3456","123456",1,1,{"01":1}]');
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '34567', '123456', 1, 1, { '01': 1 }]] })).toHaveError(msg2 + '["123","45678","9012","34567","123456",1,1,{"01":1}]');
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).not.toHaveError(msg2);
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': -1 }]] })).toHaveError('Invalid quantity at row 0');
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).not.toHaveError('Invalid quantity at row 0');
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '12345', 1, 1, { '01': 1 }]] })).toHaveError('Invalid codiceAzienda at row 0');
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).not.toHaveError('Invalid codiceAzienda at row 0');
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 2, 1, { '01': 1 }]] })).toHaveError('Invalid inProduzione at row 0');
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 0, 1, { '01': 1 }]] })).not.toHaveError('Invalid inProduzione at row 0');
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 0, { '01': 1 }]] })).toHaveError('Invalid tipoMagazzino at row 0');
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 2, { '01': 1 }]] })).not.toHaveError('Invalid tipoMagazzino at row 0');
       });
     });
 
     describe('Inventario', function () {
-      var validId = 'Inventario_099999';
+      var validId = 'Inventario_099999_3';
+
+      it('should require tipo magazzino in _id', function () {
+        var msg = 'Invalid tipo magazzino in _id';
+        expect(check({ _id: 'Inventario_099999' })).toHaveError(msg);
+        expect(check({ _id: validId })).not.toHaveError(msg);
+      });
 
       it('should require columnNames to be barcode, giacenza, and costo', function () {
         var msg = 'Invalid columnNames';
         expect(check({ _id: validId })).toHaveError('Required field: columnNames');
-        expect(check({ _id: validId, columnNames: ['barcode', 'costo', 'giacenza'] })).toHaveError(msg);
-        expect(check({ _id: validId, columnNames: ['barcode', 'giacenza', 'costo'] })).not.toHaveError(msg);
+        expect(check({ _id: validId, columnNames: ['barcode', 'costo', 'giacenza', 'inProduzione'] })).toHaveError(msg);
+        expect(check({ _id: validId, columnNames: ['barcode', 'giacenza', 'costo', 'inProduzione'] })).not.toHaveError(msg);
       });
 
       it('should require a valid inventory', function () {
@@ -442,10 +455,60 @@ describe('Service', function () {
         expect(check({ _id: validId, rows: [['123456789012345678', '123', 100]] })).toHaveError('Invalid quantity at row 0: "123456789012345678"');
         expect(check({ _id: validId, rows: [['123456789012345678', 123, '100']] })).toHaveError('Invalid costo at row 0: "123456789012345678"');
         expect(check({ _id: validId, rows: [['123456789012345678', 123, -100]] })).toHaveError('Invalid costo at row 0: "123456789012345678"');
+        //TODO a regime non dovrebbe essere più valido inserire costo=0. Per ora serve.
+        expect(check({ _id: validId, rows: [['123456789012345678', 123, 0]] })).not.toHaveError('Invalid costo at row 0: "123456789012345678"');
+        expect(check({ _id: validId, rows: [['123456789012345678', 123, 100, 0]] })).toHaveError('Invalid inProduzione at row 0: "123456789012345678"');
         expect(check({ _id: validId, rows: [['123456789012345678', 123, 100]] })).not.toHaveError(msg);
+        expect(check({ _id: validId, rows: [['123456789012345678', 123, 100, 1]] })).not.toHaveError(msg);
       });
     });
 
+    describe('CausaliMovimentoMagazzino', function () {
+      var id = 'CausaliMovimentoMagazzino';
+
+      describe('causali', function () {
+        var causali = [['VENDITA', -1, 0]];
+
+        it('should be a non empty array', function () {
+          var msg = 'Invalid causali';
+          expect(check({ _id: id })).toHaveError(msg);
+          expect(check({ _id: id, causali: [] })).toHaveError(msg);
+          expect(check({ _id: id, causali: causali })).not.toHaveError(msg);
+        });
+
+        describe('causale', function () {
+          it('should be an array of 3 elements: [name, {-1|1}, {-1|0|1}]', function () {
+            var msg = 'Invalid causale: ', c;
+            c = [['VENDITA', 0, 1]];
+            expect(check({ _id: id, causali: c })).toHaveError(msg + JSON.stringify(c[0]));
+            c = [['VENDITA', -1]];
+            expect(check({ _id: id, causali: c })).toHaveError(msg + JSON.stringify(c[0]));
+            c = causali;
+            expect(check({ _id: id, causali: c })).not.toHaveError(msg + JSON.stringify(c[0]));
+          });
+        });
+
+        describe('causaliAs400', function () {
+          it('should be an hash', function () {
+            var msg = 'Invalid causaliAs400';
+            expect(check({ _id: id, causali: causali })).toHaveError(msg);
+            expect(check({ _id: id, causali: causali, causaliAs400: {} })).not.toHaveError(msg);
+          });
+
+          it('should map codici causaleAs400 to causale in causali', function () {
+            var msg = 'Invalid causale for 1-75: ';
+            expect(check({ _id: id, causali: causali, causaliAs400: { '1-75': 'VENDITE' } })).toHaveError(msg + 'VENDITE');
+            expect(check({ _id: id, causali: causali, causaliAs400: { '1-75': 'VENDITA' } })).not.toHaveError(msg + 'VENDITA');
+          });
+
+          it('should have keys in the format "tipoMagazzino-codiceCausaleAs400"', function () {
+            var msg = 'Invalid codice causale As400: ';
+            expect(check({ _id: id, causali: causali, causaliAs400: { '1-1': 'VENDITA' } })).toHaveError(msg + '1-1');
+            expect(check({ _id: id, causali: causali, causaliAs400: { '2-12': 'VENDITA' } })).not.toHaveError(msg + '1-12');
+          });
+        });
+      });
+    });
 
     describe('TaglieScalarini', function () {
       var id = 'TaglieScalarini',

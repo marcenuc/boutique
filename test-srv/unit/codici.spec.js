@@ -45,6 +45,16 @@ requirejs(['app/js/codici'], function (codici) {
     });
   });
 
+  describe('parseIdInventario', function () {
+    it('should return codiceAzienda, tipoMagazzino', function () {
+      var codiceAzienda = '099999', tipoMagazzino = 3;
+      expect(codici.parseIdInventario(codici.idInventario(codiceAzienda, tipoMagazzino))).toEqual({
+        codiceAzienda: codiceAzienda,
+        tipoMagazzino: tipoMagazzino
+      });
+    });
+  });
+
   describe('colNamesToColIndexes', function () {
     it('should return an hash with values equal to index of the column in the given array', function () {
       var u = codici.colNamesToColIndexes;

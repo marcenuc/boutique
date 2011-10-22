@@ -10,7 +10,7 @@ requirejs.config({
 
 requirejs(['lib/comparator'], function (comparator) {
   'use strict';
-  var sortedBarcodes = ['123123456789012345', '124123456789012345'];
+  var sortedBarcodes = ['123123456789012345', '124123456789012445'];
 
   function checkAll(rows, doCompare, expectation) {
     var i = 0, n = rows.length - 1, j, l = n + 1;
@@ -85,6 +85,39 @@ requirejs(['lib/comparator'], function (comparator) {
       checkAll(sortedRows, function (a, b) {
         return comparator.rigaGiacenze(b, a);
       }, 'toBeGreaterThan');
+    });
+  });
+
+  describe('array(a, b)', function () {
+    var sortedRows = [
+        ['1234567890123', '099999', 0, 1, '123', { '01': 1 }],
+        ['1234567890123', '099999', 0, 1, '124', { '01': 1 }],
+        ['1234567890123', '199999', 0, 1, '123', { '01': 1 }],
+        ['1234567890123', '199999', 0, 2, '123', { '01': 1 }],
+        ['1234567890123', '199999', 1, 2, '123', { '01': 1 }],
+        ['1234567890124', '099999', 0, 1, '123', { '01': 1 }],
+        ['1234567890124', '199999', 0, 1, '123', { '01': 1 }],
+        ['1234567890124', '199999', 0, 2, '123', { '01': 1 }],
+        ['1234567890124', '199999', 1, 2, '123', { '01': 1 }]
+      ];
+    it('should return 0 when a.length==b.length==n, and for no 0<=i<n a[i]<b[i] or a[i]>b[i]', function () {
+      sortedRows.forEach(function (a) {
+        expect(comparator.array(a, a)).toBe(0);
+      });
+    });
+
+    it('should return -1 when a.length==b.length==n, and a[i]<b[i] for some 0<=i<n and there is no 0<j<i with a[i]>b[i]', function () {
+      checkAll(sortedRows, comparator.array, 'toBeLessThan');
+    });
+
+    it('should return 1 when a.length==b.length==n, and a[i]>b[i] for some 0<=i<n and there is no 0<j<i with a[i]<b[i]', function () {
+      checkAll(sortedRows, function (a, b) {
+        return comparator.array(b, a);
+      }, 'toBeGreaterThan');
+    });
+
+    it('should return -1 when a.length<b.length', function () {
+      expect(comparator.array([1], [1, 2]));
     });
   });
 });
