@@ -351,18 +351,22 @@ var Ctrl = {};
     },
 
     filtraGiacenza: function () {
-      var giacenze, taglia, qta, totale, r, riga, scalarino, taglie = [], nn = '--', TAGLIE_PER_SCALARINO = 12,
-        rows = this.giacenze.rows, i = 0, n = rows.length, count = 0, filtrate = [], maxCount = this.limiteRisultati,
+      var giacenze, taglia, qta, r, riga,
+        scalarino, taglie = [], nn = '--', TAGLIE_PER_SCALARINO = 12,
+        rows = this.giacenze.rows, i = 0, n = rows.length,
+        count = 0, filtrate = [], maxCount = this.limiteRisultati,
         desscal, ms = this.modelliEScalarini.lista,
         nodesscal = ['-- senza descrizione --', 0],
         colonnaTaglia, colonneTaglie = this.taglieScalarini.colonneTaglie,
         descrizioniTaglia, descrizioniTaglie = this.taglieScalarini.descrizioniTaglie,
-        accoda, filtroSmacAz = this.getFiltroSmacAz(), filtroTaglia = this.getFiltroTaglia();
+        accoda, filtroSmacAz = this.getFiltroSmacAz(), filtroTaglia = this.getFiltroTaglia(),
+        totaleRiga, totaleRighe = 0, totaliColonna = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
       for (; i < n && count < maxCount; i += 1) {
         r = rows[i];
         if (filtroSmacAz.test(r.slice(0, 5).join(''))) {
           accoda = false;
-          totale = 0;
+          totaleRiga = 0;
           desscal = ms[r[0] + r[1]] || nodesscal;
           scalarino = desscal[1];
           descrizioniTaglia = descrizioniTaglie[scalarino];
@@ -373,14 +377,17 @@ var Ctrl = {};
               if (filtroTaglia.test(descrizioniTaglia[taglia])) {
                 accoda = true;
                 qta = giacenze[taglia];
-                totale += qta;
-                colonnaTaglia = 9 + colonneTaglie[scalarino][taglia];
-                riga[colonnaTaglia] = qta;
+                totaleRiga += qta;
+                colonnaTaglia = colonneTaglie[scalarino][taglia];
+                //TODO '9' è un numero magico
+                riga[9 + colonnaTaglia] = qta;
+                totaliColonna[colonnaTaglia] += qta;
               }
             }
           }
           if (accoda) {
-            riga.push(totale);
+            riga.push(totaleRiga);
+            totaleRighe += totaleRiga;
             count = filtrate.push(riga);
           }
         }
@@ -397,10 +404,12 @@ var Ctrl = {};
           }
         }
       }
+      totaliColonna.push(totaleRighe);
 
       this.filtrate = filtrate;
       this.scalarino = scalarino;
       this.taglie = taglie;
+      this.totaliColonna = totaliColonna;
 
     }
   };
