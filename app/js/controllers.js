@@ -335,24 +335,19 @@ var Ctrl = {};
   Ctrl.RicercaArticoli.$inject = ['Document'];
 
   Ctrl.RicercaArticoli.prototype = {
-    getFiltro: function (dontFilterTaglia) {
-      var toks = [
+    getFiltroSmacAz: function () {
+      var toks = ['^',
         dotPad(this.stagione, CODICI.LEN_STAGIONE),
         dotPad(this.modello, CODICI.LEN_MODELLO),
         dotPad(this.articolo, CODICI.LEN_ARTICOLO),
         dotPad(this.colore, CODICI.LEN_COLORE),
-        dotPad(dontFilterTaglia ? '' : this.taglia, CODICI.LEN_TAGLIA)
-      ];
-      return new RegExp('^(' + toks.join(')(') + ')$');
+        this.aziendeSelezionate.length ? '(?:' + this.aziendeSelezionate.join('|') + ')' : '\\d{6}',
+        '$'];
+      return new RegExp(toks.join(''));
     },
-    getFiltroSmacAz: function () {
-      var toks = [
-        dotPad(this.stagione, CODICI.LEN_STAGIONE),
-        dotPad(this.modello, CODICI.LEN_MODELLO),
-        dotPad(this.articolo, CODICI.LEN_ARTICOLO),
-        dotPad(this.colore, CODICI.LEN_COLORE)
-      ], azs = this.aziendeSelezionate.length ? '(?:' + this.aziendeSelezionate.join('|') + ')' : '\\d{6}';
-      return new RegExp('^' + toks.join('') + azs + '$');
+
+    getFiltroTaglia: function () {
+      return new RegExp('^' + (this.descrizioneTaglia || '.{1,' + CODICI.LEN_DESCRIZIONE_TAGLIA + '}') + '$');
     },
 
     filtraGiacenza: function () {
@@ -361,24 +356,33 @@ var Ctrl = {};
         desscal, ms = this.modelliEScalarini.lista,
         nodesscal = ['-- senza descrizione --', 0],
         colonnaTaglia, colonneTaglie = this.taglieScalarini.colonneTaglie,
-        filtro = this.getFiltroSmacAz();
+        descrizioniTaglia, descrizioniTaglie = this.taglieScalarini.descrizioniTaglie,
+        accoda, filtroSmacAz = this.getFiltroSmacAz(), filtroTaglia = this.getFiltroTaglia();
       for (; i < n && count < maxCount; i += 1) {
         r = rows[i];
-        if (filtro.test(r.slice(0, 5).join(''))) {
+        if (filtroSmacAz.test(r.slice(0, 5).join(''))) {
+          accoda = false;
           totale = 0;
           desscal = ms[r[0] + r[1]] || nodesscal;
+          scalarino = desscal[1];
+          descrizioniTaglia = descrizioniTaglie[scalarino];
           giacenze = r[7];
-          riga = [r[4], desscal[0], r[0], r[1], r[2], r[3], r[6], r[5], desscal[1], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+          riga = [r[4], desscal[0], r[0], r[1], r[2], r[3], r[6], r[5], scalarino, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
           for (taglia in giacenze) {
             if (giacenze.hasOwnProperty(taglia)) {
-              qta = giacenze[taglia];
-              totale += qta;
-              colonnaTaglia = 9 + colonneTaglie[desscal[1]][taglia];
-              riga[colonnaTaglia] = qta;
+              if (filtroTaglia.test(descrizioniTaglia[taglia])) {
+                accoda = true;
+                qta = giacenze[taglia];
+                totale += qta;
+                colonnaTaglia = 9 + colonneTaglie[scalarino][taglia];
+                riga[colonnaTaglia] = qta;
+              }
             }
           }
-          riga.push(totale);
-          count = filtrate.push(riga);
+          if (accoda) {
+            riga.push(totale);
+            count = filtrate.push(riga);
+          }
         }
       }
       scalarino = nn;
