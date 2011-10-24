@@ -371,7 +371,7 @@ var Ctrl = {};
           scalarino = desscal[1];
           descrizioniTaglia = descrizioniTaglie[scalarino];
           giacenze = r[7];
-          riga = [r[4], desscal[0], r[0], r[1], r[2], r[3], r[6], r[5], scalarino, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+          riga = [r[4], desscal[0], r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PRODUZIONE' : 'PRONTO'), scalarino, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
           for (taglia in giacenze) {
             if (giacenze.hasOwnProperty(taglia)) {
               if (filtroTaglia.test(descrizioniTaglia[taglia])) {
