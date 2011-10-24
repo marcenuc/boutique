@@ -290,7 +290,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       });
     });
 
-    function updateReporter(err, warnsAndDoc, res) {
+    function updateReporter(err, warnsAndDoc, res, callback) {
       if (err) {
         return fail(util.inspect(err));
       }
@@ -300,6 +300,9 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       if (res) {
         console.log(util.inspect(res));
       }
+      if (callback) {
+        callback();
+      }
     }
 
     desc('Aggiorna dati da As400');
@@ -307,11 +310,23 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       var as400 = requirejs('lib/as400'),
         db = newBoutiqueDbConnection();
       // FIXME: questi aggiornamenti devono essere seriali, non asincroni.
-      as400.updateCausaliAs400(db, updateReporter);
-      as400.updateTaglieScalariniAs400(db, updateReporter);
-      as400.updateModelliEScalariniAs400(db, updateReporter);
-      as400.updateAziendeAs400(db, updateReporter);
-      as400.updateGiacenze(db, updateReporter);
+      as400.updateCausaliAs400(db, function (err1, warnsAndDoc1, res1) {
+        updateReporter(err1, warnsAndDoc1, res1, function () {
+          as400.updateTaglieScalariniAs400(db, function (err2, warnsAndDoc2, res2) {
+            updateReporter(err2, warnsAndDoc2, res2, function () {
+              as400.updateModelliEScalariniAs400(db, function (err3, warnsAndDoc3, res3) {
+                updateReporter(err3, warnsAndDoc3, res3, function () {
+                  as400.updateAziendeAs400(db, function (err4, warnsAndDoc4, res4) {
+                    updateReporter(err4, warnsAndDoc4, res4, function () {
+                      as400.updateGiacenze(db, updateReporter);
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
     });
 
     desc('Monitor CouchDB for MovimentoMagazzino to keep Giacenze updated');
