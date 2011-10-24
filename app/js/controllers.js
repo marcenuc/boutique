@@ -347,7 +347,7 @@ var Ctrl = {};
     },
 
     getFiltroTaglia: function () {
-      return new RegExp('^' + (this.descrizioneTaglia || '.{1,' + CODICI.LEN_DESCRIZIONE_TAGLIA + '}') + '$');
+      return new RegExp('^' + (this.descrizioneTaglia || '.{1,' + CODICI.LEN_DESCRIZIONE_TAGLIA + '}') + '$', 'i');
     },
 
     filtraGiacenza: function () {
