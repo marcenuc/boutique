@@ -1,4 +1,6 @@
 #!/bin/sh -ex
+sudo apt-get install puppet
+sudo puppet apply config/boutique_server.pp
 npm update
 git submodule init
 git submodule update

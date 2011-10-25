@@ -23,11 +23,29 @@ define(['fs', 'uglify-js', 'app/js/validate_doc_update', 'lib/servers'], functio
     '_design/boutique_db': {
       codici: codici,
       validate_doc_update: validate_doc_update,
+      // TODO DRY in tutte le view potrei usare CODICI
       views: {
+        // TODO rinominare in movimentiAccodati
         movimenti: {
           map: function (doc) {
             var ids = doc._id.split('_');
             if (ids[0] === 'MovimentoMagazzino' && doc.accodato) {
+              emit([ids[1], parseInt(ids[2], 10), parseInt(ids[3], 10)], 1);
+            }
+          }
+        },
+        riferimentiMovimentiMagazzino: {
+          map: function (doc) {
+            var ids = doc._id.split('_');
+            if (ids[0] === 'MovimentoMagazzino' && doc.riferimento) {
+              emit(doc.riferimento, 1);
+            }
+          }
+        },
+        serialiMovimentiMagazzino: {
+          map: function (doc) {
+            var ids = doc._id.split('_');
+            if (ids[0] === 'MovimentoMagazzino') {
               emit([ids[1], parseInt(ids[2], 10), parseInt(ids[3], 10)], 1);
             }
           }

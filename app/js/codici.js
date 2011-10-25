@@ -27,8 +27,11 @@ var CODICI;
   codici.TIPO_MAGAZZINO_CLIENTI = 1;
   codici.TIPO_MAGAZZINO_DISPONIBILE = 2;
   codici.TIPO_MAGAZZINO_NEGOZIO = 3;
+  // TODO Questo dovrebbe essere un documento in CouchDB
   codici.CAUSALI_MOVIMENTO_MAGAZZINO = [
     ['VENDITA', -1, 0],
+    ['C/VENDITA', 1, 0],
+    ['CARICO', 1, 0],
     ['ACQUISTO', 1, 0],
     ['RESO SU ACQUISTO', -1, 0],
     ['TRASFERIMENTO', -1, 1],
@@ -94,6 +97,14 @@ var CODICI;
     return m && (!validYear || validYear === m[1]) && codici.isDate(m[1], m[2], m[3]);
   };
 
+  codici.newYyyyMmDdDate = function (date) {
+    function pad(n) {
+      return n < 10 ? '0' + n : n;
+    }
+    var d = date || new Date();
+    return String(d.getUTCFullYear()) + pad(d.getUTCMonth() + 1) + pad(d.getUTCDate());
+  };
+
   codici.isCodiceAzienda = function (codice) {
     return typeof codice === 'string' && (/^\d{6}$/).test(codice);
   };
@@ -149,6 +160,25 @@ var CODICI;
         origine: m[1],
         anno: m[2],
         numero: m[3]
+      };
+    }
+  };
+
+  codici.idBollaAs400 = function (data, numero, enteNumerazione, codiceNumerazione) {
+    if (codici.isYyyyMmDdDate(data) && codici.isNumero(numero) && (/^[A-Z]$/).test(enteNumerazione) && codici.isCode(codiceNumerazione, 2)) {
+      return ['BollaAs400', data, numero, enteNumerazione, codiceNumerazione].join('_');
+    }
+  };
+
+  codici.parseIdBollaAs400 = function (id) {
+    // TODO DRY '\d{8}' è la data, '\d+' il numero, '[A-Z]' l'ente numerazione, '\d+' il codice numerazione
+    var m = /^BollaAs400_(\d{8})_(\d+)_([A-Z])_(\d+)$/.exec(id);
+    if (m) {
+      return {
+        data: m[1],
+        numero: m[2],
+        enteNumerazione: m[3],
+        codiceNumerazione: m[4]
       };
     }
   };

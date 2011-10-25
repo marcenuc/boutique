@@ -38,6 +38,41 @@
   }, { $inject: ['$route'], $eager: true });
 
 
+  angular.service('CdbView', function ($resource) {
+    var view = $resource('/boutique_db/_design/boutique_db/_view/:id', { id: '@_id' }, {
+      riferimentiMovimentiMagazzino: {
+        method: 'GET',
+        isArray: false,
+        params: {
+          id: 'riferimentiMovimentiMagazzino'
+        }
+      },
+      serialiMovimentiMagazzino: {
+        method: 'GET',
+        isArray: false,
+        params: {
+          id: 'serialiMovimentiMagazzino'
+        }
+      }
+    });
+
+    view.ultimoMovimentoMagazzino = function (codiceAzienda, anno, success, error) {
+      return view.serialiMovimentiMagazzino({
+        include_docs: 'false',
+        descending: 'true',
+        limit: 1,
+        startkey: [codiceAzienda, anno, {}],
+        endkey: [codiceAzienda, anno]
+      }, success, error);
+    };
+
+    view.riferimentoMovimentoMagazzino = function (idRiferimento, success, error) {
+      return view.riferimentiMovimentiMagazzino({ key: JSON.stringify(idRiferimento) }, success, error);
+    };
+
+    return view;
+  }, { $inject: ['$resource'] });
+
   angular.service('Document', function ($resource) {
     var r = $resource('/boutique_db/:id', { id: '@_id' }, {
       query: {
@@ -62,8 +97,8 @@
       return r.query(range('Azienda'), success, error);
     };
 
-    r.clienti = function (azienda, success) {
-      var baseId = azienda.replace(/^Azienda_/, 'Cliente_');
+    r.clienti = function (codiceAzienda, success) {
+      var baseId = codiceAzienda.replace(/^Azienda_/, 'Cliente_');
       return r.query(range(baseId), success);
     };
 
@@ -74,13 +109,17 @@
   angular.service('As400', function ($xhr) {
     return {
       bolla: function (intestazioneBolla, success) {
-        var p, params = [];
-        for (p in intestazioneBolla) {
-          if (intestazioneBolla.hasOwnProperty(p)) {
-            params.push(p + '=' + intestazioneBolla[p]);
+        var k, v, params = ['/boutique_app/as400/bolla'];
+        for (k in intestazioneBolla) {
+          if (intestazioneBolla.hasOwnProperty(k)) {
+            v = intestazioneBolla[k];
+            if (k === 'data' && v.length === 8) {
+              v = v.substring(2);
+            }
+            params.push(k + '=' + v);
           }
         }
-        $xhr('GET', '/boutique_app/as400/bolla/' + params.join('/'), success);
+        $xhr('GET', params.join('/'), success);
       }
     };
   }, { $inject: ['$xhr'] });

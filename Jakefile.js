@@ -309,7 +309,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
     task('sync-as400', function () {
       var as400 = requirejs('lib/as400'),
         db = newBoutiqueDbConnection();
-      // FIXME: questi aggiornamenti devono essere seriali, non asincroni.
+      // TODO Make this code smarter.
       as400.updateCausaliAs400(db, function (err1, warnsAndDoc1, res1) {
         updateReporter(err1, warnsAndDoc1, res1, function () {
           as400.updateTaglieScalariniAs400(db, function (err2, warnsAndDoc2, res2) {

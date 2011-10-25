@@ -11,6 +11,28 @@ requirejs.config({
 requirejs(['app/js/codici'], function (codici) {
   'use strict';
 
+  describe('isYyyyMmDdDate', function () {
+    it('should return true for "20110704"', function () {
+      expect(codici.isYyyyMmDdDate('20110704')).toBe(true);
+    });
+  });
+
+  describe('isNumero', function () {
+    it('should return true for "40241"', function () {
+      expect(codici.isNumero('40241')).toBe(true);
+    });
+
+    it('should return true for 40241', function () {
+      expect(codici.isNumero(40241)).toBe(true);
+    });
+  });
+
+  describe('isCode', function () {
+    it('should return true for code "10", length 2', function () {
+      expect(codici.isCode('10', 2)).toBe(true);
+    });
+  });
+
   describe('parseMoney', function () {
     it('should add cents to integer values', function () {
       expect(codici.parseMoney('12')).toEqual([null, 1200]);
@@ -93,5 +115,21 @@ requirejs(['app/js/codici'], function (codici) {
       expect(codici.idAzienda(null)).toBeUndefined();
       expect(codici.idAzienda('')).toBeUndefined();
     });
+  });
+
+  describe('idBollaAs400', function () {
+    it('should return "BollaAs400_20110704_40241_Y_10" for data "20110704", numero "40241", enteNumerazione "Y", codiceNumerazione "10"', function () {
+      expect(codici.idBollaAs400('20110704', 40241, 'Y', '10')).toBe('BollaAs400_20110704_40241_Y_10');
+    });
+  });
+
+  describe('parseIdBollaAs400', function () {
+    it('should parse "BollaAs400_20110704_40241_Y_10" as data "20110704", numero "40241", enteNumerazione "Y", codiceNumerazione "10"', function () {
+      expect(codici.parseIdBollaAs400('BollaAs400_20110704_40241_Y_10')).toEqual({ data: '20110704', numero: '40241', enteNumerazione: 'Y', codiceNumerazione: '10' });
+    });
+    it('should parse "BollaAs400_20111024_31_A_10" as data "20110704", numero "40241", enteNumerazione "Y", codiceNumerazione "10"', function () {
+      expect(codici.parseIdBollaAs400('BollaAs400_20111024_31_A_10')).toEqual({ data: '20111024', numero: '31', enteNumerazione: 'A', codiceNumerazione: '10' });
+    });
+
   });
 });

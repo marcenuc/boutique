@@ -4,32 +4,24 @@
   </ul>
 </div>
 <form ng:submit="fetch()" class="bolla">
-<label>Data:<input name="intestazione.data" size=8 required value="110704"></label>
-<label>Numero:<input name="intestazione.numero" size=8 required value="40241"></label>
-<label>Ente numerazione:<input name="intestazione.enteNumerazione" size=2 required value="Y"></label>
+<label>Data (AAAAMMGG):<input name="intestazione.data" size=8 required value="20111024"></label>
+<label>Numero:<input name="intestazione.numero" size=8 required value="31"></label>
+<label>Ente numerazione:<input name="intestazione.enteNumerazione" size=2 required value="A"></label>
 <label>Codice numerazione:<input name="intestazione.codiceNumerazione" size=2 required value="10"></label>
 <input type=submit value=Cerca>
 </form>
 
-<ng:switch on="caricata">
-<table ng:switch-when="false">
-<caption>DATI BOLLA DA AS/400</caption>
+<form ng:submit="save()">
+<table><caption>DATI BOLLA DA AS/400</caption>
 <thead><tr><th ng:repeat="col in bollaAs400.columnNames">{{col}}
 <tbody><tr ng:repeat="row in bollaAs400.rows"><td ng:repeat="v in row">{{v}}
-<tfoot><tr><td><button ng:click="save()">Carica</button>
 </table>
-
-<div ng:switch-when="true">
-<ul>
-<li>Codice cliente: {{bolla.codiceCliente}} 
-<li>Tipo magazzino: {{bolla.tipoMagazzino}} 
-<li>Codice magazzino: {{bolla.codiceMagazzino}}
-<li>Causale: <span ng:repeat="c in bolla.causale">{{c}}&nbsp; - &nbsp;</span>
-</ul>
-<table>
-<caption>DATI BOLLA CARICATI SU Boutique</caption>
-<thead><tr><th>Stagione<th>Modello<th>Articolo<th>Colore<th>Codice taglia<th>Quantità
-<tbody><tr ng:repeat="row in bolla.rows"><td ng:repeat="v in row">{{v}}
-</table>
+<div>
+ <label>Numero bolla: <input name="movimentoMagazzino.numero" size=8 required></label>
+ <label>Data bolla (AAAAMMGG): <input name="movimentoMagazzino.data" size=8 maxlenght=8 required></label><p>
+ <label>Origine: <select name="movimentoMagazzino.origine" ng:options="codice as desc for (codice, desc) in aziende"><option></select></label>
+ <label>Destinazione: <select name="movimentoMagazzino.destinazione" ng:options="codice as desc for (codice, desc) in aziende"><option></select></label><p>
+ <label>Causale: <select name="movimentoMagazzino.causale"><option ng:repeat="causa in causali" value="{{$index}}">{{causa[0]}}</select></label>&nbsp;&nbsp;Segno origine:&nbsp;"{{causali[causale][1]}}";&nbsp;&nbsp;Segno destinazione:&nbsp;"{{causali[causale][2]}}"<p>
+  <input type=submit value="Carica come movimento magazzino">
 </div>
-</ng:switch>
+</form>

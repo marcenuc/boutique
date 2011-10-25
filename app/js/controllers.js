@@ -44,6 +44,7 @@ var Ctrl = {};
 
     this.causali = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO;
 
+    // TODO Trovare un modo migliore di chiamare una funzione quando il modello è pronto.
     function doFind() {
       docCount -= 1;
       if (docCount === 0 && $routeParams.codice) {
@@ -212,21 +213,34 @@ var Ctrl = {};
     }
   };
 
-  Ctrl.RicercaBollaAs400 = function (As400, Document, userCtx) {
+  Ctrl.RicercaBollaAs400 = function (As400, Document, CdbView, userCtx, $location) {
     this.As400 = As400;
     this.Document = Document;
+    this.CdbView = CdbView;
     this.userCtx = userCtx;
+    this.$location = $location;
+
+    Document.aziende(angular.bind(this, SetAziende, null));
     this.taglieScalarini = Document.get({ id: 'TaglieScalarini' });
     this.causaliAs400 = Document.get({ id: 'CausaliAs400' });
-    this.intestazione = {};
-    this.bollaAs400 = null;
+    // TODO probabilmente questi non servono perché impliciti per AngularJS
+    //this.intestazione = {};
+    //this.movimentoMagazzino = {};
+    //this.bollaAs400 = null;
+    this.causali = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO;
 
     this.flash = userCtx.flash;
     userCtx.flash = {};
   };
-  Ctrl.RicercaBollaAs400.$inject = ['As400', 'Document', 'userCtx'];
+  Ctrl.RicercaBollaAs400.$inject = ['As400', 'Document', 'CdbView', 'userCtx', '$location'];
 
   Ctrl.RicercaBollaAs400.prototype = {
+
+    // TODO DRY copiata da MovimentoMagazzino
+    getYear: function (data) {
+      return data ? data.substring(0, 4) : null;
+    },
+
     fetch: function () {
       var self = this;
       /*
@@ -235,43 +249,58 @@ var Ctrl = {};
        * TODO write some test for this...
        */
       this.id = this.buildId();
-      this.caricata = true;
 
-      this.Document.get({ id: this.id }, function (bolla) {
-        //TODO trovare un modo di usare un widget o filtro nel template
-        self.bollaCDB = bolla;
-        self.bolla = {
-          codiceCliente: bolla.codiceCliente,
-          tipoMagazzino: bolla.tipoMagazzino,
-          codiceMagazzino: bolla.codiceMagazzino,
-          causale: bolla.causale,
+      function cercaBollaAs400() {
+        self.As400.bolla(self.intestazione, function (code, dati) {
+          if (code === 200) {
+            self.bollaAs400 = dati;
+            self.setMovimentoMagazzino();
+          } else {
+            self.flash = { errors: [{ message: 'Errore ' + code }] };
+          }
+        });
+      }
 
-          rows: bolla.rows.map(function (r) {
-            var v = [].slice.call(CODICI.rexpBarcodeAs400.exec(r[0]), 1);
-            v.push(r[1]);
-            return v;
-          })
-        };
-      }, function (status, resp) {
-        if (status === 404) {
-          self.caricata = false;
-          self.As400.bolla(self.intestazione, function (code, dati) {
-            if (code === 200) {
-              self.bollaAs400 = dati;
-            } else {
-              self.flash = { errors: [{ message: 'Errore ' + code }] };
-            }
-          });
-        } else {
-          self.flash = { errors: [{ message: 'Errore ' + status + ': ' + JSON.stringify(resp) }] };
+      this.CdbView.riferimentoMovimentoMagazzino(this.id, function (resp) {
+        var riferimento = resp.rows[0];
+        if (!riferimento) {
+          return cercaBollaAs400();
         }
+        this.userCtx.flash = { notices: [{ message: 'Bolla già caricata su Boutique' }] };
+        self.$location.path(riferimento.id).replace();
+      }, function (status, resp) {
+        self.flash = { errors: [{ message: 'Errore ' + status + ': ' + JSON.stringify(resp) }] };
       });
     },
 
     buildId: function () {
-      return 'BollaAs400_' + ['data', 'numero', 'enteNumerazione', 'codiceNumerazione'].map(function (field) {
-        return this.intestazione[field];
-      }, this).join('_');
+      var d = this.intestazione;
+      return CODICI.idBollaAs400(d.data, d.numero, d.enteNumerazione, d.codiceNumerazione);
+    },
+
+    findCausale: function (causaleAs400) {
+      var i = 0, n = this.causali.length, c;
+      for (; i < n; i += 1) {
+        c = this.causali[i];
+        if (c[0] === causaleAs400) {
+          return i;
+        }
+      }
+      return 0;
+    },
+
+    setMovimentoMagazzino: function () {
+      var r0 = this.bollaAs400.rows[0],
+        col = CODICI.colNamesToColIndexes(this.bollaAs400.columnNames),
+        codiceCliente = r0[col.codiceCliente],
+        tipoMagazzino = r0[col.tipoMagazzino],
+        causale = r0[col.causale];
+
+      this.movimentoMagazzino = {
+        origine: codiceCliente,
+        causale: this.findCausale(this.causaliAs400[tipoMagazzino][causale]),
+        data: CODICI.newYyyyMmDdDate()
+      };
     },
 
     buildBolla: function () {
@@ -300,23 +329,28 @@ var Ctrl = {};
             row[col.tipoMagazzino] === tipoMagazzino &&
             row[col.codiceMagazzino] === codiceMagazzino &&
             row[col.causale] === causale;
-        }, this);
+        }, this),
+        mm = this.movimentoMagazzino,
+        doc = {
+          _id: CODICI.idMovimentoMagazzino(mm.origine, this.getYear(mm.data), mm.numero),
+          riferimento: this.id,
+          data: mm.data,
+          columnNames: ['barcode', 'qta'],
+          causale: this.causali[mm.causale],
+          rows: rows
+        };
+      if (mm.destinazione) {
+        doc.destinazione = mm.destinazione;
+      }
 
-      return ok ? {
-        _id: this.id,
-        codiceCliente: codiceCliente,
-        tipoMagazzino: tipoMagazzino,
-        codiceMagazzino: codiceMagazzino,
-        causale: [causale].concat(this.causaliAs400[tipoMagazzino][causale]),
-        rows: rows
-      } : null;
+      return (ok && doc._id && doc.riferimento) ? doc : null;
     },
 
     save: function () {
       var self = this;
       this.Document.save(this.buildBolla(), function (res) {
-        self.flash = { notices: [{ message: 'Salvato ' + JSON.stringify(res) }] };
-        self.fetch();
+        self.flash = { notices: [{ message: 'Salvato ' + res.id }] };
+        self.$location.path(res.id).replace();
       });
     }
   };
