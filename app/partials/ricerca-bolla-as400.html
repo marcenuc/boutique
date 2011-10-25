@@ -18,7 +18,7 @@
 </table>
 <div>
  <label>Numero bolla: <input name="movimentoMagazzino.numero" size=8 required></label>
- <label>Data bolla (AAAAMMGG): <input name="movimentoMagazzino.data" size=8 maxlenght=8 required></label><p>
+ <label>Data bolla (AAAAMMGG): <input name="movimentoMagazzino.data" size=8 maxlength=8 required></label><p>
  <label>Origine: <select name="movimentoMagazzino.origine" ng:options="codice as desc for (codice, desc) in aziende"><option></select></label>
  <label>Destinazione: <select name="movimentoMagazzino.destinazione" ng:options="codice as desc for (codice, desc) in aziende"><option></select></label><p>
  <label>Causale: <select name="movimentoMagazzino.causale"><option ng:repeat="causa in causali" value="{{$index}}">{{causa[0]}}</select></label>&nbsp;&nbsp;Segno origine:&nbsp;"{{causali[causale][1]}}";&nbsp;&nbsp;Segno destinazione:&nbsp;"{{causali[causale][2]}}"<p>
