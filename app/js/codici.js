@@ -124,7 +124,7 @@ var CODICI;
   };
 
   codici.idListino = function (versione, dataUso) {
-    if (codici.isNumero(versione) && codici.isDate(dataUso)) {
+    if (codici.isNumero(versione) && codici.isYyyyMmDdDate(dataUso)) {
       return ['Listino', versione, dataUso].join('_');
     }
   };
