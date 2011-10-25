@@ -266,7 +266,7 @@ var Ctrl = {};
         if (!riferimento) {
           return cercaBollaAs400();
         }
-        this.userCtx.flash = { notices: [{ message: 'Bolla già caricata su Boutique' }] };
+        self.userCtx.flash = { notices: [{ message: 'Bolla già caricata su Boutique' }] };
         self.$location.path(riferimento.id).replace();
       }, function (status, resp) {
         self.flash = { errors: [{ message: 'Errore ' + status + ': ' + JSON.stringify(resp) }] };

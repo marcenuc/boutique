@@ -127,9 +127,5 @@ requirejs(['app/js/codici'], function (codici) {
     it('should parse "BollaAs400_20110704_40241_Y_10" as data "20110704", numero "40241", enteNumerazione "Y", codiceNumerazione "10"', function () {
       expect(codici.parseIdBollaAs400('BollaAs400_20110704_40241_Y_10')).toEqual({ data: '20110704', numero: '40241', enteNumerazione: 'Y', codiceNumerazione: '10' });
     });
-    it('should parse "BollaAs400_20111024_31_A_10" as data "20110704", numero "40241", enteNumerazione "Y", codiceNumerazione "10"', function () {
-      expect(codici.parseIdBollaAs400('BollaAs400_20111024_31_A_10')).toEqual({ data: '20111024', numero: '31', enteNumerazione: 'A', codiceNumerazione: '10' });
-    });
-
   });
 });
