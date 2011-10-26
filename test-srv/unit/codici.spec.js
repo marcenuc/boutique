@@ -11,6 +11,63 @@ requirejs.config({
 requirejs(['app/js/codici'], function (codici) {
   'use strict';
 
+  describe('setProperty', function () {
+    it('should set new property', function () {
+      var a = {};
+      codici.setProperty(a, 'a', 1);
+      expect(a).toEqual({ a: 1 });
+    });
+
+    it('should set existing property', function () {
+      var a = { a: 3 };
+      codici.setProperty(a, 'a', 1);
+      expect(a).toEqual({ a: 1 });
+    });
+
+    it('should create parent of level 2 property', function () {
+      var a = {};
+      codici.setProperty(a, 'a', 'b', 1);
+      expect(a).toEqual({ a: { b: 1 } });
+    });
+
+    it('should create all parents of level 3 property', function () {
+      var a = {};
+      codici.setProperty(a, 'a', 'b', 'c', 1);
+      expect(a).toEqual({ a: { b: { c: 1 } } });
+    });
+
+    it('should set new level 3 property with existing parents', function () {
+      var a = { a: { b: { d: 4 } } };
+      codici.setProperty(a, 'a', 'b', 'c', 1);
+      expect(a).toEqual({ a: { b: { c: 1, d: 4 } } });
+    });
+
+    it('should set existing level 3 property with existing parents', function () {
+      var a = { a: { b: { c: 8, d: 4 } } };
+      codici.setProperty(a, 'a', 'b', 'c', 1);
+      expect(a).toEqual({ a: { b: { c: 1, d: 4 } } });
+    });
+  });
+
+  describe('getProperty', function () {
+    it('should return undefined for non existent property', function () {
+      expect(codici.getProperty({}, 'a')).toBeUndefined();
+      expect(codici.getProperty({ b: 1 }, 'a')).toBeUndefined();
+    });
+
+    it('should return undefined for non existent level 2 property', function () {
+      expect(codici.getProperty({ a: { b: 1 } }, 'c', 'b')).toBeUndefined();
+    });
+
+    it('should return value of existing property', function () {
+      expect(codici.getProperty({ a: 1 }, 'a')).toBe(1);
+    });
+
+    it('should return value of existing level 2 property', function () {
+      expect(codici.getProperty({ a: { b: 1 } }, 'a', 'b')).toBe(1);
+    });
+  });
+
   describe('isYyyyMmDdDate', function () {
     it('should return true for "20110704"', function () {
       expect(codici.isYyyyMmDdDate('20110704')).toBe(true);

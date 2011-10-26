@@ -393,7 +393,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
   });
 
   desc('Aggiorna inventario');
-  task('aggiorna-inventario', function (baseName, azienda, doReset, sheet) {
+  task('aggiornaInventario', function (baseName, azienda, doReset, sheet) {
     requirejs(['lib/inventario'], function (inventario) {
       var xlsName = baseName + '.xlsx',
         csvName = baseName + '.csv';
@@ -421,37 +421,11 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
     });
   });
 
-  desc('Produce un file di testo con la stampa delle etichette da un inventario XLS');
-  task('stampaEtichetteFromXLS', function (baseName, sheet, comparator) {
-    requirejs(['lib/etichette'], function (etichette) {
-      var xlsName = baseName + '.xlsx',
-        csvName = baseName + '.csv';
-      xlsToCsv(xlsName, csvName, function (errConvert, out) {
-        if (errConvert) {
-          fail(util.inspect(errConvert));
-        }
-        if (out) {
-          console.log(out);
-        }
-        var db = newBoutiqueDbConnection();
-        etichette.stampaFromCsvFile(csvName + '.' + sheet, db, comparator, function (err, warns, stampa) {
-          if (err) {
-            return fail(util.inspect(err));
-          }
-          if (warns && warns.length) {
-            console.warn(warns.join('\n'));
-          }
-          process.stdout.write(stampa);
-        });
-      });
-    });
-  });
-
-  desc('Produce un file di testo con la stampa delle etichette da una bolla as400');
-  task('stampaEtichetteFromBollaAs400', function (idBollaAs400, comparator) {
+  desc('Produce un file di testo con la stampa delle etichette da un movimento magazzino');
+  task('stampaEtichetteFromMovimentoMagazzino', function (idMovimentoMagazzino, comparatorName, templateName) {
     requirejs(['lib/etichette'], function (etichette) {
       var db = newBoutiqueDbConnection();
-      etichette.stampaFromBollaAs400(idBollaAs400, db, comparator, function (err, warns, stampa) {
+      etichette.stampaFromMovimentoMagazzino(idMovimentoMagazzino, db, comparatorName, templateName, function (err, warns, stampa) {
         if (err) {
           return fail(util.inspect(err));
         }
@@ -463,11 +437,11 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
     });
   });
 
-  desc('Produce un file di testo con la stampa delle etichette');
-  task('stampaEtichette', function (azienda, comparator) {
+  desc('Produce un file di testo con la stampa delle etichette dalle giacenze');
+  task('stampaEtichetteFromGiacenze', function (codiceAzienda, tipoMagazzino, comparatorName, templateName) {
     requirejs(['lib/etichette'], function (etichette) {
       var db = newBoutiqueDbConnection();
-      etichette.stampa(db, azienda, comparator, function (err, warns, stampa) {
+      etichette.stampaFromGiacenze(db, codiceAzienda, parseInt(tipoMagazzino, 10), comparatorName, templateName, function (err, warns, stampa) {
         if (err) {
           return fail(util.inspect(err));
         }

@@ -92,34 +92,46 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
     if (!prezzi) {
       return error('Listino vuoto');
     }
-    var codice, j, l, vuoto = true;
-    for (codice in prezzi) {
-      if (prezzi.hasOwnProperty(codice)) {
-        vuoto = false;
-        // TODO DRY '\d{12}' è codiceListino
-        if (/^\d{12}$/.test(codice)) {
-          r = prezzi[codice];
-          if (typeOf(r) !== 'array') {
-            error('Invalid row at: "' + codice + '"');
-          } else {
-            l = typeof r[r.length - 1] === 'string' ? r.length - 1 : r.length;
-            if (l < 1) {
-              error('Invalid row at: "' + codice + '"');
-            } else {
-              for (j = 0; j < l; j += 1) {
-                if (typeof r[j] !== 'number') {
-                  error('Invalid row at: "' + codice + '"');
+    var stagione, modello, modelli, articolo, articoli, r, j, l, vuoto = true;
+    for (stagione in prezzi) {
+      if (prezzi.hasOwnProperty(stagione)) {
+        if (!codici.isCode(stagione, codici.LEN_STAGIONE)) {
+          return error('Invalid stagione "' + stagione + '"');
+        }
+        modelli = prezzi[stagione];
+        for (modello in modelli) {
+          if (modelli.hasOwnProperty(modello)) {
+            if (!codici.isCode(modello, codici.LEN_MODELLO)) {
+              return error('Invalid modello "' + modello + '" in stagione "' + stagione + '"');
+            }
+            articoli = modelli[modello];
+            for (articolo in articoli) {
+              if (articoli.hasOwnProperty(articolo)) {
+                if (!codici.isCode(articolo, codici.LEN_ARTICOLO)) {
+                  return error('Invalid articolo "' + articolo + '" in modello "' + modello + '", stagione "' + stagione + '"');
+                }
+                vuoto = false;
+                r = articoli[articolo];
+                if (typeOf(r) !== 'array' || (r.length !== 3 && r.length !== 4)) {
+                  error('Invalid row for articolo "' + articolo + '" in modello "' + modello + '", stagione "' + stagione + '": ' + JSON.stringify(r));
+                } else {
+                  for (j = 0, l = 3; j < l; j += 1) {
+                    if (!codici.isInt(r[j]) || r[j] < 0) {
+                      error('Invalid row for articolo "' + articolo + '" in modello "' + modello + '", stagione "' + stagione + '": ' + JSON.stringify(r));
+                    }
+                  }
+                  if (typeof r[4] !== 'undefined' && typeof r[4] !== 'string') {
+                    error('Invalid row for articolo "' + articolo + '" in modello "' + modello + '", stagione "' + stagione + '": ' + JSON.stringify(r));
+                  }
                 }
               }
             }
           }
-        } else {
-          error('Invalid code: "' + codice + '"');
         }
       }
     }
     if (vuoto) {
-      return error('Listino vuoto');
+      error('Listino vuoto');
     }
   }
 
@@ -442,6 +454,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         if (!codici.idListino(codes[0], codes[1])) {
           error('Invalid code');
         }
+        hasColumnNames(['costo', 'prezzo1', 'prezzo2', 'offerta']);
         hasValidListino(doc.prezzi);
         break;
       default:

@@ -135,7 +135,7 @@ var Ctrl = {};
           this.error(msg);
           return msg;
         }
-        descs = CODICI.barcodeDescs(codes, this.taglieScalarini.descrizioniTaglie, this.modelliEScalarini.lista);
+        descs = CODICI.descrizioniModello(codes.stagione, codes.modello, codes.taglia, this.taglieScalarini.descrizioniTaglie, this.modelliEScalarini.lista);
         if (descs[0]) {
           msg = descs[0] + ': "' + r.barcode + '"';
           this.error(msg);
@@ -187,7 +187,7 @@ var Ctrl = {};
           if (!codes) {
             return this.error('Codice non valido: "' + r.barcode + '"');
           }
-          descs = CODICI.barcodeDescs(codes, this.taglieScalarini.descrizioniTaglie, this.modelliEScalarini.lista);
+          descs = CODICI.descrizioniModello(codes.stagione, codes.modello, codes.taglia, this.taglieScalarini.descrizioniTaglie, this.modelliEScalarini.lista);
           if (descs[0]) {
             return this.error(descs[0] + ': "' + r.barcode + '"');
           }

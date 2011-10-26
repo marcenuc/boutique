@@ -39,6 +39,30 @@ var CODICI;
     ['RETTIFICA INVENTARIO -', -1, 0]
   ];
 
+  codici.setProperty = function (obj) {
+    var arg, o = obj, i = 1, n = arguments.length - 2;
+    for (; i < n; i += 1) {
+      arg = arguments[i];
+      if (!o.hasOwnProperty(arg)) {
+        o[arg] = {};
+      }
+      o = o[arg];
+    }
+    o[arguments[n]] = arguments[n + 1];
+  };
+
+  codici.getProperty = function (obj) {
+    var arg, o = obj, i = 1, n = arguments.length - 1;
+    for (; i < n; i += 1) {
+      arg = arguments[i];
+      if (!o.hasOwnProperty(arg)) {
+        return;
+      }
+      o = o[arg];
+    }
+    return o[arguments[n]];
+  };
+
   codici.isNumero = function (numero) {
     return numero && (/^\d+$/).test(numero);
   };
@@ -192,19 +216,18 @@ var CODICI;
         articolo: m[3],
         colore: m[4],
         taglia: m[5],
-        codiceListino: code.substring(0, 12),
         codiceDescrizioneEScalarino: code.substring(0, 8)
       };
     }
   };
 
-  codici.barcodeDescs = function (codes, descrizioniTaglie, listaModelli) {
+  codici.descrizioniModello = function (stagione, modello, taglia, descrizioniTaglie, listaModelli) {
     var descrizioniTaglia, descrizioneTaglia,
-      desscal = listaModelli[codes.codiceDescrizioneEScalarino];
+      desscal = listaModelli[stagione + modello];
     if (desscal) {
       descrizioniTaglia = descrizioniTaglie[desscal[1]];
       if (descrizioniTaglia) {
-        descrizioneTaglia = descrizioniTaglia[codes.taglia];
+        descrizioneTaglia = descrizioniTaglia[taglia];
         if (descrizioneTaglia) {
           return [null, {
             descrizione: desscal[0],
@@ -212,11 +235,11 @@ var CODICI;
             descrizioneTaglia: descrizioneTaglia
           }];
         }
-        return ['Codice taglia (' + codes.taglia + ') non valido'];
+        return ['Codice taglia (' + taglia + ') non valido'];
       }
       return ['Scalarino (' + desscal[1] + ') non trovato'];
     }
-    return ['Modello (' + codes.codiceDescrizioneEScalarino + ') non in anagrafe'];
+    return ['Modello (' + stagione + ' ' + modello + ') non in anagrafe'];
   };
 
   codici.codiceTaglia = function (stagione, modello, codiciTaglie, listaModelli, descrizioneTaglia) {

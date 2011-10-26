@@ -356,7 +356,8 @@ describe('Service', function () {
     });
 
     describe('Listino', function () {
-      var validId = 'Listino_1_20111003';
+      var validId = 'Listino_1_20111003',
+        columnNames = ['costo', 'prezzo1', 'prezzo2', 'offerta'];
 
       it('should require admin user for writes', function () {
         expect(check({ _id: validId })).not.toHaveError('Not authorized');
@@ -376,20 +377,40 @@ describe('Service', function () {
         expect(check({ _id: validId, prezzi: { '112708995017': [100] } })).not.toHaveError(msg);
       });
 
+      it('should require columnNames to be costo, prezzo1, prezzo2, and offerta', function () {
+        var msg = 'Invalid columnNames';
+        expect(check({ _id: validId })).toHaveError('Required field: columnNames');
+        expect(check({ _id: validId, columnNames: ['costo', 'prezzo1', 'prezzo2'] })).toHaveError(msg);
+        expect(check({ _id: validId, columnNames: columnNames })).not.toHaveError(msg);
+      });
+
       describe('valid row', function () {
-        it('should have a valid code', function () {
-          var msg = 'Invalid code: "11270899501"';
-          expect(check({ _id: validId, prezzi: { '11270899501': [100] } })).toHaveError(msg);
-          expect(check({ _id: validId, prezzi: { '112708995017': [100] } })).not.toHaveError(msg);
+        it('should require valid stagione', function () {
+          var msgp = /Invalid stagione/i;
+          expect(check({ _id: validId, columnNames: columnNames, prezzi: { '1234': { '12345': { '1234': [] } } }})).toMatchError(msgp);
+          expect(check({ _id: validId, columnNames: columnNames, prezzi: { '123': { '12345': { '1234': [] } } }})).not.toMatchError(msgp);
         });
 
-        it('should be an array with [priceN, priceN-1, ..., price1, offerta] (offerta is optional string)', function () {
-          var msg = 'Invalid row at: "112708995017"';
-          expect(check({ _id: validId, prezzi: { '112708995017': ['100'] } })).toHaveError(msg);
-          expect(check({ _id: validId, prezzi: { '112708995017': ['100', '*'] } })).toHaveError(msg);
-          expect(check({ _id: validId, prezzi: { '112708995017': [100, '*'] } })).not.toHaveError(msg);
-          expect(check({ _id: validId, prezzi: { '112708995017': [100, 90, '*'] } })).not.toHaveError(msg);
-          expect(check({ _id: validId, prezzi: { '112708995017': [100] } })).not.toHaveError(msg);
+        it('should require valid modello', function () {
+          var msgp = /Invalid modello/i;
+          expect(check({ _id: validId, columnNames: columnNames, prezzi: { '123': { '123456': { '1234': [] } } }})).toMatchError(msgp);
+          expect(check({ _id: validId, columnNames: columnNames, prezzi: { '123': { '12345': { '1234': [] } } }})).not.toMatchError(msgp);
+        });
+
+        it('should require valid articolo', function () {
+          var msgp = /Invalid articolo/i;
+          expect(check({ _id: validId, columnNames: columnNames, prezzi: { '123': { '12345': { '12345': [] } } }})).toMatchError(msgp);
+          expect(check({ _id: validId, columnNames: columnNames, prezzi: { '123': { '12345': { '1234': [] } } }})).not.toMatchError(msgp);
+        });
+
+        it('should be an array with [costo, prezzo1, prezzo2, offerta] (offerta is optional string)', function () {
+          var msgp = /Invalid row/i;
+          expect(check({ _id: validId, prezzi: { '112': { '70899': { '5017': ['100'] } } } })).toMatchError(msgp);
+          expect(check({ _id: validId, prezzi: { '112': { '70899': { '5017': [100, '*'] } } } })).toMatchError(msgp);
+          expect(check({ _id: validId, prezzi: { '112': { '70899': { '5017': [100, 200, '*'] } } } })).toMatchError(msgp);
+          expect(check({ _id: validId, prezzi: { '112': { '70899': { '5017': [100, 190] } } } })).toMatchError(msgp);
+          expect(check({ _id: validId, prezzi: { '112': { '70899': { '5017': [50, 100, 190, '*'] } } } })).not.toMatchError(msgp);
+          expect(check({ _id: validId, prezzi: { '112': { '70899': { '5017': [50, 100, 90] } } } })).not.toMatchError(msgp);
         });
       });
     });
