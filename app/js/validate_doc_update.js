@@ -153,15 +153,8 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       if (!codici.isCode(row[2], codici.LEN_ARTICOLO)) {
         error('Invalid articolo at row ' + idx + ': ' + JSON.stringify(row));
       }
-      var taglia, giacenze = row[7];
-      for (taglia in giacenze) {
-        if (giacenze.hasOwnProperty(taglia)) {
-          if (!codici.codiceAs400(row[0], row[1], row[2], row[3], taglia)) {
-            error('Invalid barcode at row ' + idx + ': ' + JSON.stringify(row));
-          } else if (typeof giacenze[taglia] !== 'number' || giacenze[taglia] <= 0) {
-            error('Invalid quantity at row ' + idx + ': ' + JSON.stringify(row));
-          }
-        }
+      if (!codici.isCode(row[3], codici.LEN_COLORE)) {
+        error('Invalid colore at row ' + idx + ': ' + JSON.stringify(row));
       }
       if (!codici.isCodiceAzienda(row[4])) {
         error('Invalid codiceAzienda at row ' + idx + ': ' + JSON.stringify(row));
@@ -171,6 +164,16 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       }
       if (row[6] !== 1 && row[6] !== 2 && row[6] !== 3) {
         error('Invalid tipoMagazzino at row ' + idx + ': ' + JSON.stringify(row));
+      }
+      var taglia, giacenze = row[7];
+      for (taglia in giacenze) {
+        if (giacenze.hasOwnProperty(taglia)) {
+          if (!codici.codiceAs400(row[0], row[1], row[2], row[3], taglia)) {
+            error('Invalid barcode at row ' + idx + ': ' + JSON.stringify(row));
+          } else if (typeof giacenze[taglia] !== 'number' || giacenze[taglia] <= 0) {
+            error('Invalid quantity at row ' + idx + ': ' + JSON.stringify(row));
+          }
+        }
       }
     });
   }

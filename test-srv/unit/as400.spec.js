@@ -127,8 +127,18 @@ requirejs(['underscore', 'lib/as400', 'app/js/codici'], function (_, as400, codi
         });
 
         it('should remove from inventario when movimenti magazzino - equal to inventario', function () {
-          inventario.rows = [['123123451234123401', 2]];
-          movimenti.rows = [{ doc: { causale: ['c', -1, 0], rows: [['123123451234123401', 2]] } }];
+          inventario.rows = [['123123451234123401', 2], ['123123451234123402', 2]];
+          movimenti.rows = [{ doc: { causale: ['c', -1, 0], rows: [['123123451234123402', 2]] } }];
+          doUpdateGiacenze();
+          expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 2 }]]);
+          expect(warns).toEqual([]);
+        });
+
+        it('should ignore movimenti that results to 0', function () {
+          movimenti.rows = [
+            { doc: { causale: ['c', 1, 0], rows: [['123123451234123401', 4]] } },
+            { doc: { causale: ['c', -1, 0], rows: [['123123451234123401', 4]] } }
+          ];
           doUpdateGiacenze();
           expect(giacenze).toHaveSortedRows([]);
           expect(warns).toEqual([]);
