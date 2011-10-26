@@ -431,23 +431,23 @@ describe('Service', function () {
       });
 
       it('should require a valid inventory', function () {
-        var msg = 'Inventario vuoto', msg2 = 'Invalid barcode at row 0: ';
+        var msg = 'Inventario vuoto', msgp = /Invalid \w+ at row 0: /;
         expect(check({ _id: validId })).toHaveError(msg);
         expect(check({ _id: validId, rows: [] })).toHaveError(msg);
         expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 2, { '01': 1 }]] })).not.toHaveError(msg);
-        expect(check({ _id: validId, rows: [['', '45678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).toHaveError(msg2 + '["","45678","9012","3456","123456",1,1,{"01":1}]');
-        expect(check({ _id: validId, rows: [['123', '345678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).toHaveError(msg2 + '["123","345678","9012","3456","123456",1,1,{"01":1}]');
-        expect(check({ _id: validId, rows: [['123', '45678', '0a', '3456', '123456', 1, 1, { '01': 1 }]] })).toHaveError(msg2 + '["123","45678","0a","3456","123456",1,1,{"01":1}]');
-        expect(check({ _id: validId, rows: [['123', '45678', '9012', '34567', '123456', 1, 1, { '01': 1 }]] })).toHaveError(msg2 + '["123","45678","9012","34567","123456",1,1,{"01":1}]');
-        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).not.toHaveError(msg2);
-        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': -1 }]] })).toHaveError('Invalid quantity at row 0');
-        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).not.toHaveError('Invalid quantity at row 0');
-        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '12345', 1, 1, { '01': 1 }]] })).toHaveError('Invalid codiceAzienda at row 0');
-        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).not.toHaveError('Invalid codiceAzienda at row 0');
-        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 2, 1, { '01': 1 }]] })).toHaveError('Invalid inProduzione at row 0');
-        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 0, 1, { '01': 1 }]] })).not.toHaveError('Invalid inProduzione at row 0');
-        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 0, { '01': 1 }]] })).toHaveError('Invalid tipoMagazzino at row 0');
-        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 2, { '01': 1 }]] })).not.toHaveError('Invalid tipoMagazzino at row 0');
+        expect(check({ _id: validId, rows: [['', '45678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['123', '345678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['123', '45678', '0a', '3456', '123456', 1, 1, { '01': 1 }]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '34567', '123456', 1, 1, { '01': 1 }]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).not.toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': -1 }]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).not.toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '12345', 1, 1, { '01': 1 }]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).not.toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 2, 1, { '01': 1 }]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 0, 1, { '01': 1 }]] })).not.toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 0, { '01': 1 }]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 2, { '01': 1 }]] })).not.toMatchError(msgp);
       });
     });
 

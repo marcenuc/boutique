@@ -135,15 +135,23 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
     }
   }
 
-  function hasInventario(inventario) {
+  function hasGiacenze(inventario) {
     if (!inventario || !inventario.length) {
-      error('Inventario vuoto');
-      return;
+      return error('Inventario vuoto');
     }
     // TODO verificare anche l'ordinamento
     inventario.forEach(function (row, idx) {
       if (typeOf(row) !== 'array' || row.length < 8) {
         return error('Invalid row: ' + JSON.stringify(row));
+      }
+      if (!codici.isCode(row[0], codici.LEN_STAGIONE)) {
+        error('Invalid stagione at row ' + idx + ': ' + JSON.stringify(row));
+      }
+      if (!codici.isCode(row[1], codici.LEN_MODELLO)) {
+        error('Invalid modello at row ' + idx + ': ' + JSON.stringify(row));
+      }
+      if (!codici.isCode(row[2], codici.LEN_ARTICOLO)) {
+        error('Invalid articolo at row ' + idx + ': ' + JSON.stringify(row));
       }
       var taglia, giacenze = row[7];
       for (taglia in giacenze) {
@@ -151,26 +159,25 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
           if (!codici.codiceAs400(row[0], row[1], row[2], row[3], taglia)) {
             error('Invalid barcode at row ' + idx + ': ' + JSON.stringify(row));
           } else if (typeof giacenze[taglia] !== 'number' || giacenze[taglia] <= 0) {
-            error('Invalid quantity at row ' + idx);
+            error('Invalid quantity at row ' + idx + ': ' + JSON.stringify(row));
           }
         }
       }
       if (!codici.isCodiceAzienda(row[4])) {
-        error('Invalid codiceAzienda at row ' + idx);
+        error('Invalid codiceAzienda at row ' + idx + ': ' + JSON.stringify(row));
       }
       if (row[5] !== 0 && row[5] !== 1) {
-        error('Invalid inProduzione at row ' + idx);
+        error('Invalid inProduzione at row ' + idx + ': ' + JSON.stringify(row));
       }
       if (row[6] !== 1 && row[6] !== 2 && row[6] !== 3) {
-        error('Invalid tipoMagazzino at row ' + idx);
+        error('Invalid tipoMagazzino at row ' + idx + ': ' + JSON.stringify(row));
       }
     });
   }
 
-  function hasElencoArticoli(elenco) {
+  function hasMovimenti(elenco) {
     if (!elenco || !elenco.length) {
-      error('Elenco vuoto');
-      return;
+      return error('Elenco vuoto');
     }
     elenco.forEach(function (row, idx) {
       if (typeOf(row) !== 'array' || row.length < 2) {
@@ -186,7 +193,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
     });
   }
 
-  function hasValidInventario(inventario) {
+  function hasInventario(inventario) {
     if (!inventario || !inventario.length) {
       error('Inventario vuoto');
       return;
@@ -387,7 +394,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       case 'Giacenze':
         mustBeAdmin();
         hasColumnNames(['stagione', 'modello', 'articolo', 'colore', 'codiceAzienda', 'inProduzione', 'tipoMagazzino', 'giacenze']);
-        hasInventario(doc.rows);
+        hasGiacenze(doc.rows);
         break;
       case 'Inventario':
         mustBeOwner();
@@ -396,7 +403,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
           error('Invalid tipo magazzino in _id');
         }
         hasColumnNames(['barcode', 'giacenza', 'costo', 'inProduzione']);
-        hasValidInventario(doc.rows);
+        hasInventario(doc.rows);
         break;
       case 'MovimentoMagazzino':
         if ((oldDoc && oldDoc.accodato) ||
@@ -433,7 +440,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         } else if (r[2] && !codici.isCodiceAzienda(doc.destinazione)) {
           error('Invalid destinazione');
         }
-        hasElencoArticoli(doc.rows);
+        hasMovimenti(doc.rows);
         if (doc.riferimento) {
           if (!codici.parseIdBollaAs400(doc.riferimento)) {
             error('Invalid riferimento');
