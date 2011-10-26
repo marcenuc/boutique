@@ -57,10 +57,16 @@ describe('Controller', function () {
 
   function getUrl(id) {
     var u;
-    if (id === 'AZIENDE') {
+    switch (id) {
+    case 'AZIENDE':
       u = '_all_docs?endkey=%22Azienda_%EF%BF%B0%22&include_docs=true&startkey=%22Azienda_%22';
-    } else {
+      break;
+    case 'VIEW_RIFERIMENTI':
+      u = '_design/boutique_db/_view/riferimentiMovimentiMagazzino?key=%22BollaAs400_20110704_1234_Y_10%22';
+      break;
+    default:
       u = id;
+      break;
     }
     return '/boutique_db/' + u;
   }
@@ -476,14 +482,14 @@ describe('Controller', function () {
         '3': { 'TU': '01' }
       },
       listeDescrizioni: {
-        '2': ["44", "46", "48", "50", "52", "54", "56", "58", "60", "62", "64", "SM"],
+        '2': ['44', '46', '48', '50', '52', '54', '56', '58', '60', '62', '64', 'SM'],
         '3': ['TU']
       }
     },
       causaliAs400 = {
         '1': { '98': ['VENDITA', -1] }
       },
-      intestazione = { data: '110704', numero: '1234', enteNumerazione: 'Y', codiceNumerazione: '10' },
+      intestazione = { data: '20110704', numero: '1234', enteNumerazione: 'Y', codiceNumerazione: '10' },
       bollaAs400 = {
         columnNames: ['codiceCliente', 'tipoMagazzino', 'codiceMagazzino', 'causale', 'stagione', 'modello',
                       'articolo', 'colore', 'scalarino', 'qta1', 'qta2', 'qta3', 'qta4', 'qta5', 'qta6',
@@ -495,11 +501,11 @@ describe('Controller', function () {
         ]
       },
       bollaDoc = {
-        _id: 'BollaAs400_110704_1234_Y_10',
-        codiceCliente: '002812',
-        tipoMagazzino: '1',
-        codiceMagazzino: 'C',
-        causale: ['98', 'VENDITA', -1],
+        _id: 'MovimentoMagazzino_123456_2011_1',
+        riferimento: 'BollaAs400_20110704_1234_Y_10',
+        data: '20110704',
+        causale: ['VENDITA', -1, 0],
+        columnNames: ['barcode', 'qta'],
         rows: [
           ['112708995017800044', 1],
           ['112708995017800046', 2],
@@ -510,6 +516,7 @@ describe('Controller', function () {
     describe('actions', function () {
 
       function newController() {
+        expectGET('AZIENDE', aziende);
         expectGET('TaglieScalarini', scalarini);
         expectGET('CausaliAs400', causaliAs400);
         ctrl = scope.$new(Ctrl.RicercaBollaAs400);
@@ -523,28 +530,40 @@ describe('Controller', function () {
       describe('buildId', function () {
         it('should put, in this order, "data", "numero", "enteNumerazione", and "codiceNumerazione" in the id', function () {
           ctrl.intestazione = intestazione;
-          expect(ctrl.buildId()).toBe('BollaAs400_110704_1234_Y_10');
+          expect(ctrl.buildId()).toBe(bollaDoc.riferimento);
         });
       });
 
       describe('buildBolla', function () {
         it('should put codiceCliente, tipoMagazzino, codiceMagazzino, and causale in the doc', function () {
-          ctrl.id = 'BollaAs400_110704_1234_Y_10';
+          ctrl.id = bollaDoc.riferimento;
           ctrl.bollaAs400 = bollaAs400;
+          ctrl.movimentoMagazzino = {
+            numero: '1',
+            data: '20110704',
+            origine: '123456',
+            causale: 0
+          };
           expect(ctrl.buildBolla()).toEqual(bollaDoc);
         });
       });
 
       describe('save', function () {
         function doSave() {
-          $browser.xhr.expectPUT('/boutique_db/' + bollaDoc._id, bollaDoc).respond(JSON.stringify(okResponse));
+          expectPUT(bollaDoc._id, bollaDoc, JSON.stringify(okResponse));
           ctrl.save();
           $browser.xhr.flush();
         }
 
         it('should put the document', function () {
-          ctrl.id = bollaDoc._id;
+          ctrl.id = bollaDoc.riferimento;
           ctrl.bollaAs400 = bollaAs400;
+          ctrl.movimentoMagazzino = {
+            numero: '1',
+            data: '20110704',
+            origine: '123456',
+            causale: 0
+          };
           doSave();
         });
       });
@@ -552,6 +571,7 @@ describe('Controller', function () {
       describe('fetch', function () {
         it('should GET bolla only from CouchDB if already present', function () {
           expectGET(bollaDoc._id, bollaDoc);
+          expectGET('VIEW_RIFERIMENTI', { rows: [] });
           $browser.xhr.expectGET('/boutique_app/as400/bolla/data=110704/numero=1234/enteNumerazione=Y/codiceNumerazione=10').respond(JSON.stringify(bollaAs400));
           ctrl.intestazione = intestazione;
           ctrl.fetch();
@@ -563,17 +583,13 @@ describe('Controller', function () {
 
 
   describe('RicercaArticoli', function () {
-    var baseCode = '7023352152100',
-      rows = [
-        ['102' + baseCode + '48', 1, '019998', 1, 1],
-        ['102' + baseCode + '50', 1, '019998', 1, 1],
-        ['923' + baseCode + '50', 1, '019998', 1, 1],
-        ['102' + baseCode + '52', 1, '019998', 1, 1],
-        ['923' + baseCode + '52', 1, '019998', 1, 1]
+    var rows = [
+        ['102', '70233', '5215', '2100', '019998', 0, 1, { '48': 1, '50': 1, '52': 1 }],
+        ['923', '70233', '5215', '2100', '019998', 1, 1, { '50': 1, '52': 1 }]
       ],
       rowsExpected = [
-        ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '102', '70233', '5215', '2100', 1, 'PRONTO', 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 3],
-        ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '923', '70233', '5215', '2100', 1, 'PRONTO', 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2]
+        ['019998', 'ABITO BOT.FANT.', '102', '70233', '5215', '2100', 1, 'PRONTO', 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 3],
+        ['019998', 'ABITO BOT.FANT.', '923', '70233', '5215', '2100', 1, 'IN PRODUZIONE', 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2]
       ],
       giacenze = { rows: rows };
 
