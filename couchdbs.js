@@ -25,12 +25,14 @@ define(['fs', 'uglify-js', 'app/js/validate_doc_update', 'lib/servers'], functio
       validate_doc_update: validate_doc_update,
       // TODO DRY in tutte le view potrei usare CODICI
       views: {
-        // TODO rinominare in movimentiAccodati
-        movimenti: {
+        movimentiMagazzinoAccodati: {
           map: function (doc) {
             var ids = doc._id.split('_');
             if (ids[0] === 'MovimentoMagazzino' && doc.accodato) {
               emit([ids[1], parseInt(ids[2], 10), parseInt(ids[3], 10)], 1);
+              if (doc.causale && doc.causale[2]) {
+                emit([doc.destinazione, ids[1], parseInt(ids[2], 10), parseInt(ids[3], 10)], 1);
+              }
             }
           }
         },

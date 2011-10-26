@@ -80,6 +80,8 @@ requirejs(['underscore', 'lib/as400', 'app/js/codici'], function (_, as400, codi
     describe('updateGiacenzeWithInventarioAndMovimentiMagazzino', function () {
       var inProduzione = 0, codiceAzienda = '099999', tipoMagazzino = codici.TIPO_MAGAZZINO_NEGOZIO,
         idInventario = codici.idInventario(codiceAzienda, tipoMagazzino),
+        idMm1 = codici.idMovimentoMagazzino(codiceAzienda, 2011, 1),
+        idMm2 = codici.idMovimentoMagazzino(codiceAzienda, 2011, 2),
         warns = null, giacenze = null, inventario = null, movimenti = null;
 
       beforeEach(function () {
@@ -106,21 +108,21 @@ requirejs(['underscore', 'lib/as400', 'app/js/codici'], function (_, as400, codi
 
         it('should update inventario with movimenti magazzino +', function () {
           inventario.rows = [['123123451234123401', 12]];
-          movimenti.rows = [{ doc: { causale: ['c', 1, 0], rows: [['123123451234123401', 3]] } }];
+          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', 3]] } }];
           doUpdateGiacenze();
           expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 15 }]]);
         });
 
         it('should update inventario with movimenti magazzino -', function () {
           inventario.rows = [['123123451234123401', 12]];
-          movimenti.rows = [{ doc: { causale: ['c', -1, 0], rows: [['123123451234123401', 3]] } }];
+          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', -1, 0], rows: [['123123451234123401', 3]] } }];
           doUpdateGiacenze();
           expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 9 }]]);
         });
 
         it('should remove from inventario when movimenti magazzino - greater than inventario and issue warning', function () {
           inventario.rows = [['123123451234123401', 2]];
-          movimenti.rows = [{ doc: { causale: ['c', -1, 0], rows: [['123123451234123401', 3]] } }];
+          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', -1, 0], rows: [['123123451234123401', 3]] } }];
           doUpdateGiacenze();
           expect(giacenze).toHaveSortedRows([]);
           expect(warns).toEqual(['Giacenza negativa (-1) per "123123451234123401" di "' + codiceAzienda + '"']);
@@ -128,7 +130,7 @@ requirejs(['underscore', 'lib/as400', 'app/js/codici'], function (_, as400, codi
 
         it('should remove from inventario when movimenti magazzino - equal to inventario', function () {
           inventario.rows = [['123123451234123401', 2], ['123123451234123402', 2]];
-          movimenti.rows = [{ doc: { causale: ['c', -1, 0], rows: [['123123451234123402', 2]] } }];
+          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', -1, 0], rows: [['123123451234123402', 2]] } }];
           doUpdateGiacenze();
           expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 2 }]]);
           expect(warns).toEqual([]);
@@ -136,8 +138,8 @@ requirejs(['underscore', 'lib/as400', 'app/js/codici'], function (_, as400, codi
 
         it('should ignore movimenti that results to 0', function () {
           movimenti.rows = [
-            { doc: { causale: ['c', 1, 0], rows: [['123123451234123401', 4]] } },
-            { doc: { causale: ['c', -1, 0], rows: [['123123451234123401', 4]] } }
+            { doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', 4]] } },
+            { doc: { _id: idMm2, causale: ['c', -1, 0], rows: [['123123451234123401', 4]] } }
           ];
           doUpdateGiacenze();
           expect(giacenze).toHaveSortedRows([]);
@@ -145,13 +147,13 @@ requirejs(['underscore', 'lib/as400', 'app/js/codici'], function (_, as400, codi
         });
 
         it('should append movimenti magazzino to giacenze', function () {
-          movimenti.rows = [{ doc: { causale: ['c', 1, 0], rows: [['123123451234123401', 4]] } }];
+          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', 4]] } }];
           doUpdateGiacenze();
           expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 4 }]]);
         });
 
         it('should warn on negative values', function () {
-          movimenti.rows = [{ doc: { causale: ['c', 1, 0], rows: [['123123451234123401', -4]] } }];
+          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', -4]] } }];
           doUpdateGiacenze();
           expect(giacenze).toHaveSortedRows([]);
           expect(warns).toEqual(['Giacenza negativa (-4) per "123123451234123401" di "' + codiceAzienda + '"']);
@@ -160,14 +162,14 @@ requirejs(['underscore', 'lib/as400', 'app/js/codici'], function (_, as400, codi
         describe('when an article has multiple entries in inventario', function () {
           it('should merge data when different costo', function () {
             inventario.rows = [['123123451234123401', 2, 100], ['123123451234123401', 3, 200]];
-            movimenti.rows = [{ doc: { causale: ['c', 1, 0], rows: [['123123451234123401', 4]] } }];
+            movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', 4]] } }];
             doUpdateGiacenze();
             expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 9 }]]);
           });
 
           it('should merge data when different taglia', function () {
             inventario.rows = [['123123451234123401', 2, 100], ['123123451234123402', 3, 200]];
-            movimenti.rows = [{ doc: { causale: ['c', 1, 0], rows: [['123123451234123401', 4], ['123123451234123403', 5]] } }];
+            movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', 4], ['123123451234123403', 5]] } }];
             doUpdateGiacenze();
             expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 6, '02': 3, '03': 5 }]]);
           });
@@ -202,7 +204,7 @@ requirejs(['underscore', 'lib/as400', 'app/js/codici'], function (_, as400, codi
 
         it('should update giacenze with movimenti magazzino', function () {
           setGiacenza(['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 12 }]);
-          movimenti.rows = [{ doc: { causale: ['c', 1, 0], rows: [['123123451234123401', 3]] } }];
+          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', 3]] } }];
           doUpdateGiacenze();
           expect(giacenze).toHaveSortedRows([
             ['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 15 }]
@@ -213,7 +215,7 @@ requirejs(['underscore', 'lib/as400', 'app/js/codici'], function (_, as400, codi
           it('should merge data when different costo', function () {
             setGiacenza(['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 12 }]);
             inventario.rows = [['123123451234123401', 2, 100], ['123123451234123401', 3, 200]];
-            movimenti.rows = [{ doc: { causale: ['c', 1, 0], rows: [['123123451234123401', 4]] } }];
+            movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', 4]] } }];
             doUpdateGiacenze();
             expect(giacenze).toHaveSortedRows([
               ['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 21 }]
@@ -223,12 +225,34 @@ requirejs(['underscore', 'lib/as400', 'app/js/codici'], function (_, as400, codi
           it('should merge data when different taglia', function () {
             setGiacenza(['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 12 }]);
             inventario.rows = [['123123451234123401', 2, 100], ['123123451234123402', 3, 200]];
-            movimenti.rows = [{ doc: { causale: ['c', 1, 0], rows: [['123123451234123401', 4], ['123123451234123403', 5]] } }];
+            movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', 4], ['123123451234123403', 5]] } }];
             doUpdateGiacenze();
             expect(giacenze).toHaveSortedRows([
               ['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 18, '02': 3, '03': 5 }]
             ]);
           });
+        });
+      });
+
+      describe('destinazione with causale[2] === 0', function () {
+        it('should NOT update giacenza destinazione', function () {
+          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], destinazione: '010101', rows: [['123123451234123401', 4]] } }];
+          doUpdateGiacenze();
+          expect(giacenze).toHaveSortedRows([
+            ['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 4 }]
+          ]);
+        });
+      });
+
+      describe('destinazione with causale[2] !== 0', function () {
+        it('should update giacenza destinazione', function () {
+          var codiceDestinazione = '010101';
+          inventario._id = codici.idInventario(codiceDestinazione, tipoMagazzino);
+          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', -1, 1], destinazione: codiceDestinazione, rows: [['123123451234123401', 4]] } }];
+          doUpdateGiacenze();
+          expect(giacenze).toHaveSortedRows([
+            ['123', '12345', '1234', '1234', codiceDestinazione, inProduzione, tipoMagazzino, { '01': 4 }]
+          ]);
         });
       });
     });
