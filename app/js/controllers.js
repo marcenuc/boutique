@@ -594,17 +594,15 @@ var Ctrl = {};
         });
       if (ok) {
         this.prezzi.forEach(function (r) {
-          var stagione = r[0], modello = r[1], articolo = r[2], vals = r[3];
-          if (!vals[4]) {
-            vals.pop();
-          }
-          CODICI.setProperty(ps, stagione, modello, articolo, vals);
+          var stagione = r[0], modello = r[1], articolo = r[2], vals = r[3],
+            v = vals[4] ? vals : vals.slice(0, 4);
+          CODICI.setProperty(ps, stagione, modello, articolo, v);
         });
         this.Document.save(this.listino, function (res) {
           if (!self.rev) {
             self.$location.path(res.id).replace();
           }
-          self.rev = res.rev;
+          self.listino._rev = res.rev;
           self.error('Salvato ' + res.id, 'notices');
         });
       } else {
