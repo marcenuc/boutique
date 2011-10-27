@@ -550,9 +550,10 @@ var Ctrl = {};
     },
 
     fetch: function (codice) {
-      var self = this;
-      // FIXME usare CODICI.idListino o altro.
-      this.Document.get({ id: 'Listino_' + codice }, function (listino) {
+      var self = this,
+        // TODO DRY usare CODICI.idListino o altro.
+        id = codice ? 'Listino_' + codice : CODICI.idListino(this.versione, this.dataUso);
+      this.Document.get({ id: id }, function (listino) {
         if (codice) {
           self.listino = listino;
         } else {
