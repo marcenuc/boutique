@@ -65,6 +65,7 @@ var Ctrl = {};
   Ctrl.MovimentoMagazzino.$inject = ['$routeParams', 'userCtx', '$location', 'Document'];
 
   Ctrl.MovimentoMagazzino.prototype = {
+    //TODO DRY condividere questa funzione tra i controller
     error: function (message, level) {
       this.flash = {};
       this.flash[level || 'errors'] = [{ message: message }];
@@ -522,6 +523,92 @@ var Ctrl = {};
           return true;
         }
       }, this);
+    }
+  };
+
+  Ctrl.Listino = function ($routeParams, Document, Validator, userCtx, $location) {
+    this.$routeParams = $routeParams;
+    this.Document = Document;
+    this.Validator = Validator;
+    this.userCtx = userCtx;
+    this.$location = $location;
+
+    this.prezzi = [];
+    if ($routeParams.codice) {
+      this.fetch($routeParams.codice);
+    }
+    this.flash = userCtx.flash;
+    userCtx.flash = {};
+  };
+  Ctrl.Listino.$inject = ['$routeParams', 'Document', 'Validator', 'userCtx', '$location'];
+
+  Ctrl.Listino.prototype = {
+    //TODO DRY condividere questa funzione tra i controller
+    error: function (message, level) {
+      this.flash = {};
+      this.flash[level || 'errors'] = [{ message: message }];
+    },
+
+    fetch: function (codice) {
+      var self = this;
+      // FIXME usare CODICI.idListino o altro.
+      this.Document.get({ id: 'Listino_' + codice }, function (listino) {
+        if (codice) {
+          self.listino = listino;
+        } else {
+          self.$location.path(listino._id).replace();
+        }
+      }, function (status, resp) {
+        if (status === 404) {
+          return self.error('Non trovato');
+        }
+        self.error(status + JSON.stringify(resp));
+      });
+    },
+
+    getFiltro: function (val, len) {
+      return new RegExp('^' + dotPad(val, len) + '$');
+    },
+
+    findRows: function () {
+      if (this.stagione || this.modello || this.articolo) {
+        var filtroStagione = this.getFiltro(this.stagione, CODICI.LEN_STAGIONE),
+          filtroModello = this.getFiltro(this.modello, CODICI.LEN_MODELLO),
+          filtroArticolo = this.getFiltro(this.articolo, CODICI.LEN_ARTICOLO);
+        this.prezzi = CODICI.findProperties(this.listino.prezzi, filtroStagione, filtroModello, filtroArticolo);
+      }
+    },
+
+    save: function () {
+      var self = this,
+        ps = this.listino.prezzi,
+        ok = this.prezzi.every(function (r) {
+          var stagione = r[0], modello = r[1], articolo = r[2], vals = r[3];
+          return (CODICI.isCode(stagione, CODICI.LEN_STAGIONE) &&
+              CODICI.isCode(modello, CODICI.LEN_MODELLO) &&
+              CODICI.isCode(articolo, CODICI.LEN_ARTICOLO) &&
+              CODICI.isNumero(vals[0]) &&
+              CODICI.isNumero(vals[1]) &&
+              CODICI.isNumero(vals[2]));
+        });
+      if (ok) {
+        this.prezzi.forEach(function (r) {
+          var stagione = r[0], modello = r[1], articolo = r[2], vals = r[3];
+          if (!vals[4]) {
+            vals.pop();
+          }
+          CODICI.setProperty(ps, stagione, modello, articolo, vals);
+        });
+        this.Document.save(this.listino, function (res) {
+          if (!self.rev) {
+            self.$location.path(res.id).replace();
+          }
+          self.rev = res.rev;
+          self.error('Salvato ' + res.id, 'notices');
+        });
+      } else {
+        this.error('Valori non validi', 'errors');
+      }
     }
   };
 }());

@@ -1,4 +1,4 @@
-/*global angular: false */
+/*global angular: false, CODICI: false */
 
 (function () {
   'use strict';
@@ -10,11 +10,21 @@
   });
 
   angular.formatter('codiceAzienda', {
+    // TODO DRY usare CODICI.
     parse: function (value) {
       return 'Azienda_' + value;
     },
     format: function (value) {
       return value.slice(8);
+    }
+  });
+
+  angular.formatter('money', {
+    parse: function (value) {
+      return CODICI.parseMoney(value.replace(',', '.'))[1];
+    },
+    format: function (value) {
+      return String(value / 100).replace('.', ',');
     }
   });
 }());

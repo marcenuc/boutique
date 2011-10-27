@@ -1,0 +1,10 @@
+<div class="flash">
+  <ul ng:repeat="(class, messages) in flash" ng:class="class">
+    <li ng:repeat="message in messages">{{message.message}}
+  </ul>
+</div>
+<form ng:submit="fetch()">
+<label>Versione: <input name="versione" size=2 value=1></label>
+<label>Data uso (AAAAMMGG): <input name="dataUso" size=8 value=20111018></label>
+<input type=submit value=Cerca>
+</form>

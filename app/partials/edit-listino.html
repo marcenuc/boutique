@@ -1,0 +1,28 @@
+<div class="flash">
+  <ul ng:repeat="(class, messages) in flash" ng:class="class">
+    <li ng:repeat="message in messages">{{message.message}}
+  </ul>
+</div>
+<p>{{listino._id}}</p>
+<form ng:submit="findRows()">
+<label>Stagione: <input name="stagione" size=3></label>
+<label>Modello: <input name="modello" size=5></label>
+<label>Articolo: <input name="articolo" size=4></label>
+<input type=submit value=Cerca>
+</form>
+
+<form ng:submit="save()">
+<table>
+<thead><tr><th>Stagione<th>Modello<th>Articolo<th>Costo<th>Prezzo1<th>Prezzo2<th>Offerta
+<tbody><tr ng:repeat="r in prezzi">
+  <td><input name="r[0]" size=3>
+  <td><input name="r[1]" size=5>
+  <td><input name="r[2]" size=4>
+  <td><input name="r[3][0]" size=7 ng:format="money">
+  <td><input name="r[3][1]" size=7 ng:format="money">
+  <td><input name="r[3][2]" size=7 ng:format="money">
+  <td><input name="r[3][3]" size=2>
+</table>
+[&nbsp;<a href="" ng:click="prezzi.push(['','','',[0,0,0,'']])">Aggiungi riga</a>&nbsp;]
+<input type=submit value=Salva>
+</form>

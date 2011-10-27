@@ -15,6 +15,8 @@
     $route.when('/ricerca-giacenza', { template: 'partials/ricerca-giacenza.html', controller: Ctrl.RicercaArticoli });
     $route.when('/MovimentoMagazzino', { template: 'partials/movimento-magazzino.html', controller: Ctrl.MovimentoMagazzino });
     $route.when('/MovimentoMagazzino_:codice', { template: 'partials/movimento-magazzino.html', controller: Ctrl.MovimentoMagazzino });
+    $route.when('/Listino', { template: 'partials/listino.html', controller: Ctrl.Listino });
+    $route.when('/Listino_:codice', { template: 'partials/edit-listino.html', controller: Ctrl.Listino });
     $route.otherwise({ redirectTo: '/' });
 
     this.$on('$afterRouteChange', function () {
