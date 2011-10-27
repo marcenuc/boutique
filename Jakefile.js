@@ -422,10 +422,10 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
   });
 
   desc('Produce un file di testo con la stampa delle etichette da un movimento magazzino');
-  task('stampaEtichetteFromMovimentoMagazzino', function (idMovimentoMagazzino, comparatorName, templateName) {
+  task('stampaEtichetteFromMovimentoMagazzino', function (idMovimentoMagazzino, comparatorName, layout, formato) {
     requirejs(['lib/etichette'], function (etichette) {
       var db = newBoutiqueDbConnection();
-      etichette.stampaFromMovimentoMagazzino(idMovimentoMagazzino, db, comparatorName, templateName, function (err, warns, stampa) {
+      etichette.stampaFromMovimentoMagazzino(idMovimentoMagazzino, db, comparatorName, layout, formato, function (err, warns, stampa) {
         if (err) {
           return fail(util.inspect(err));
         }
@@ -438,10 +438,10 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
   });
 
   desc('Produce un file di testo con la stampa delle etichette dalle giacenze');
-  task('stampaEtichetteFromGiacenze', function (codiceAzienda, tipoMagazzino, comparatorName, templateName) {
+  task('stampaEtichetteFromGiacenze', function (codiceAzienda, tipoMagazzino, comparatorName, layout, formato) {
     requirejs(['lib/etichette'], function (etichette) {
       var db = newBoutiqueDbConnection();
-      etichette.stampaFromGiacenze(db, codiceAzienda, parseInt(tipoMagazzino, 10), comparatorName, templateName, function (err, warns, stampa) {
+      etichette.stampaFromGiacenze(db, codiceAzienda, parseInt(tipoMagazzino, 10), comparatorName, layout, formato, function (err, warns, stampa) {
         if (err) {
           return fail(util.inspect(err));
         }
@@ -522,6 +522,8 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         port = servers.couchdb.webserver.port,
         server = connect.createServer()
           .use(connect.logger())
+          .use('/taskRunner',
+            cmdExec('text/plain', __dirname, './taskRunner.sh', []))
           .use('/as400',
             cmdExec('application/json', __dirname, 'java', ['-jar', 'as400-querier.jar']));
 

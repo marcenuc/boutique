@@ -36,6 +36,7 @@ var Ctrl = {};
 
   Ctrl.MovimentoMagazzino = function ($routeParams, userCtx, $location, Document) {
     var self = this, codes = ($routeParams.codice || '').split('_'), docCount = 3;
+    // TODO DRY usare CODICI per estrarre i dati dal codice
     this.origine = codes[0];
     this.data = codes[1];
     this.numero = codes[2];
