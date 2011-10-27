@@ -63,6 +63,36 @@ var CODICI;
     return o[arguments[n]];
   };
 
+  function doFindProperties(parents, props, obj, filters) {
+    var nextFilters, key, filter = filters[0], value;
+    if (filters.length > 1) {
+      nextFilters = filters.slice(1);
+      for (key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          if (filter.test(key)) {
+            doFindProperties(parents.concat(key), props, obj[key], nextFilters);
+          }
+        }
+      }
+    } else {
+      for (key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          if (filter.test(key)) {
+            value = parents.concat(key);
+            value.push(obj[key]);
+            props.push(value);
+          }
+        }
+      }
+    }
+  }
+
+  codici.findProperties = function (obj) {
+    var props = [];
+    doFindProperties([], props, obj, [].slice.call(arguments, 1));
+    return props;
+  };
+
   codici.isNumero = function (numero) {
     return numero && (/^\d+$/).test(numero);
   };

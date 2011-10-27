@@ -68,6 +68,21 @@ requirejs(['app/js/codici'], function (codici) {
     });
   });
 
+  describe('findProperties', function () {
+    var f = codici.findProperties;
+
+    it('should return empty array with empty obj', function () {
+      expect(f({}, /a/)).toEqual([]);
+      expect(f({}, /a/, /b/)).toEqual([]);
+    });
+
+    it('should return array with found property and path to it', function () {
+      expect(f({ a: 1 }, /^a$/)).toEqual([['a', 1]]);
+      expect(f({ a: { b: 1 } }, /^\w$/, /b/)).toEqual([['a', 'b', 1]]);
+      expect(f({ a: { b: 1 }, c: { b: 'x' }, d: { e: 3 } }, /^\w$/, /b/)).toEqual([['a', 'b', 1], ['c', 'b', 'x']]);
+    });
+  });
+
   describe('isYyyyMmDdDate', function () {
     it('should return true for "20110704"', function () {
       expect(codici.isYyyyMmDdDate('20110704')).toBe(true);
