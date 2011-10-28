@@ -37,11 +37,11 @@
 ?52&31,554,97,1,45;<% row = rows[i]; %><%= row.barcode %>
 ?52&30,598,146,7,11;<%= row.descrizione %>
 ?52&30,554,146,7,11;<%= row.stagione %>
-?52&30,742,48,2,11;<%= row.modello %>
+?52&30,744,48,2,11;<%= row.modello %>
 ?52&30,674,48,2,11;<%= row.articolo %>
-?52&30,600,48,2,11;<%= row.colore %>
-?52&30,548,48,2,11;<%= row.descrizioneTaglia %>
-?52&30,726,10,2,11;Euro
+?52&30,601,48,2,11;<%= row.colore %>
+?52&30,549,48,2,11;<%= row.descrizioneTaglia %>
+?52&30,744,10,2,11;Euro
 ?52&30,592,10,2,11;<%= row.prezzo2 %> <%= row.offerta %>
 ?15&543,43,280,2,2
 ?52&30,468,75,7,11;MOD.
@@ -55,11 +55,11 @@
 ?52&31,248,97,1,45;<% row = rows[i + 1]; %><%= row && row.barcode %>
 ?52&30,287,146,7,11;<%= row && row.descrizione %>
 ?52&30,251,146,7,11;<%= row && row.stagione %>
-?52&30,436,48,2,11;<%= row && row.modello %>
+?52&30,439,48,2,11;<%= row && row.modello %>
 ?52&30,368,48,2,11;<%= row && row.articolo %>
-?52&30,294,48,2,11;<%= row && row.colore %>
-?52&30,243,48,2,11;<%= row && row.descrizioneTaglia %>
-?52&30,410,10,2,11;Euro
+?52&30,295,48,2,11;<%= row && row.colore %>
+?52&30,244,48,2,11;<%= row && row.descrizioneTaglia %>
+?52&30,440,10,2,11;Euro
 ?52&30,284,10,2,11;<%= row && row.prezzo2 %> <%= row && row.offerta %>
 ?15&237,43,280,2,2
 ?50&0
