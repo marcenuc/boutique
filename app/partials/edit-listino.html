@@ -3,15 +3,17 @@
     <li ng:repeat="message in messages">{{message.message}}
   </ul>
 </div>
-<p>{{listino._id}}</p>
 <form ng:submit="findRows()">
+<fieldset><legend>Ricerca articoli in {{listino._id}}</legend>
 <label>Stagione: <input name="stagione" size=3></label>
 <label>Modello: <input name="modello" size=5></label>
 <label>Articolo: <input name="articolo" size=4></label>
 <input type=submit value=Cerca>
+</fieldset>
 </form>
 
 <form ng:submit="save()">
+<fieldset><legend>{{listino._id}}</legend>
 <table>
 <thead><tr><th>Stagione<th>Modello<th>Articolo<th>Costo<th>Prezzo1<th>Prezzo2<th>Offerta
 <tbody><tr ng:repeat="r in prezzi">
@@ -25,4 +27,5 @@
 </table>
 [&nbsp;<a href="" ng:click="prezzi.push(['','','',[0,0,0,'']])">Aggiungi riga</a>&nbsp;]
 <input type=submit value=Salva>
+</fieldset>
 </form>
