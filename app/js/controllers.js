@@ -96,6 +96,9 @@ var Ctrl = {};
       if (this.destinazione) {
         doc.destinazione = this.destinazione;
       }
+      if (this.riferimento) {
+        doc.riferimento = this.riferimento;
+      }
       if (this.id === doc._id && this.rev) {
         doc._rev = this.rev;
       } else {
@@ -125,6 +128,7 @@ var Ctrl = {};
       this.numero = parsedId.numero;
       this.data = bolla.data;
       this.destinazione = bolla.destinazione;
+      this.riferimento = bolla.riferimento;
       this.causale = this.findCausale(bolla.causale);
       //TODO DRY questo codice è duplicato in save()
       this.rows = bolla.rows.map(function (row) {
