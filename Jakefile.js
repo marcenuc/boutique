@@ -523,9 +523,9 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         server = connect.createServer()
           .use(connect.logger())
           .use('/taskRunner',
-            cmdExec('text/plain', __dirname, './taskRunner.sh', []))
+            cmdExec({ 'Content-Type': 'text/plain;charset=utf-8', '_parseHeadersInOutput': true }, __dirname, './taskRunner.sh', []))
           .use('/as400',
-            cmdExec('application/json', __dirname, 'java', ['-jar', 'as400-querier.jar']));
+            cmdExec({ 'Content-Type': 'application/json;charset=utf-8' }, __dirname, 'java', ['-jar', 'as400-querier.jar']));
 
       if (environment === 'test') {
         console.log('Serving tests.');
