@@ -265,6 +265,46 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       });
     });
 
+    desc('Stampa giacenze');
+    task('stampaGiacenze', function () {
+      var codici = requirejs('app/js/codici'),
+        db = newBoutiqueDbConnection();
+      db.get(['Giacenze', 'Listino_1_20111017'], function (err, docs) {
+        if (err) {
+          return fail(util.inspect(err));
+        }
+        var giacenze = docs.rows[0].doc, docListino = docs.rows[1].doc, listino = docListino.prezzi, prezzi,
+          colGiacenze = codici.colNamesToColIndexes(giacenze.columnNames), stagione, modello, articolo,
+          rows = giacenze.rows, i = 0, n = rows.length, row, taglia, qtas, qta;
+        giacenze.columnNames.pop();
+        console.log(giacenze.columnNames.concat('codiceTaglia', 'qta', docListino.columnNames).join(','));
+
+        function formatPrice(p) {
+          return typeof p === 'number' ? p / 100 : p;
+        }
+
+        for (; i < n; i += 1) {
+          row = rows[i];
+          qtas = row.pop();
+          stagione = row[colGiacenze.stagione];
+          modello = row[colGiacenze.modello];
+          articolo = row[colGiacenze.articolo];
+          prezzi = codici.getProperty(listino, stagione, modello, articolo);
+          if (!prezzi) {
+            console.error('Articolo non a listino ' + stagione + ' ' + modello + ' ' + articolo);
+          } else {
+            prezzi = prezzi.map(formatPrice);
+            for (taglia in qtas) {
+              if (qtas.hasOwnProperty(taglia)) {
+                qta = qtas[taglia];
+                console.log(row.concat(taglia, qta, prezzi).join(','));
+              }
+            }
+          }
+        }
+      });
+    });
+
     desc('Add or update CouchDB user');
     task('setupUser', function (newName, newPassword, newRole) {
       requirejs(['app/js/sha1'], function (sha1) {
