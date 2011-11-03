@@ -1,5 +1,5 @@
 <form ng:submit="submit()" name=movimentoMagazzino>
-<fieldset><legend>Movimento magazzino</legend>
+<!--<fieldset><legend>Movimento magazzino</legend>-->
  <label>Numero bolla: <input ng:model=numero size=8 required></label>
  <label>Data bolla (AAAAMMGG): <input ng:model=data size=8 required></label><p>
  <label>Origine: <select ng:model=origine ng:options="a as aziende[a] for a in codiciAzienda"><option></select></label>
@@ -25,7 +25,7 @@
  <button ng:click="action = 'save'">Salva</button>
  <button ng:click="action = 'find'">Cerca</button>
  [&nbsp;<a href="#/MovimentoMagazzino">Nuovo</a>&nbsp;]
-</fieldset>
+<!--</fieldset>-->
 </form>
 
 <p>Stampe etichette
