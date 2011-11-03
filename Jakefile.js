@@ -562,6 +562,14 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         port = servers.couchdb.webserver.port,
         server = connect.createServer()
           .use(connect.logger())
+          .use(connect.basicAuth(function (user, pass) {
+            // TODO do authentication against couchdb or use a shared users db
+            return user && pass;
+          }, 'administrator'))
+          .use('/_session', function (req, res) {
+            res.setHeader('Content-Type', 'application/json;charset=utf-8');
+            res.end(JSON.stringify({ userCtx: { name: req.remoteUser } }));
+          })
           .use('/taskRunner',
             cmdExec({ 'Content-Type': 'text/plain;charset=utf-8', '_parseHeadersInOutput': true }, __dirname, './taskRunner.sh', []))
           .use('/as400',
