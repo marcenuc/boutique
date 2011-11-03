@@ -139,12 +139,6 @@ describe('Controller', function () {
 
     describe('inizialization', function () {
 
-      it('should set aziendaIdx to undefined', function () {
-        newController();
-        $browser.xhr.flush();
-        expect(ctrl.aziendaIdx).toBeUndefined();
-      });
-
       it('should have an empty list of aziende before fetching', function () {
         newController();
         expect(ctrl.aziende).toEqualData({});
@@ -158,52 +152,46 @@ describe('Controller', function () {
       });
 
       it('should flash fetch errors', function () {
-        var $route = scope.$service('$route');
+        //TODO this test should not be specific to Ctrl.Azienda
+        var $route = scope.$service('$route'), SessionInfo = scope.$service('SessionInfo');
         newController(500, 'No service');
         $route.reload();
         scope.$digest();
         $route.current.scope = ctrl;
         $browser.xhr.flush();
-        expect(ctrl.flash).toEqual({ errors: [{ message: 'ERROR 500: No service' }] });
+        expect(SessionInfo.flash).toEqual({ errors: [{ message: 'ERROR 500: No service' }] });
       });
 
-      it('should set azienda and aziendaIdx according to $routeParams.codice', function () {
+      it('should set id and azienda according to $routeParams.codice', function () {
         var azienda = aziende.rows[1].doc;
         $routeParams.codice = CODICI.typeAndCodeFromId(azienda._id)[2];
+        expectGET(azienda._id, azienda);
         newController();
-        expect(ctrl.azienda._id).toBe(azienda._id);
+        expect(ctrl.id).toBe(azienda._id);
         $browser.xhr.flush();
-        expect(ctrl.azienda).toEqual(azienda);
-        expect(ctrl.aziendaIdx).toBe(1);
-      });
-
-      it('should set flash to userCtx.flash and reset the latter', function () {
-        var userCtx = scope.$service('userCtx'),
-          flash = { errors: [{ message: 'sample error' }] };
-        userCtx.flash = flash;
-        newController();
-        $browser.xhr.flush();
-        expect(ctrl.flash).toEqual(flash);
-        expect(userCtx.flash).toEqual({});
+        expect(ctrl.azienda).toEqualData(azienda);
       });
     });
 
 
     describe('actions', function () {
+      var SessionInfo = null;
+
       beforeEach(function () {
+        SessionInfo = scope.$service('SessionInfo');
         newController();
         $browser.xhr.flush();
       });
 
       describe('validate', function () {
-        it('should set flash to validation errors', function () {
-          expect(ctrl.flash).toBeUndefined();
+        it('should set SessionInfo.flash to validation errors', function () {
+          expect(SessionInfo.flash).toEqual({});
           ctrl.azienda = { _id: 'Azienda_000001' };
           expect(ctrl.validate()).toBe(false);
-          expect(ctrl.flash).toEqual({ errors: [{ message: 'Required: nome' }, { message: 'Required: tipo' }] });
+          expect(SessionInfo.flash).toEqual({ errors: [{ message: 'Required: nome' }, { message: 'Required: tipo' }] });
           ctrl.azienda = { _id: 'Azienda_000001', nome: 'a', tipo: 'NEGOZIO' };
-          expect(ctrl.validate()).toBe(true);
-          expect(ctrl.flash).toEqual({ errors: [] });
+          expect(ctrl.validate()).toBeTruthy();
+          expect(SessionInfo.flash).toEqual({ errors: [] });
         });
       });
 
@@ -216,37 +204,29 @@ describe('Controller', function () {
           $browser.xhr.flush();
         }
 
-        function expectAppendedAzienda() {
-          var newCount = ctrl.aziende.rows.length,
-            oldCount = aziende.rows.length;
-          expect(newCount).toBe(oldCount + 1);
-          expect(ctrl.aziende.rows[newCount - 1].doc).toEqualData(ctrl.azienda);
-        }
-
-
         it('should not submit the data if not valid', function () {
-          ctrl.azienda = { _id: 'Azienda_010101', _rev: '1', nome: '' };
+          ctrl.id = 'Azienda_010101';
+          ctrl.azienda = { _id: ctrl.id, _rev: '1', nome: '' };
           ctrl.save();
           expect(ctrl.azienda._rev).toBe('1');
-          expect(ctrl.flash.errors[0]).toEqual({ message: 'Required: nome' });
+          expect(SessionInfo.flash.errors[0]).toEqual({ message: 'Required: nome' });
         });
 
         it('should create new document if id changed', function () {
-          ctrl.select(0);
-          ctrl.azienda._id = 'Azienda_000000';
-          var az = angular.copy(ctrl.azienda);
-          delete az._rev;
-          expectPUT('Azienda_000000', az);
+          ctrl.id = 'Azienda_000000';
+          ctrl.azienda = angular.copy(aziende.rows[0].doc);
+          var data = angular.copy(ctrl.azienda);
+          delete data._rev;
+          expectPUT(ctrl.azienda._id, data);
           ctrl.save();
           $browser.xhr.flush();
-          expectAppendedAzienda();
         });
 
 
         describe('new document', function () {
-
           beforeEach(function () {
             ctrl.azienda = { _id: 'Azienda_010101', nome: 'Nuova azienda', tipo: 'NEGOZIO' };
+            ctrl.id = ctrl.azienda._id;
             doSave();
           });
 
@@ -254,20 +234,16 @@ describe('Controller', function () {
             expect(ctrl.azienda._rev).toBe(response.rev);
           });
 
-          it('should append azienda to aziende', function () {
-            expectAppendedAzienda();
-          });
-
           it('should redirect to azienda page', function () {
             expect(scope.$service('$location').path()).toBe('/' + ctrl.azienda._id);
           });
-
         });
 
         describe('existing document', function () {
-
           beforeEach(function () {
-            ctrl.select(0);
+            ctrl.azienda = angular.copy(aziende.rows[0].doc);
+            ctrl.id = ctrl.azienda._id;
+            ctrl.azienda.nome = "NUOVO NOME";
             doSave();
           });
 
@@ -282,55 +258,13 @@ describe('Controller', function () {
       });
 
 
-      describe('select', function () {
-
-        it('should copy to azienda from aziende at given index', function () {
-          ctrl.select(1);
-          expect(ctrl.azienda).toEqualData(ctrl.aziende.rows[1].doc);
-          expect(ctrl.azienda === ctrl.aziende.rows[1].doc).toBe(false);
-        });
-
-        it('should cache selected index in aziendaIdx', function () {
-          ctrl.select(0);
-          expect(ctrl.aziendaIdx).toBe(0);
-          ctrl.select(1);
-          expect(ctrl.aziendaIdx).toBe(1);
-        });
-      });
-
-
-      describe('selectCodice', function () {
-
-        it('should copy to azienda from aziende with given codice', function () {
-          expect(ctrl.selectCodice('000000')).toBe(false);
-          expect(ctrl.azienda).toEqualData({});
-          expect(ctrl.selectCodice('099997')).toBe(true);
-          expect(ctrl.azienda).toEqualData(aziende.rows[1].doc);
-          expect(ctrl.azienda === ctrl.aziende.rows[1].doc).toBe(false);
-        });
-      });
-
-
-      describe('getAziendaAtIdx', function () {
-
-        it('should return undefined if aziendaIdx is undefined', function () {
-          ctrl.aziendaIdx = undefined;
-          expect(ctrl.getAziendaAtIdx()).toBeUndefined();
-        });
-
-        it('should return the first record in aziende if aziendaIdx is 0', function () {
-          ctrl.aziendaIdx = 0;
-          expect(ctrl.getAziendaAtIdx()).toBe(ctrl.aziende.rows[0].doc);
-        });
-      });
-
-
       describe('isIdChanged', function () {
-        it('should return true only if _id of azienda is not equal to _id of azienda at aziendaIdx', function () {
-          ctrl.select(0);
-          expect(ctrl.isIdChanged()).toBe(false);
-          ctrl.azienda._id = 'Azienda_999999';
+        it('should return true only if id is not equal to azienda._id', function () {
+          ctrl.id = aziende.rows[0].id;
+          ctrl.azienda = { _id: aziende.rows[1].id };
           expect(ctrl.isIdChanged()).toBe(true);
+          ctrl.azienda._id = ctrl.id;
+          expect(ctrl.isIdChanged()).toBe(false);
         });
       });
     });
@@ -364,10 +298,10 @@ describe('Controller', function () {
     });
 
     describe('inizialization', function () {
-      it('should set causale to 0', function () {
+      it('should set causale to the first one', function () {
         newController();
         $browser.xhr.flush();
-        expect(ctrl.causale).toBe(0);
+        expect(ctrl.causale).toEqual(['VENDITA', -1, 0]);
       });
 
       it('should fetch all aziende', function () {
@@ -377,13 +311,13 @@ describe('Controller', function () {
       });
 
       it('should flash fetch errors', function () {
-        var $route = scope.$service('$route');
+        var $route = scope.$service('$route'), SessionInfo = scope.$service('SessionInfo');
         newController(500, 'No service');
         $route.reload();
         scope.$digest();
         $route.current.scope = ctrl;
         $browser.xhr.flush();
-        expect(ctrl.flash).toEqual({ errors: [{ message: 'ERROR 500: No service' }] });
+        expect(SessionInfo.flash).toEqual({ errors: [{ message: 'ERROR 500: No service' }] });
       });
 
       it('should set origine, data, and numero according to $routeParams.codice', function () {
@@ -396,16 +330,6 @@ describe('Controller', function () {
         expect(ctrl.origine).toBe(codes[0]);
         expect(ctrl.data).toBe(codes[1]);
         expect(ctrl.numero).toBe(codes[2]);
-      });
-
-      it('should set flash to userCtx.flash and reset the latter', function () {
-        var userCtx = scope.$service('userCtx'),
-          flash = { errors: [{ message: 'sample error' }] };
-        userCtx.flash = flash;
-        newController();
-        $browser.xhr.flush();
-        expect(ctrl.flash).toEqual(flash);
-        expect(userCtx.flash).toEqual({});
       });
     });
 
@@ -542,7 +466,7 @@ describe('Controller', function () {
             numero: '1',
             data: '20110704',
             origine: '123456',
-            causale: 0
+            causale: ['VENDITA', -1, 0]
           };
           expect(ctrl.buildBolla()).toEqual(bollaDoc);
         });
@@ -562,7 +486,7 @@ describe('Controller', function () {
             numero: '1',
             data: '20110704',
             origine: '123456',
-            causale: 0
+            causale: ['VENDITA', -1, 0]
           };
           doSave();
         });
@@ -588,8 +512,8 @@ describe('Controller', function () {
         ['923', '70233', '5215', '2100', '019998', 1, 1, { '50': 1, '52': 1 }]
       ],
       rowsExpected = [
-        ['019998', 'ABITO BOT.FANT.', '102', '70233', '5215', '2100', 1, 'PRONTO', 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 3],
-        ['019998', 'ABITO BOT.FANT.', '923', '70233', '5215', '2100', 1, 'IN PRODUZIONE', 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2]
+        ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '102', '70233', '5215', '2100', 1, 'PRONTO', 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 3],
+        ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '923', '70233', '5215', '2100', 1, 'IN PRODUZIONE', 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2]
       ],
       giacenze = { rows: rows };
 

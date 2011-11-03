@@ -35,7 +35,7 @@
       } else {
         msg = 'REQUEST FAILED: ' + JSON.stringify(request);
       }
-      $route.current.scope.flash = { errors: [{ message: msg }] };
+      $route.current.scope.SessionInfo.error(msg);
     };
   }, { $inject: ['$route'], $eager: true });
 
@@ -127,13 +127,106 @@
   }, { $inject: ['$xhr'] });
 
 
+  angular.service('SessionInfo', function ($resource, Document, xhrError) {
+    var info = { loading: 0, flash: {} };
+
+    function loaded() {
+      info.loading -= 1;
+    }
+
+    info.getResource = function (resourceUrl) {
+      info.loading += 1;
+      return $resource(resourceUrl).get(loaded, function (code, response) {
+        loaded();
+        xhrError({ url: resourceUrl }, { status: code, body: response });
+      });
+    };
+
+    // TODO DRY there's lot of repetition in this code
+    info.getDocument = function (id, success, error) {
+      info.loading += 1;
+      return Document.get({ id: id }, function () {
+        loaded();
+        if (success) {
+          success.apply(this, arguments);
+        }
+      }, function (code, response) {
+        loaded();
+        if (error) {
+          error.apply(this, arguments);
+        } else {
+          xhrError({ url: id }, { status: code, body: response });
+        }
+      });
+    };
+    info.aziende = function (success, error) {
+      info.loading += 1;
+      return Document.aziende(function () {
+        loaded();
+        if (success) {
+          success.apply(this, arguments);
+        }
+      }, function (code, response) {
+        loaded();
+        if (error) {
+          error.apply(this, arguments);
+        } else {
+          xhrError({ url: 'AZIENDE' }, { status: code, body: response });
+        }
+      });
+    };
+    info.save = function (data, success, error) {
+      info.loading += 1;
+      return Document.save(data, function () {
+        loaded();
+        if (success) {
+          success.apply(this, arguments);
+        }
+      }, function (code, response) {
+        loaded();
+        if (error) {
+          error.apply(this, arguments);
+        } else {
+          xhrError({ data: data }, { status: code, body: response });
+        }
+      });
+    };
+
+    info.resetFlash = function () {
+      info.flash = {};
+    };
+    info.setFlash = function (flash) {
+      info.flash = flash;
+      return flash.hasOwnProperty('errors') && flash.errors.length;
+    };
+    info.error = function (msg, append) {
+      if (!append) {
+        info.resetFlash();
+      }
+      if (!info.flash.hasOwnProperty('errors')) {
+        info.flash.errors = [];
+      }
+      info.flash.errors.push({ message: msg });
+    };
+    info.notice = function (msg, append) {
+      if (!append) {
+        info.resetFlash();
+      }
+      if (!info.flash.hasOwnProperty('notices')) {
+        info.flash.notices = [];
+      }
+      info.flash.notices.push({ message: msg });
+    };
+    return info;
+  }, { $inject: ['$resource', 'Document', '$xhr.error'] });
+
+  // TODO
   angular.service('userCtx', function () {
     return {
       name: 'commerciale',
       roles: ['boutique']
     };
   });
-
 
   angular.service('Validator', function (userCtx) {
     return {

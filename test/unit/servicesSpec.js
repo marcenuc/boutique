@@ -22,8 +22,9 @@ describe('Service', function () {
       $route.reload();
       scope.$digest();
       $route.current.scope = scope;
+      scope.SessionInfo = scope.$service('SessionInfo');
       xhrError({}, { status: 500, body: 'Ouch!' });
-      expect(scope.flash).toEqual({ errors: [{ message: 'ERROR 500: Ouch!' }]});
+      expect(scope.SessionInfo.flash).toEqual({ errors: [{ message: 'ERROR 500: Ouch!' }]});
     });
   });
 

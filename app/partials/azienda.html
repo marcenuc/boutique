@@ -1,28 +1,22 @@
-<div class="flash">
-  <ul ng:repeat="(class, messages) in flash" ng:class="class">
-    <li ng:repeat="message in messages">{{message.message}}
-  </ul>
-</div>
-
-<form ng:submit="save()" class="azienda">
+<form ng:submit="save()">
 <fieldset>
 <legend>Azienda</legend>
 <div>
-  <label>Codice:<input name="azienda._id" ng:format="codiceAzienda" size=6 maxlength=6 required></label>
-  <label>Tipo:<select name="azienda.tipo"><option>MAGAZZINO<option>NEGOZIO</select></label>
-  <label><input type=checkbox name="azienda.inattivo">&nbsp;Inattivo</label><br>
-  <label>Nome:<input name="azienda.nome" required></label><br>
-  <label>Indirizzo:<input name="azienda.indirizzo" size=30></label><br>
-  <label>Comune:<input name="azienda.comune" size=30></label><br>
-  <label>CAP:<input name="azienda.cap" size=5 maxlength=5></label>
-  <label>Provincia:<input name="azienda.provincia" size=2 maxlength=2></label>
-  <label>Nazione:<input name="azienda.nazione" size=2 maxlength=2></label><br><br>
-  <label>Versione listino:<input name="azienda.versioneListino" size=2></label><br>
-  <label>Codice magazzino:<input name="azienda.codiceMagazzino" size=1 maxlength=1></label><br>
-  <label>Note:<input name="azienda.note" size=40></label><br><br>
+  <label>Codice: <input type=codiceAzienda ng:model="azienda._id" size=6 maxlength=6 required></label>
+  <label>Tipo: <select ng:model="azienda.tipo"><option>MAGAZZINO<option>NEGOZIO</select></label>
+  <label><input type=checkbox ng:model="azienda.inattivo">&nbsp;Inattivo</label><br>
+  <label>Nome: <input ng:model="azienda.nome" required></label><br>
+  <label>Indirizzo: <input ng:model="azienda.indirizzo" size=30></label><br>
+  <label>Comune: <input ng:model="azienda.comune" size=30></label><br>
+  <label>CAP: <input ng:model="azienda.cap" size=5 maxlength=5></label>
+  <label>Provincia: <input ng:model="azienda.provincia" size=2 maxlength=2></label>
+  <label>Nazione: <input ng:model="azienda.nazione" size=2 maxlength=2></label><br><br>
+  <label>Versione listino: <input ng:model="azienda.versioneListino" size=2></label><br>
+  <label>Codice magazzino: <input ng:model="azienda.codiceMagazzino" size=1 maxlength=1></label><br>
+  <label>Note: <input ng:model="azienda.note" size=40></label><br><br>
   <label>Contatti:</label>
   [&nbsp;<a href="" ng:click="azienda.contatti.$add()">aggiungi</a>&nbsp;]
-    <ul><li ng:repeat="contatto in azienda.contatti"><select name="contatto.tipo"><option>Telefono<option>Fax<option>Mail</select><input name="contatto.valore" required size=30> [&nbsp;<a href="" ng:click="azienda.contatti.$remove(contatto)">X</a>&nbsp;]</li></ul>
+    <ul><li ng:repeat="contatto in azienda.contatti"><select ng:model="contatto.tipo"><option>Telefono<option>Fax<option>Mail</select><input ng:model="contatto.valore" required size=30> [&nbsp;<a href="" ng:click="azienda.contatti.$remove(contatto)">X</a>&nbsp;]</li></ul>
 </div>
 <hr>
 <div><input type=submit value=Salva> [&nbsp;<a href="#/Azienda">Nuova</a>&nbsp;]</div>

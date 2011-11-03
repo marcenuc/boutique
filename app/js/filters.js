@@ -9,22 +9,24 @@
     return angular.element('<a href="#/' + input + '">' + ids[2] + '</a>');
   });
 
-  angular.formatter('codiceAzienda', {
+  angular.inputType('codiceAzienda', function () {
     // TODO DRY usare CODICI.
-    parse: function (value) {
-      return 'Azienda_' + value;
-    },
-    format: function (value) {
-      return value.slice(8);
-    }
+    this.$parseView = function () {
+      this.$modelValue = 'Azienda_' + this.$viewValue;
+    };
+    this.$parseModel = function () {
+      var v = this.$modelValue;
+      this.$viewValue = typeof v === 'undefined' ? '' : v.slice(8);
+    };
   });
 
-  angular.formatter('money', {
-    parse: function (value) {
-      return CODICI.parseMoney(value.replace(',', '.'))[1];
-    },
-    format: function (value) {
-      return String(value / 100).replace('.', ',');
-    }
+  angular.inputType('money', function () {
+    this.$parseView = function () {
+      this.$modelValue = CODICI.parseMoney(this.$viewValue.replace(',', '.'))[1];
+    };
+    this.$parseModel = function () {
+      var v = this.$modelValue;
+      this.$viewValue = typeof v === 'undefined' ? '' : String(v / 100).replace('.', ',');
+    };
   });
 }());

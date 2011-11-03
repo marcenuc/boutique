@@ -1,22 +1,14 @@
-<div class="flash">
-  <ul ng:repeat="(class, messages) in flash" ng:class="class">
-    <li ng:repeat="message in messages">{{message.message}}
-  </ul>
-</div>
-<form ng:submit="filtraGiacenza()" class="ricerca-articoli">
+<form ng:submit="filtraGiacenza()" name=ricercaArticoli>
 <fieldset><legend>Usa il '.' come carattere jolly.</legend>
 <div>
-  <label for="codice-azienda">Aziende:</label>
-  <select id="codice-azienda" name=aziendeSelezionate multiple>
-    <option ng:repeat="(codice, desc) in aziende" value="{{codice}}">{{desc}}
-  </select><br>
-  <label>Modello: <input name=modello size=5 maxlength=5 pattern="^[.\d]{0,5}$"></label>
-  <label>Articolo: <input name=articolo size=4 maxlength=4 pattern="^[.\d]{0,4}$"></label>
-  <label>Colore: <input name=colore size=4 maxlength=4 pattern="^[.\d]{0,4}$"></label>
-  <label>Descrizione taglia: <input name=descrizioneTaglia size=3 maxlength=3 pattern="^.{0,3}$"></label>
-  <label>Stagione: <input name=stagione size=3 maxlength=3 pattern="^[.\d]{0,3}$"></label>
+  <label>Aziende: <select ng:model=aziendeSelezionate multiple ng:options="a as aziende[a] for a in codiciAzienda"></select></label>
+  <label>Modello: <input ng:model=modello size=5 maxlength=5 pattern="^[.\d]{0,5}$"></label>
+  <label>Articolo: <input ng:model=articolo size=4 maxlength=4 pattern="^[.\d]{0,4}$"></label>
+  <label>Colore: <input ng:model=colore size=4 maxlength=4 pattern="^[.\d]{0,4}$"></label>
+  <label>Descrizione taglia: <input ng:model=descrizioneTaglia size=3 maxlength=3 pattern="^.{0,3}$"></label>
+  <label>Stagione: <input ng:model=stagione size=3 maxlength=3 pattern="^[.\d]{0,3}$"></label>
   <hr>
-  <label>LIMITE RISULTATI: <input name=limiteRisultati size=3 pattern="^\d*$"></label>
+  <label>LIMITE RISULTATI: <input ng:model=limiteRisultati size=3 pattern="^\d*$"></label>
   <input type=submit value=Cerca>
 </div>
 </fieldset>

@@ -1,15 +1,10 @@
-<div class="flash">
-  <ul ng:repeat="(class, messages) in flash" ng:class="class">
-    <li ng:repeat="message in messages">{{message.message}}
-  </ul>
-</div>
-<form ng:submit="submit()">
+<form ng:submit="submit()" name=movimentoMagazzino>
 <fieldset><legend>Movimento magazzino</legend>
- <label>Numero bolla: <input name=numero size=8 required></label>
- <label>Data bolla (AAAAMMGG): <input name=data size=8 required></label><p>
- <label>Origine: <select name=origine ng:options="codice as desc for (codice, desc) in aziende"><option></select></label>
- <label>Destinazione: <select name=destinazione ng:options="codice as desc for (codice, desc) in aziende"><option></select></label><p>
- <label>Causale: <select name=causale><option ng:repeat="causa in causali" value="{{$index}}">{{causa[0]}}</select></label>&nbsp;&nbsp;Segno origine:&nbsp;"{{causali[causale][1]}}";&nbsp;&nbsp;Segno destinazione:&nbsp;"{{causali[causale][2]}}"<p>
+ <label>Numero bolla: <input ng:model=numero size=8 required></label>
+ <label>Data bolla (AAAAMMGG): <input ng:model=data size=8 required></label><p>
+ <label>Origine: <select ng:model=origine ng:options="a as aziende[a] for a in codiciAzienda"><option></select></label>
+ <label>Destinazione: <select ng:model=destinazione ng:options="a as aziende[a] for a in codiciAzienda"><option></select></label><p>
+ <label>Causale: <select ng:model=causale ng:options="causa[0] for causa in causali"></select></label>&nbsp;&nbsp;Segno origine:&nbsp;"{{causale[1]}}";&nbsp;&nbsp;Segno destinazione:&nbsp;"{{causale[2]}}"<p>
  <table>
   <caption>Righe</caption>
   <thead>
@@ -17,16 +12,16 @@
   <tbody>
    <tr ng:repeat="row in rows">
     <td>{{$index + 1}}
-    <td><ng:switch on="$position"><input ng:switch-when="last" my:focus="" name="row.barcode" size=21 pattern="^\d{18}$"><input ng:switch-default name="row.barcode" size=21 pattern="^\d{18}$"></ng:switch>
+    <td><ng:switch on="$position"><input ng:switch-when="last" my:focus="" ng:model="row.barcode" size=21 pattern="^\d{18}$"><input ng:switch-default ng:model="row.barcode" size=21 pattern="^\d{18}$"></ng:switch>
     <td>{{row.codes.stagione}}&nbsp;{{row.codes.modello}}&nbsp;{{row.codes.articolo}}&nbsp;{{row.codes.colore}}
     <td>{{row.descrizione}}
     <td>{{row.descrizioneTaglia}}
-    <td><input name="row.qta" size=3>
+    <td><input ng:model="row.qta" size=3>
     <td>[&nbsp;<a href="" ng:click="rows.$remove(row)" title="Elimina riga">X</a>&nbsp;]
   <tfoot>
-    <tr><th colspan="5" style="text-align:right">Quantità totale:<th>{{qtaTotale}}<th>&nbsp;
+    <tr><th colspan=5 style="text-align:right">Quantità totale:<th>{{qtaTotale}}<th>&nbsp;
  </table>
- <label><input type=checkbox name=accodato value=1>&nbsp;Accodato</label><p>
+ <label><input type=checkbox ng:model=accodato value=1>&nbsp;Accodato</label><p>
  <button ng:click="action = 'save'">Salva</button>
  <button ng:click="action = 'find'">Cerca</button>
  [&nbsp;<a href="#/MovimentoMagazzino">Nuovo</a>&nbsp;]

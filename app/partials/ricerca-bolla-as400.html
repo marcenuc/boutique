@@ -1,19 +1,14 @@
-<div class="flash">
-  <ul ng:repeat="(class, messages) in flash" ng:class="class">
-    <li ng:repeat="message in messages">{{message.message}}
-  </ul>
-</div>
-<form ng:submit="fetch()" class="bolla">
+<form ng:submit="fetch()" name=ricercaBollaAs400>
 <fieldset><legend>Ricerca bolla AS/400</legend>
-<label>Data (AAAAMMGG):<input name="intestazione.data" size=8 required value="20111024"></label>
-<label>Numero:<input name="intestazione.numero" size=8 required value="31"></label>
-<label>Ente numerazione:<input name="intestazione.enteNumerazione" size=2 required value="A"></label>
-<label>Codice numerazione:<input name="intestazione.codiceNumerazione" size=2 required value="10"></label>
+<label>Data (AAAAMMGG):<input ng:model="intestazione.data" size=8 required></label>
+<label>Numero:<input ng:model="intestazione.numero" size=8 required></label>
+<label>Ente numerazione:<input ng:model="intestazione.enteNumerazione" size=2 required></label>
+<label>Codice numerazione:<input ng:model="intestazione.codiceNumerazione" size=2 required></label>
 <input type=submit value=Cerca>
 </fieldset>
 </form>
 
-<form ng:submit="save()">
+<form ng:show="bollaAs400" ng:submit="save()" name=caricamentoMovimentoMagazzino>
 <fieldset><legend>Dati bolla da AS/400</legend>
 <table>
 <thead><tr><th ng:repeat="col in bollaAs400.columnNames">{{col}}
@@ -21,11 +16,11 @@
 </table>
 </fieldset>
 <fieldset><legend>Dati movimento magazzino boutique</legend>
- <label>Numero bolla: <input name="movimentoMagazzino.numero" size=8 required></label>
- <label>Data bolla (AAAAMMGG): <input name="movimentoMagazzino.data" size=8 maxlength=8 required></label><p>
- <label>Origine: <select name="movimentoMagazzino.origine" ng:options="codice as desc for (codice, desc) in aziende"><option></select></label>
- <label>Destinazione: <select name="movimentoMagazzino.destinazione" ng:options="codice as desc for (codice, desc) in aziende"><option></select></label><p>
- <label>Causale: <select name="movimentoMagazzino.causale"><option ng:repeat="causa in causali" value="{{$index}}">{{causa[0]}}</select></label>&nbsp;&nbsp;Segno origine:&nbsp;"{{causali[causale][1]}}";&nbsp;&nbsp;Segno destinazione:&nbsp;"{{causali[causale][2]}}"<p>
-  <input type=submit value="Carica come movimento magazzino">
+ <label>Numero bolla: <input ng:model="movimentoMagazzino.numero" size=8 required></label>
+ <label>Data bolla (AAAAMMGG): <input ng:model="movimentoMagazzino.data" size=8 maxlength=8 required></label><p>
+ <label>Origine: <select ng:model="movimentoMagazzino.origine" ng:options="a as aziende[a] for a in codiciAzienda"><option></select></label>
+ <label>Destinazione: <select ng:model="movimentoMagazzino.destinazione" ng:options="a as aziende[a] for a in codiciAzienda"><option></select></label><p>
+ <label>Causale: <select ng:model="movimentoMagazzino.causale" ng:options="causa[0] for causa in causali"></select></label>&nbsp;&nbsp;Segno origine:&nbsp;"{{movimentoMagazzino.causale[1]}}";&nbsp;&nbsp;Segno destinazione:&nbsp;"{{movimentoMagazzino.causale[2]}}"<p>
+ <input type=submit value="Carica come movimento magazzino">
 </fieldset>
 </form>

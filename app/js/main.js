@@ -2,6 +2,5 @@
 
 require(['domReady!', 'order!angular/angular', 'order!codici', 'order!validate_doc_update', 'order!services', 'order!controllers', 'order!filters', 'order!directives'], function () {
   'use strict';
-  //TODO $digest() non servirà più nella prossima versione: rimuovere dopo aggiornamento.
-  angular.compile(document)().$digest();
+  angular.compile(document)().$apply();
 });

@@ -21,6 +21,12 @@ var Ctrl = {};
     padLeft: padLeft
   };
 
+  Ctrl.Header = function (SessionInfo) {
+    this.SessionInfo = SessionInfo;
+    this.session = SessionInfo.getResource('/boutique_app/_session');
+  };
+  Ctrl.Header.$inject = ['SessionInfo'];
+
   // Capitalized because designed for use with angular.bind().
   function SetAziende(callback, xhrResp) {
     this.aziende = {};
@@ -28,20 +34,22 @@ var Ctrl = {};
       var codice = r.id.split('_', 2)[1];
       this.aziende[codice] = codice + ' ' + r.doc.nome;
     }, this);
+    this.codiciAzienda = Object.keys(this.aziende).sort();
     if (callback) {
       callback();
     }
   }
 
 
-  Ctrl.MovimentoMagazzino = function ($routeParams, userCtx, $location, Document) {
+  Ctrl.MovimentoMagazzino = function (SessionInfo, $routeParams, $location) {
     var self = this, codes = ($routeParams.codice || '').split('_'), docCount = 3;
+    SessionInfo.resetFlash();
     // TODO DRY usare CODICI per estrarre i dati dal codice
     this.origine = codes[0];
     this.data = codes[1];
     this.numero = codes[2];
+    this.SessionInfo = SessionInfo;
     this.$location = $location;
-    this.Document = Document;
 
     this.causali = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO;
 
@@ -53,25 +61,16 @@ var Ctrl = {};
       }
     }
 
-    Document.aziende(angular.bind(this, SetAziende, doFind));
-    this.taglieScalarini = Document.get({ id: 'TaglieScalarini' }, doFind);
-    this.modelliEScalarini = Document.get({ id: 'ModelliEScalarini' }, doFind);
+    SessionInfo.aziende(angular.bind(this, SetAziende, doFind));
+    this.taglieScalarini = SessionInfo.getDocument('TaglieScalarini', doFind);
+    this.modelliEScalarini = SessionInfo.getDocument('ModelliEScalarini', doFind);
 
-    this.causale = 0;
+    this.causale = this.causali[0];
     this.rows = [{ qta: 1 }];
-
-    this.flash = userCtx.flash;
-    userCtx.flash = {};
   };
-  Ctrl.MovimentoMagazzino.$inject = ['$routeParams', 'userCtx', '$location', 'Document'];
+  Ctrl.MovimentoMagazzino.$inject = ['SessionInfo', '$routeParams', '$location'];
 
   Ctrl.MovimentoMagazzino.prototype = {
-    //TODO DRY condividere questa funzione tra i controller
-    error: function (message, level) {
-      this.flash = {};
-      this.flash[level || 'errors'] = [{ message: message }];
-    },
-
     submit: function () {
       this[this.action]();
     },
@@ -85,7 +84,7 @@ var Ctrl = {};
         _id: CODICI.idMovimentoMagazzino(this.origine, this.getYear(), this.numero),
         data: this.data,
         columnNames: ['barcode', 'qta'],
-        causale: this.causali[this.causale],
+        causale: this.causale,
         rows: this.rows.map(function (r) {
           return [r.barcode, r.qta];
         })
@@ -108,10 +107,11 @@ var Ctrl = {};
     },
 
     findCausale: function (causale) {
-      var i = 0, n = this.causali.length;
+      var i = 0, n = this.causali.length, c;
       for (; i < n; i += 1) {
-        if (causale[0] === this.causali[i][0]) {
-          return i;
+        c = this.causali[i];
+        if (angular.equals(causale, c)) {
+          return c;
         }
       }
     },
@@ -122,7 +122,7 @@ var Ctrl = {};
       var parsedId = CODICI.parseIdMovimentoMagazzino(bolla._id),
         qtaTotale = 0;
       if (!parsedId) {
-        return this.error('Id documento non valido');
+        return this.SessionInfo.error('Id documento non valido');
       }
       this.origine = parsedId.origine;
       this.numero = parsedId.numero;
@@ -138,13 +138,13 @@ var Ctrl = {};
           msg;
         if (!codes) {
           msg = 'Codice non valido: "' + r.barcode + '"';
-          this.error(msg);
+          this.SessionInfo.error(msg);
           return msg;
         }
         descs = CODICI.descrizioniModello(codes.stagione, codes.modello, codes.taglia, this.taglieScalarini.descrizioniTaglie, this.modelliEScalarini.lista);
         if (descs[0]) {
           msg = descs[0] + ': "' + r.barcode + '"';
-          this.error(msg);
+          this.SessionInfo.error(msg);
           return msg;
         }
         r.descrizione = descs[1].descrizione;
@@ -168,14 +168,14 @@ var Ctrl = {};
       delete this.destinazione;
       delete this.accodato;
       this.rows = [{ qta: 1 }];
-      this.Document.get({ id: CODICI.idMovimentoMagazzino(this.origine, this.getYear(), this.numero) }, function (bolla) {
+      this.SessionInfo.getDocument(CODICI.idMovimentoMagazzino(this.origine, this.getYear(), this.numero), function (bolla) {
         self.buildModel(bolla);
         self.$location.path(self.id).replace();
       }, function (status, resp) {
         if (status === 404) {
-          return self.error('Non trovato');
+          return self.SessionInfo.error('Non trovato');
         }
-        self.error(status + JSON.stringify(resp));
+        self.SessionInfo.error(status + JSON.stringify(resp));
       });
     },
 
@@ -186,16 +186,16 @@ var Ctrl = {};
         if (r.barcode) {
           qta = CODICI.parseQta(r.qta);
           if (qta[0]) {
-            return this.error('Quantità non valida: "' + r.qta + '"');
+            return this.SessionInfo.error('Quantità non valida: "' + r.qta + '"');
           }
           //TODO DRY questo codice è duplicato in buildModel()
           codes = CODICI.parseBarcodeAs400(r.barcode);
           if (!codes) {
-            return this.error('Codice non valido: "' + r.barcode + '"');
+            return this.SessionInfo.error('Codice non valido: "' + r.barcode + '"');
           }
           descs = CODICI.descrizioniModello(codes.stagione, codes.modello, codes.taglia, this.taglieScalarini.descrizioniTaglie, this.modelliEScalarini.lista);
           if (descs[0]) {
-            return this.error(descs[0] + ': "' + r.barcode + '"');
+            return this.SessionInfo.error(descs[0] + ': "' + r.barcode + '"');
           }
           r.descrizione = descs[1].descrizione;
           r.descrizioneTaglia = descs[1].descrizioneTaglia;
@@ -208,40 +208,36 @@ var Ctrl = {};
       this.rows = newRows;
       this.qtaTotale = qtaTotale;
       self = this;
-      this.Document.save(this.buildBolla(), function (res) {
+      this.SessionInfo.save(this.buildBolla(), function (res) {
         if (!self.rev) {
           self.$location.path(res.id).replace();
         }
         self.rev = res.rev;
-        self.error('Salvato ' + res.id, 'notices');
+        self.SessionInfo.notice('Salvato ' + res.id);
       });
       angular.Array.add(this.rows, { qta: 1 });
     }
   };
 
-  Ctrl.RicercaBollaAs400 = function (As400, Document, CdbView, userCtx, $location) {
+  Ctrl.RicercaBollaAs400 = function (As400, SessionInfo, CdbView, $location) {
+    SessionInfo.resetFlash();
     this.As400 = As400;
-    this.Document = Document;
+    this.SessionInfo = SessionInfo;
     this.CdbView = CdbView;
-    this.userCtx = userCtx;
     this.$location = $location;
 
-    Document.aziende(angular.bind(this, SetAziende, null));
-    this.taglieScalarini = Document.get({ id: 'TaglieScalarini' });
-    this.causaliAs400 = Document.get({ id: 'CausaliAs400' });
+    SessionInfo.aziende(angular.bind(this, SetAziende, null));
+    this.taglieScalarini = SessionInfo.getDocument('TaglieScalarini');
+    this.causaliAs400 = SessionInfo.getDocument('CausaliAs400');
     // TODO probabilmente questi non servono perché impliciti per AngularJS
-    //this.intestazione = {};
-    //this.movimentoMagazzino = {};
-    //this.bollaAs400 = null;
+    this.intestazione = {};
+    this.movimentoMagazzino = {};
+    this.bollaAs400 = null;
     this.causali = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO;
-
-    this.flash = userCtx.flash;
-    userCtx.flash = {};
   };
-  Ctrl.RicercaBollaAs400.$inject = ['As400', 'Document', 'CdbView', 'userCtx', '$location'];
+  Ctrl.RicercaBollaAs400.$inject = ['As400', 'SessionInfo', 'CdbView', '$location'];
 
   Ctrl.RicercaBollaAs400.prototype = {
-
     // TODO DRY copiata da MovimentoMagazzino
     getYear: function (data) {
       return data ? data.substring(0, 4) : null;
@@ -262,7 +258,7 @@ var Ctrl = {};
             self.bollaAs400 = dati;
             self.setMovimentoMagazzino();
           } else {
-            self.flash = { errors: [{ message: 'Errore ' + code }] };
+            self.SessionInfo.error('Errore ' + code);
           }
         });
       }
@@ -272,10 +268,11 @@ var Ctrl = {};
         if (!riferimento) {
           return cercaBollaAs400();
         }
-        self.userCtx.flash = { notices: [{ message: 'Bolla già caricata su Boutique' }] };
+        //FIXME questo non viene visualizzato perché cambio pagina...
+        self.SessionInfo.notice('Bolla già caricata su Boutique');
         self.$location.path(riferimento.id).replace();
       }, function (status, resp) {
-        self.flash = { errors: [{ message: 'Errore ' + status + ': ' + JSON.stringify(resp) }] };
+        self.SessionInfo.error('Errore ' + status + ': ' + JSON.stringify(resp));
       });
     },
 
@@ -289,10 +286,10 @@ var Ctrl = {};
       for (; i < n; i += 1) {
         c = this.causali[i];
         if (c[0] === causaleAs400) {
-          return i;
+          return c;
         }
       }
-      return 0;
+      return this.causali[0];
     },
 
     setMovimentoMagazzino: function () {
@@ -300,11 +297,11 @@ var Ctrl = {};
         col = CODICI.colNamesToColIndexes(this.bollaAs400.columnNames),
         codiceCliente = r0[col.codiceCliente],
         tipoMagazzino = r0[col.tipoMagazzino],
-        causale = r0[col.causale];
+        codiceCausaleAs400 = r0[col.causale];
 
       this.movimentoMagazzino = {
         origine: codiceCliente,
-        causale: this.findCausale(this.causaliAs400[tipoMagazzino][causale]),
+        causale: this.findCausale(this.causaliAs400[tipoMagazzino][codiceCausaleAs400]),
         data: CODICI.newYyyyMmDdDate()
       };
     },
@@ -315,7 +312,7 @@ var Ctrl = {};
         codiceCliente = r0[col.codiceCliente],
         tipoMagazzino = r0[col.tipoMagazzino],
         codiceMagazzino = r0[col.codiceMagazzino],
-        causale = r0[col.causale],
+        codiceCausaleAs400 = r0[col.causale],
         taglie = this.taglieScalarini.taglie,
         listeDescrizioni = this.taglieScalarini.listeDescrizioni,
         rows = [],
@@ -334,7 +331,7 @@ var Ctrl = {};
           return row[col.codiceCliente] === codiceCliente &&
             row[col.tipoMagazzino] === tipoMagazzino &&
             row[col.codiceMagazzino] === codiceMagazzino &&
-            row[col.causale] === causale;
+            row[col.causale] === codiceCausaleAs400;
         }, this),
         mm = this.movimentoMagazzino,
         doc = {
@@ -342,7 +339,7 @@ var Ctrl = {};
           riferimento: this.id,
           data: mm.data,
           columnNames: ['barcode', 'qta'],
-          causale: this.causali[mm.causale],
+          causale: mm.causale,
           rows: rows
         };
       if (mm.destinazione) {
@@ -354,25 +351,26 @@ var Ctrl = {};
 
     save: function () {
       var self = this;
-      this.Document.save(this.buildBolla(), function (res) {
-        self.flash = { notices: [{ message: 'Salvato ' + res.id }] };
+      this.SessionInfo.save(this.buildBolla(), function (res) {
+        self.SessionInfo.notice('Salvato ' + res.id);
         self.$location.path(res.id).replace();
       });
     }
   };
 
-  Ctrl.RicercaArticoli = function (Document) {
-    Document.aziende(angular.bind(this, SetAziende, null));
+  Ctrl.RicercaArticoli = function (SessionInfo) {
+    SessionInfo.resetFlash();
+    SessionInfo.aziende(angular.bind(this, SetAziende, null));
     this.aziendeSelezionate = [];
 
-    this.taglieScalarini = Document.get({ id: 'TaglieScalarini' });
-    this.modelliEScalarini = Document.get({ id: 'ModelliEScalarini' });
-    this.giacenze = Document.get({ id: 'Giacenze' });
+    this.taglieScalarini = SessionInfo.getDocument('TaglieScalarini');
+    this.modelliEScalarini = SessionInfo.getDocument('ModelliEScalarini');
+    this.giacenze = SessionInfo.getDocument('Giacenze');
 
     this.filtrate = [];
     this.limiteRisultati = 50;
   };
-  Ctrl.RicercaArticoli.$inject = ['Document'];
+  Ctrl.RicercaArticoli.$inject = ['SessionInfo'];
 
   Ctrl.RicercaArticoli.prototype = {
     getFiltroSmacAz: function () {
@@ -454,111 +452,94 @@ var Ctrl = {};
     }
   };
 
-  Ctrl.Azienda = function ($routeParams, Document, Validator, userCtx, $location) {
+  Ctrl.Azienda = function ($routeParams, SessionInfo, Validator, $location) {
+    SessionInfo.resetFlash();
     this.$routeParams = $routeParams;
-    this.Document = Document;
+    this.SessionInfo = SessionInfo;
     this.Validator = Validator;
-    this.userCtx = userCtx;
     this.$location = $location;
 
-    this.aziende = Document.aziende(this.cbAziendeLoaded);
-    //FIXME i contatti non vengono salvati.
-    this.azienda = { _id: CODICI.idAzienda($routeParams.codice) };
-
-    this.flash = userCtx.flash;
-    userCtx.flash = {};
+    if ($routeParams.codice) {
+      this.id = CODICI.idAzienda($routeParams.codice);
+      this.azienda = SessionInfo.getDocument(this.id);
+    }
+    this.aziende = SessionInfo.aziende();
   };
-  Ctrl.Azienda.$inject = ['$routeParams', 'Document', 'Validator', 'userCtx', '$location'];
+  Ctrl.Azienda.$inject = ['$routeParams', 'SessionInfo', 'Validator', '$location'];
 
   Ctrl.Azienda.prototype = {
-
-    cbAziendeLoaded: function () {
-      this.selectCodice(this.$routeParams.codice);
-    },
-
-    getAziendaAtIdx: function () {
-      if (angular.isDefined(this.aziendaIdx)) {
-        return this.aziende.rows[this.aziendaIdx].doc;
+    getOldAziendaDocument: function () {
+      var rows = this.aziende.rows, i = 0, n = rows.length, r;
+      for (; i < n; i += 1) {
+        r = rows[i];
+        if (r.id === this.azienda._id) {
+          return r.doc;
+        }
       }
     },
 
+    aggiornaAzienda: function () {
+      var rows = this.aziende.rows, i = 0, n = rows.length, r;
+      for (; i < n; i += 1) {
+        r = rows[i];
+        if (r.id === this.azienda._id) {
+          r.value.rev = this.azienda._rev;
+          r.doc = angular.copy(this.azienda);
+          return true;
+        }
+      }
+      return false;
+    },
+
     isIdChanged: function () {
-      var selectedAzienda = this.getAziendaAtIdx();
-      return selectedAzienda && selectedAzienda._id !== this.azienda._id;
+      return this.id !== this.azienda._id;
     },
 
     validate: function () {
-      this.flash = this.Validator.check(this.azienda, this.getAziendaAtIdx());
-      return this.flash.errors.length === 0;
+      return !this.SessionInfo.setFlash(this.Validator.check(this.azienda, this.getOldAziendaDocument()));
     },
 
+    //FIXME i contatti non vengono salvati.
     save: function () {
       var self = this;
       if (this.isIdChanged()) {
         delete this.azienda._rev;
-        delete this.aziendaIdx;
       }
       if (this.validate()) {
-        this.Document.save(this.azienda, function (res) {
-          var isNew = !self.azienda._rev,
-            notices = { notices: [{ message: 'Salvato' }] };
+        this.SessionInfo.save(this.azienda, function (res) {
+          var isNew = !self.azienda._rev;
+          self.SessionInfo.notice('Salvato');
           self.azienda._rev = res.rev;
           if (isNew) {
-            self.userCtx.flash = notices;
-            self.aziende.rows.push({ doc: angular.copy(self.azienda) });
             self.$location.path('/' + self.azienda._id).replace();
           } else {
-            self.flash = notices;
-            angular.copy(self.azienda, self.aziende.rows[self.aziendaIdx].doc);
+            self.aggiornaAzienda();
           }
         });
       }
-    },
-
-    select: function (idx) {
-      this.azienda = angular.copy(this.aziende.rows[idx].doc);
-      this.aziendaIdx = idx;
-    },
-
-    selectCodice: function (codice) {
-      var id = CODICI.idAzienda(codice);
-      return this.aziende.rows.some(function (row, idx) {
-        if (row.id === id) {
-          this.select(idx);
-          return true;
-        }
-      }, this);
     }
   };
 
-  Ctrl.Listino = function ($routeParams, Document, Validator, userCtx, $location) {
+  Ctrl.Listino = function ($routeParams, SessionInfo, Validator, $location) {
+    SessionInfo.resetFlash();
     this.$routeParams = $routeParams;
-    this.Document = Document;
+    this.SessionInfo = SessionInfo;
     this.Validator = Validator;
-    this.userCtx = userCtx;
     this.$location = $location;
 
     this.prezzi = [];
     if ($routeParams.codice) {
       this.fetch($routeParams.codice);
     }
-    this.flash = userCtx.flash;
-    userCtx.flash = {};
   };
-  Ctrl.Listino.$inject = ['$routeParams', 'Document', 'Validator', 'userCtx', '$location'];
+  Ctrl.Listino.$inject = ['$routeParams', 'SessionInfo', 'Validator', '$location'];
 
   Ctrl.Listino.prototype = {
-    //TODO DRY condividere questa funzione tra i controller
-    error: function (message, level) {
-      this.flash = {};
-      this.flash[level || 'errors'] = [{ message: message }];
-    },
-
     fetch: function (codice) {
       var self = this,
         // TODO DRY usare CODICI.idListino o altro.
         id = codice ? 'Listino_' + codice : CODICI.idListino(this.versione, this.dataUso);
-      this.Document.get({ id: id }, function (listino) {
+      this.SessionInfo.getDocument(id, function (listino) {
         if (codice) {
           self.listino = listino;
         } else {
@@ -566,9 +547,9 @@ var Ctrl = {};
         }
       }, function (status, resp) {
         if (status === 404) {
-          return self.error('Non trovato');
+          return self.SessionInfo.error('Non trovato');
         }
-        self.error(status + JSON.stringify(resp));
+        self.SessionInfo.error(status + JSON.stringify(resp));
       });
     },
 
@@ -603,15 +584,15 @@ var Ctrl = {};
             v = vals[4] ? vals : vals.slice(0, 4);
           CODICI.setProperty(ps, stagione, modello, articolo, v);
         });
-        this.Document.save(this.listino, function (res) {
+        this.SessionInfo.save(this.listino, function (res) {
           if (!self.rev) {
             self.$location.path(res.id).replace();
           }
           self.listino._rev = res.rev;
-          self.error('Salvato ' + res.id, 'notices');
+          self.SessionInfo.notice('Salvato ' + res.id);
         });
       } else {
-        this.error('Valori non validi', 'errors');
+        this.SessionInfo.error('Valori non validi');
       }
     }
   };

@@ -1,29 +1,24 @@
-<div class="flash">
-  <ul ng:repeat="(class, messages) in flash" ng:class="class">
-    <li ng:repeat="message in messages">{{message.message}}
-  </ul>
-</div>
-<form ng:submit="findRows()">
+<form ng:submit="findRows()" name=ricercaArticoli>
 <fieldset><legend>Ricerca articoli in {{listino._id}}</legend>
-<label>Stagione: <input name="stagione" size=3></label>
-<label>Modello: <input name="modello" size=5></label>
-<label>Articolo: <input name="articolo" size=4></label>
+<label>Stagione: <input ng:model="stagione" size=3></label>
+<label>Modello: <input ng:model="modello" size=5></label>
+<label>Articolo: <input ng:model="articolo" size=4></label>
 <input type=submit value=Cerca>
 </fieldset>
 </form>
 
-<form ng:submit="save()">
+<form ng:submit="save()" name=righeListino>
 <fieldset><legend>{{listino._id}}</legend>
 <table>
 <thead><tr><th>Stagione<th>Modello<th>Articolo<th>Costo<th>Prezzo1<th>Prezzo2<th>Offerta
 <tbody><tr ng:repeat="r in prezzi">
-  <td><input name="r[0]" size=3>
-  <td><input name="r[1]" size=5>
-  <td><input name="r[2]" size=4>
-  <td><input name="r[3][0]" size=7 ng:format="money">
-  <td><input name="r[3][1]" size=7 ng:format="money">
-  <td><input name="r[3][2]" size=7 ng:format="money">
-  <td><input name="r[3][3]" size=2>
+  <td><input ng:model="r[0]" size=3>
+  <td><input ng:model="r[1]" size=5>
+  <td><input ng:model="r[2]" size=4>
+  <td><input ng:model="r[3][0]" size=7 type=money>
+  <td><input ng:model="r[3][1]" size=7 type=money>
+  <td><input ng:model="r[3][2]" size=7 type=money>
+  <td><input ng:model="r[3][3]" size=2>
 </table>
 [&nbsp;<a href="" ng:click="prezzi.push(['','','',[0,0,0,'']])">Aggiungi riga</a>&nbsp;]
 <input type=submit value=Salva>
