@@ -394,7 +394,7 @@ var Ctrl = {};
     },
 
     filtraGiacenza: function () {
-      var giacenze, taglia, qta, r, riga, listino, prezzi,
+      var giacenze, taglia, qta, r, riga, versioneListino, listino, prezzi,
         scalarino, taglie = [], nn = '--', TAGLIE_PER_SCALARINO = 12,
         rows = this.giacenze.rows, i = 0, n = rows.length,
         count = 0, filtrate = [], maxCount = this.limiteRisultati,
@@ -430,7 +430,9 @@ var Ctrl = {};
           }
           if (accoda) {
             riga.push(totaleRiga);
-            listino = this.listini[this.allAziende[r[4]].versioneListino];
+            versioneListino = this.allAziende[r[4]].versioneListino;
+            riga.push(versioneListino);
+            listino = this.listini[versioneListino];
             prezzi = listino && CODICI.getProperty(listino.prezzi, r[0], r[1], r[2]);
             if (prezzi) {
               riga.push(CODICI.formatMoney(prezzi[2]) + (prezzi[3] || ''));
