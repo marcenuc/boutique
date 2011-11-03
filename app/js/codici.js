@@ -303,6 +303,10 @@ var CODICI;
     return ['Invalid amount for money: ' + value];
   };
 
+  codici.formatMoney = function (v) {
+    return typeof v === 'undefined' ? '' : String(v / 100).replace('.', ',');
+  };
+
   codici.parseQta = function (value) {
     var mp = /^\s*([1-9][0-9]*)\s*$/.exec(value), qta;
     if (mp) {

@@ -25,8 +25,7 @@
       this.$modelValue = CODICI.parseMoney(this.$viewValue.replace(',', '.'))[1];
     };
     this.$parseModel = function () {
-      var v = this.$modelValue;
-      this.$viewValue = typeof v === 'undefined' ? '' : String(v / 100).replace('.', ',');
+      this.$viewValue = CODICI.formatMoney(this.$modelValue);
     };
   });
 }());

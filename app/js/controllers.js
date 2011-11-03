@@ -29,10 +29,13 @@ var Ctrl = {};
 
   // Capitalized because designed for use with angular.bind().
   function SetAziende(callback, xhrResp) {
+    // TODO DRY remove data duplication
     this.aziende = {};
+    this.allAziende = {};
     xhrResp.rows.forEach(function (r) {
       var codice = r.id.split('_', 2)[1];
       this.aziende[codice] = codice + ' ' + r.doc.nome;
+      this.allAziende[codice] = r.doc;
     }, this);
     this.codiciAzienda = Object.keys(this.aziende).sort();
     if (callback) {
@@ -366,6 +369,8 @@ var Ctrl = {};
     this.taglieScalarini = SessionInfo.getDocument('TaglieScalarini');
     this.modelliEScalarini = SessionInfo.getDocument('ModelliEScalarini');
     this.giacenze = SessionInfo.getDocument('Giacenze');
+    //FIXME don't use fixed values
+    this.listini = [null, SessionInfo.getDocument('Listino_1_20111018'), SessionInfo.getDocument('Listino_2_20111011')];
 
     this.filtrate = [];
     this.limiteRisultati = 50;
@@ -389,7 +394,7 @@ var Ctrl = {};
     },
 
     filtraGiacenza: function () {
-      var giacenze, taglia, qta, r, riga,
+      var giacenze, taglia, qta, r, riga, listino, prezzi,
         scalarino, taglie = [], nn = '--', TAGLIE_PER_SCALARINO = 12,
         rows = this.giacenze.rows, i = 0, n = rows.length,
         count = 0, filtrate = [], maxCount = this.limiteRisultati,
@@ -425,6 +430,13 @@ var Ctrl = {};
           }
           if (accoda) {
             riga.push(totaleRiga);
+            listino = this.listini[this.allAziende[r[4]].versioneListino];
+            prezzi = listino && CODICI.getProperty(listino.prezzi, r[0], r[1], r[2]);
+            if (prezzi) {
+              riga.push(CODICI.formatMoney(prezzi[2]) + (prezzi[3] || ''));
+            } else {
+              riga.push('ND');
+            }
             totaleRighe += totaleRiga;
             count = filtrate.push(riga);
           }
