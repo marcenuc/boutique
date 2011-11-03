@@ -16,7 +16,7 @@
 <table>
 <caption>Giacenze</caption>
 <thead><tr><th>Azienda<th>Descrizione<th>Stagione<th>Modello<th>Articolo<th>Colore<th>Tipo magazzino<th>Stato<th>Scalarino ({{scalarino}})<th ng:repeat="t in taglie">{{t}}<th>Quantità<th>Listino<th>Prezzo
-<tfoot><tr><th colspan=9 style="text-align:right">Quantità totali:<td ng:repeat="totale in totaliColonna">{{totale || ''}}
+<tfoot><tr><th colspan=9 style="text-align:right">Quantità totali:<th ng:repeat="totale in totaliColonna">{{totale || ''}}
 <tbody><tr ng:repeat="row in filtrate"><td ng:repeat="v in row">{{v || ''}}
 
 </table>

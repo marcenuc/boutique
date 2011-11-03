@@ -437,7 +437,7 @@ var Ctrl = {};
             if (prezzi) {
               riga.push(CODICI.formatMoney(prezzi[2]) + (prezzi[3] || ''));
             } else {
-              riga.push('ND');
+              riga.push('n.d.');
             }
             totaleRighe += totaleRiga;
             count = filtrate.push(riga);
