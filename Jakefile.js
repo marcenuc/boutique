@@ -242,10 +242,10 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
           '{couch_httpd_proxy, handle_proxy_req, <<"' + servers.couchdb.webserverUrl() + '">>}',
           function (err) {
             if (err) {
-              fail(util.inspect(err));
-            } else {
-              complete();
+              return fail(util.inspect(err));
             }
+            console.log('Done.');
+            complete();
           }
         );
       });
