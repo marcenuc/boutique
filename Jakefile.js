@@ -277,10 +277,10 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
           colGiacenze = codici.colNamesToColIndexes(giacenze.columnNames), stagione, modello, articolo,
           rows = giacenze.rows, i = 0, n = rows.length, row, taglia, qtas, qta;
         giacenze.columnNames.pop();
-        console.log(giacenze.columnNames.concat('codiceTaglia', 'qta', docListino.columnNames).join(','));
+        console.log(giacenze.columnNames.concat('codiceTaglia', 'qta', docListino.columnNames).join('\t'));
 
         function formatPrice(p) {
-          return typeof p === 'number' ? p / 100 : p;
+          return typeof p === 'number' ? String(p / 100).replace('.', ',') : p;
         }
 
         for (; i < n; i += 1) {
@@ -297,7 +297,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
             for (taglia in qtas) {
               if (qtas.hasOwnProperty(taglia)) {
                 qta = qtas[taglia];
-                console.log(row.concat(taglia, qta, prezzi).join(','));
+                console.log(row.concat(taglia, qta, prezzi).join('\t'));
               }
             }
           }
