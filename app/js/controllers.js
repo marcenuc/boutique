@@ -378,6 +378,27 @@ var Ctrl = {};
   Ctrl.RicercaArticoli.$inject = ['SessionInfo'];
 
   Ctrl.RicercaArticoli.prototype = {
+    showPhoto: function (row) {
+      var stagione = row[2],
+        modello = row[3],
+        articolo = row[4],
+        colore = row[5],
+        photo = ['/boutique_app/img/', stagione, modello, articolo, colore, '.jpg'].join('');
+
+      if (this.photo1) {
+        this.photo1 = null;
+        this.photo2 = photo;
+      } else {
+        this.photo1 = photo;
+        this.photo2 = null;
+      }
+    },
+
+    hidePhoto: function () {
+      this.photo1 = null;
+      this.photo2 = null;
+    },
+
     getFiltroSmacAz: function () {
       var toks = ['^',
         dotPad(this.stagione, CODICI.LEN_STAGIONE),

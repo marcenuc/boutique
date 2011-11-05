@@ -559,21 +559,14 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
     task('start', function (environment) {
       var connect = require('connect'),
         cmdExec = require('connect-exec').exec,
+        sendFoto = requirejs('lib/sendFoto'),
         port = servers.couchdb.webserver.port,
         server = connect.createServer()
           .use(connect.logger())
           .use(connect.basicAuth(function (user, pass) {
             // TODO do authentication against couchdb or use a shared users db
             return user && pass;
-          }, 'administrator'))
-          .use('/_session', function (req, res) {
-            res.setHeader('Content-Type', 'application/json;charset=utf-8');
-            res.end(JSON.stringify({ userCtx: { name: req.remoteUser } }));
-          })
-          .use('/taskRunner',
-            cmdExec({ 'Content-Type': 'text/plain;charset=utf-8', '_parseHeadersInOutput': true }, __dirname, './taskRunner.sh', []))
-          .use('/as400',
-            cmdExec({ 'Content-Type': 'application/json;charset=utf-8' }, __dirname, 'java', ['-jar', 'as400-querier.jar']));
+          }, 'administrator'));
 
       if (environment === 'test') {
         console.log('Serving tests.');
@@ -583,6 +576,16 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       } else {
         server.use('/app', connect['static'](path.join(__dirname, 'build')));
       }
+
+      server.use('/_session', function (req, res) {
+        res.setHeader('Content-Type', 'application/json;charset=utf-8');
+        res.end(JSON.stringify({ userCtx: { name: req.remoteUser } }));
+      })
+        .use('/img', sendFoto('/srv/samba/Immagini_Boutique/pubblicate'))
+        .use('/taskRunner',
+          cmdExec({ 'Content-Type': 'text/plain;charset=utf-8', '_parseHeadersInOutput': true }, __dirname, './taskRunner.sh', []))
+        .use('/as400',
+          cmdExec({ 'Content-Type': 'application/json;charset=utf-8' }, __dirname, 'java', ['-jar', 'as400-querier.jar']));
 
       console.log('Listening on port ' + port + '.');
       server.listen(port);
