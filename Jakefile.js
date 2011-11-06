@@ -549,9 +549,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
     task('updatePhotos', function () {
       var path = require('path'),
         photoFolder = servers.couchdb.webserver.photoFolder,
-        find = require('findit').find,
-        finderFoto = find(path.resolve(photoFolder, '..', 'foto')),
-        finderSchizzi = find(path.resolve(photoFolder, '..', 'schizzi'));
+        find = require('findit').sync;
       function convert(src, dst) {
         taskutil.execBuffered('convert', [src, '-resample', '96x96', dst], function (err, out) {
           if (err) {
@@ -561,27 +559,23 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         });
       }
 
-      finderFoto.on('file', function (file) {
+      find(path.resolve(photoFolder, '..', 'foto'), function (file) {
         // TODO DRY usare codici
         var m = file.match(/\/(\d{16})\.[a-z]+$/);
         if (m) {
           convert(file, path.join(photoFolder, m[1] + '.jpg'));
         }
       });
-      finderFoto.on('end', function () {
-        console.log('Processate foto.');
-      });
+      console.log('Processate foto.');
 
-      finderSchizzi.on('file', function (file) {
+      find(path.resolve(photoFolder, '..', 'schizzi'), function (file) {
         // TODO DRY usare codici
         var m = file.match(/\/(\d{8})\.[a-z]+$/);
         if (m) {
           convert(file, path.join(photoFolder, m[1] + '.jpg'));
         }
       });
-      finderSchizzi.on('end', function () {
-        console.log('Processato schizzi.');
-      });
+      console.log('Processato schizzi.');
     });
 
     desc('Build optimized files for production');
