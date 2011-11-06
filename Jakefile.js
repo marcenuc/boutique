@@ -545,6 +545,45 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
 
   namespace('webserver', function () {
 
+    desc('Update photos');
+    task('updatePhotos', function () {
+      var path = require('path'),
+        photoFolder = servers.couchdb.webserver.photoFolder,
+        find = require('findit').find,
+        finderFoto = find(path.resolve(photoFolder, '..', 'foto')),
+        finderSchizzi = find(path.resolve(photoFolder, '..', 'schizzi'));
+      function convert(src, dst) {
+        taskutil.execBuffered('convert', [src, '-resample', '96x96', dst], function (err, out) {
+          if (err) {
+            fail(util.inspect(err));
+          }
+          console.log(out);
+        });
+      }
+
+      finderFoto.on('file', function (file) {
+        // TODO DRY usare codici
+        var m = file.match(/\/(\d{16})\.[a-z]+$/);
+        if (m) {
+          convert(file, path.join(photoFolder, m[1] + '.jpg'));
+        }
+      });
+      finderFoto.on('end', function () {
+        console.log('Processate foto.');
+      });
+
+      finderSchizzi.on('file', function (file) {
+        // TODO DRY usare codici
+        var m = file.match(/\/(\d{8})\.[a-z]+$/);
+        if (m) {
+          convert(file, path.join(photoFolder, m[1] + '.jpg'));
+        }
+      });
+      finderFoto.on('end', function () {
+        console.log('Processato schizzi.');
+      });
+    });
+
     desc('Build optimized files for production');
     task('build', function () {
       taskutil.execBuffered('node', ['node_modules/requirejs/bin/r.js', '-o', 'app.build.js'], function (err, out) {
@@ -581,7 +620,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         res.setHeader('Content-Type', 'application/json;charset=utf-8');
         res.end(JSON.stringify({ userCtx: { name: req.remoteUser } }));
       })
-        .use('/img', sendFoto('/srv/samba/Immagini_Boutique/pubblicate'))
+        .use('/img', sendFoto(servers.couchdb.webserver.photoFolder, { '11': '12', '10': '12', '92': '12' }))
         .use('/taskRunner',
           cmdExec({ 'Content-Type': 'text/plain;charset=utf-8', '_parseHeadersInOutput': true }, __dirname, './taskRunner.sh', []))
         .use('/as400',

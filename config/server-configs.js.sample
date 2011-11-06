@@ -13,7 +13,8 @@ define({
     webserver: {
       route: 'boutique_app',
       host: 'localhost',
-      port: 8000
+      port: 8000,
+      photoFolder: '/srv/samba/Immagini_Boutique/pubblicate'
     }
   }
 });

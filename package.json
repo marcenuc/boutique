@@ -13,6 +13,7 @@
     "cradle": "0.5.x",
     "csv": "~0.0.10",
     "follow": ">=0.2.0",
+    "findit": "*",
     "glob": "2.0.x"
   },
   "engines": { "node": "~0.4.12" }
