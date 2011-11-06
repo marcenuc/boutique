@@ -579,7 +579,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
           convert(file, path.join(photoFolder, m[1] + '.jpg'));
         }
       });
-      finderFoto.on('end', function () {
+      finderSchizzi.on('end', function () {
         console.log('Processato schizzi.');
       });
     });
