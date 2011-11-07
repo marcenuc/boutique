@@ -380,6 +380,7 @@ var Ctrl = {};
   Ctrl.RicercaArticoli.prototype = {
     showPhoto: function (row) {
       var photo = {
+          descrizione: row[1],
           stagione: row[2],
           modello: row[3],
           articolo: row[4],
