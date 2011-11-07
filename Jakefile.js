@@ -574,12 +574,12 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       f = files[i];
 
       function doConvert() {
-        return spawn('convert', [f[0], '-resample', '96x96', f[1]]);
+        return spawn('convert', [f[0], '-resize', '400>', f[1]]);
       }
 
       function doNext(code) {
         if (typeof code !== 'number' || code !== 0) {
-          return fail('Conversione di ' + f[0] + ': ' + code);
+          return fail('convert "' + f[0] + '" failed with: ' + code);
         }
         process.stdout.write(Math.floor((i / n) * 100) + '%\r');
 
