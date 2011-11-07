@@ -20,13 +20,10 @@
 <tbody><tr ng:repeat="row in filtrate"><td ng:repeat="v in row">{{v || ''}}<td><a ng:click="showPhoto(row)">Foto</a>
 </table>
 <div ng:show=photo ng:click="hidePhoto()" class=photo>
-<dl>
-<dt>Stagione:<dd>{{photo.stagione}}
-<dt>Modello:<dd>{{photo.modello}}
-<dt>Articolo:<dd>{{photo.articolo}}
-<dt>Colore:<dd>{{photo.colore}}
-<dt>Descrizione:<dd>{{photo.descrizione}}
-</dl>
-<img ng:show="photo.img[0]" ng:src="{{photo.img[0]}}">
-<img ng:show="photo.img[1]" ng:src="{{photo.img[1]}}">
+<table>
+<caption>{{photo.descrizione}}</caption>
+<tr><th>Stagione<th>Modello<th>Articolo<th>Colore 
+<tr><td>{{photo.stagione}}<td>{{photo.modello}}<td>{{photo.articolo}}<td>{{photo.colore}}
+</table>
+<img ng:src="{{photo.img}}">
 </div>

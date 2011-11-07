@@ -380,19 +380,14 @@ var Ctrl = {};
   Ctrl.RicercaArticoli.prototype = {
     showPhoto: function (row) {
       var photo = {
-          descrizione: row[1],
-          stagione: row[2],
-          modello: row[3],
-          articolo: row[4],
-          colore: row[5]
-        },
-        img = ['/boutique_app/img/', photo.stagione, photo.modello, photo.articolo, photo.colore, '.jpg'].join('');
+        descrizione: row[1],
+        stagione: row[2],
+        modello: row[3],
+        articolo: row[4],
+        colore: row[5]
+      };
+      photo.img = ['/boutique_app/img/', photo.stagione, photo.modello, photo.articolo, photo.colore, '.jpg'].join('');
 
-      if (this.photo && this.photo.img[0]) {
-        photo.img = [null, img];
-      } else {
-        photo.img = [img, null];
-      }
       this.photo = photo;
     },
 

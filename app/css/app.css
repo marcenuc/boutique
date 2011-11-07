@@ -384,9 +384,10 @@ body {
 div.photo {
   border: 2px solid black;
   padding: 5px;
-  left: 30%;
   position: fixed;
   top: 0;
+  left: 50%;
+  margin-left: -200px;
   color: #000;
   background: #fff;
 }
