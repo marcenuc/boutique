@@ -547,7 +547,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
 
     desc('Update photos');
     task('updatePhotos', function () {
-      var i, n, f, cmd, files = [],
+      var i, n, f, files = [],
         path = require('path'),
         spawn = require('child_process').spawn,
         photoFolder = servers.couchdb.webserver.photoFolder,
@@ -572,13 +572,16 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       i = 0;
       n = files.length;
       f = files[i];
-      cmd = spawn('convert', [f[0], '-resample', '96x96', f[1]]);
+
+      function doConvert() {
+        return spawn('convert', [f[0], '-resample', '96x96', f[1]]);
+      }
 
       function doNext(code) {
         if (typeof code !== 'number' || code !== 0) {
           return fail('Conversione di ' + f[0] + ': ' + code);
         }
-        process.stdout.write(Math.ceil((i / n) * 100) + '%\r');
+        process.stdout.write(Math.floor((i / n) * 100) + '%\r');
 
         i += 1;
         if (i >= n) {
@@ -586,11 +589,10 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         }
 
         f = files[i];
-        cmd = spawn('convert', [f[0], '-resample', '96x96', f[1]]);
-        cmd.on('exit', doNext);
+        doConvert().on('exit', doNext);
       }
 
-      cmd.on('exit', doNext);
+      doConvert().on('exit', doNext);
     });
 
     desc('Build optimized files for production');
