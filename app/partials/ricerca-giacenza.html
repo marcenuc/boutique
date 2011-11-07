@@ -19,4 +19,13 @@
 <tfoot><tr><th colspan=9 style="text-align:right">Quantità totali:<th ng:repeat="totale in totaliColonna">{{totale || ''}}
 <tbody><tr ng:repeat="row in filtrate"><td ng:repeat="v in row">{{v || ''}}<td><a ng:click="showPhoto(row)">Foto</a>
 </table>
-<div ng:show="photo1 || photo2" ng:click="hidePhoto()" class=foto><img ng:show=photo1 ng:src="{{photo1}}" onerror="this.src='img/notFound.png';"><img ng:show=photo2 ng:src="{{photo2}}" onerror="this.src='img/notFound.png';"></div>
+<div ng:show=photo ng:click="hidePhoto()" class=photo>
+<dl>
+<dt>Stagione:<dd>{{photo.stagione}}
+<dt>Modello:<dd>{{photo.modello}}
+<dt>Articolo:<dd>{{photo.articolo}}
+<dt>Colore:<dd>{{photo.colore}}
+</dl>
+<img ng:show="photo.img[0]" ng:src="{{photo.img[0]}}" onerror="this.src='img/notFound.png';">
+<img ng:show="photo.img[1]" ng:src="{{photo.img[1]}}" onerror="this.src='img/notFound.png';">
+</div>

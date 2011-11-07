@@ -381,6 +381,16 @@ body {
   z-index: 2; /* just below #fader */
 }
 
+div.photo {
+  border: 2px solid black;
+  padding: 5px;
+  left: 30%;
+  position: fixed;
+  top: 0;
+  color: #000;
+  background: #fff;
+}
+
 table {
   border-spacing: 2px;
   border-collapse: separate;

@@ -379,24 +379,24 @@ var Ctrl = {};
 
   Ctrl.RicercaArticoli.prototype = {
     showPhoto: function (row) {
-      var stagione = row[2],
-        modello = row[3],
-        articolo = row[4],
-        colore = row[5],
-        photo = ['/boutique_app/img/', stagione, modello, articolo, colore, '.jpg'].join('');
+      var photo = {
+          stagione: row[2],
+          modello: row[3],
+          articolo: row[4],
+          colore: row[5]
+        },
+        img = ['/boutique_app/img/', photo.stagione, photo.modello, photo.articolo, photo.colore, '.jpg'].join('');
 
-      if (this.photo1) {
-        this.photo1 = null;
-        this.photo2 = photo;
+      if (this.photo && this.photo.img[0]) {
+        photo.img = [null, img];
       } else {
-        this.photo1 = photo;
-        this.photo2 = null;
+        photo.img = [img, null];
       }
+      this.photo = photo;
     },
 
     hidePhoto: function () {
-      this.photo1 = null;
-      this.photo2 = null;
+      this.photo = null;
     },
 
     getFiltroSmacAz: function () {
