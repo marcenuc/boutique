@@ -574,7 +574,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       f = files[i];
 
       function doConvert() {
-        return spawn('convert', [f[0], '-resize', '400>', f[1]]);
+        return spawn('convert', [f[0], '-resize', '400x800>', f[1]]);
       }
 
       function doNext(code) {
