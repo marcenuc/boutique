@@ -389,7 +389,7 @@ var Ctrl = {};
         img = ['/boutique_app/img/', photo.stagione, photo.modello, photo.articolo, photo.colore, '.jpg'].join('');
 
       if (this.photo && this.photo.img[0]) {
-        photo.img = ['spinnger.gif', img];
+        photo.img = ['spinner.gif', img];
         photo.show = [false, true];
       } else {
         photo.img = [img, 'spinner.gif'];
