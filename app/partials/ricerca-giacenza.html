@@ -25,5 +25,6 @@
 <tr><th>Stagione<th>Modello<th>Articolo<th>Colore 
 <tr><td>{{photo.stagione}}<td>{{photo.modello}}<td>{{photo.articolo}}<td>{{photo.colore}}
 </table>
-<img ng:src="{{photo.img}}">
+<img ng:show="photo.show[0]" ng:src="{{photo.img[0]}}">
+<img ng:show="photo.show[1]" ng:src="{{photo.img[1]}}">
 </div>
