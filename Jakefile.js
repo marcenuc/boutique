@@ -547,35 +547,50 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
 
     desc('Update photos');
     task('updatePhotos', function () {
-      var path = require('path'),
+      var i, n, f, cmd, files = [],
+        path = require('path'),
+        spawn = require('child_process').spawn,
         photoFolder = servers.couchdb.webserver.photoFolder,
         find = require('findit').sync;
-      function convert(src, dst) {
-        taskutil.execBuffered('convert', [src, '-resample', '96x96', dst], function (err, out) {
-          if (err) {
-            fail(util.inspect(err));
-          }
-          console.log(out);
-        });
-      }
 
       find(path.resolve(photoFolder, '..', 'foto'), function (file) {
         // TODO DRY usare codici
         var m = file.match(/\/(\d{16})\.[a-z]+$/);
         if (m) {
-          convert(file, path.join(photoFolder, m[1] + '.jpg'));
+          files.push([file, path.join(photoFolder, m[1] + '.jpg')]);
         }
       });
-      console.log('Processate foto.');
 
       find(path.resolve(photoFolder, '..', 'schizzi'), function (file) {
         // TODO DRY usare codici
         var m = file.match(/\/(\d{8})\.[a-z]+$/);
         if (m) {
-          convert(file, path.join(photoFolder, m[1] + '.jpg'));
+          files.push([file, path.join(photoFolder, m[1] + '.jpg')]);
         }
       });
-      console.log('Processato schizzi.');
+
+      i = 0;
+      n = files.length;
+      f = files[i];
+      cmd = spawn('convert', [f[0], '-resample', '96x96', f[1]]);
+
+      function doNext(code) {
+        if (typeof code !== 'number' || code !== 0) {
+          return fail('Conversione di ' + f[0] + ': ' + code);
+        }
+        process.stdout.write(Math.ceil((i / n) * 100) + '%\r');
+
+        i += 1;
+        if (i >= n) {
+          return console.log('Done.');
+        }
+
+        f = files[i];
+        cmd = spawn('convert', [f[0], '-resample', '96x96', f[1]]);
+        cmd.on('exit', doNext);
+      }
+
+      cmd.on('exit', doNext);
     });
 
     desc('Build optimized files for production');
