@@ -357,7 +357,7 @@ describe('Service', function () {
     });
 
     describe('Listino', function () {
-      var validId = 'Listino_1_20111003',
+      var validId = 'Listino_1',
         columnNames = ['costo', 'prezzo1', 'prezzo2', 'offerta'];
 
       it('should require admin user for writes', function () {
@@ -365,10 +365,10 @@ describe('Service', function () {
         expect(check099999({ _id: validId })).toHaveError('Not authorized');
       });
 
-      it('should require valid _id with (versione, dataUso)', function () {
+      it('should require valid _id with (versione)', function () {
         var msg = 'Invalid code';
         expect(check({ _id: validId })).not.toHaveError('Invalid type');
-        expect(check({ _id: 'Listino_1_20110229' })).toHaveError(msg);
+        expect(check({ _id: 'Listino_a' })).toHaveError(msg);
       });
 
       it('should not be empty', function () {

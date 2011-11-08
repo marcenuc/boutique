@@ -14,6 +14,10 @@ describe('Controller', function () {
       descrizioniTaglie: [null, { '44': '44', '46': '46', '48': '48', '50': '50', '52': '52', '54': '54', '56': '56', '58': '58', '60': '60', '62': '62', '64': '64', '66': 'SM' }],
       listeDescrizioni: [null, ['44', '46', '48', '50', '52', '54', '56', '58', '60', '62', '64', 'SM']]
     },
+    listini = [
+      { _id: 'Listino_1', prezzi: {} },
+      { _id: 'Listino_2', prezzi: {} }
+    ],
     aziende = {
       total_rows: 15,
       offset: 1,
@@ -512,8 +516,8 @@ describe('Controller', function () {
         ['923', '70233', '5215', '2100', '019998', 1, 1, { '50': 1, '52': 1 }]
       ],
       rowsExpected = [
-        ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '102', '70233', '5215', '2100', 1, 'PRONTO', 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 3],
-        ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '923', '70233', '5215', '2100', 1, 'IN PRODUZIONE', 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2]
+        ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '102', '70233', '5215', '2100', 1, 'PRONTO', 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 3, 1, 'n.d.'],
+        ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '923', '70233', '5215', '2100', 1, 'IN PRODUZIONE', 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 'n.d.']
       ],
       giacenze = { rows: rows };
 
@@ -522,6 +526,8 @@ describe('Controller', function () {
       expectGET('TaglieScalarini', taglieScalarini);
       expectGET('ModelliEScalarini', modelliEScalarini);
       expectGET('Giacenze', giacenze);
+      expectGET('Listino_1', listini[0]);
+      expectGET('Listino_2', listini[1]);
       ctrl = scope.$new(Ctrl.RicercaArticoli);
     }
 
