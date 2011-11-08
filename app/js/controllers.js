@@ -43,6 +43,20 @@ var Ctrl = {};
     }
   }
 
+  function SetListini(callback, xhrResp) {
+    var rows = xhrResp.rows, i = 0, n = rows.length, r, codes;
+    this.listini = {};
+    for (; i < n; i += 1) {
+      r = rows[i];
+      codes = CODICI.parseIdListino(r.id);
+      if (codes) {
+        this.listini[codes.versione] = r.doc;
+      }
+    }
+    if (callback) {
+      callback();
+    }
+  }
 
   Ctrl.MovimentoMagazzino = function (SessionInfo, $routeParams, $location) {
     var self = this, codes = ($routeParams.codice || '').split('_'), docCount = 3;
@@ -363,14 +377,14 @@ var Ctrl = {};
 
   Ctrl.RicercaArticoli = function (SessionInfo) {
     SessionInfo.resetFlash();
+    // TODO assicurarsi che questi siano caricati prima di attivare l'interfaccia
+    SessionInfo.listini(angular.bind(this, SetListini, null));
     SessionInfo.aziende(angular.bind(this, SetAziende, null));
     this.aziendeSelezionate = [];
 
     this.taglieScalarini = SessionInfo.getDocument('TaglieScalarini');
     this.modelliEScalarini = SessionInfo.getDocument('ModelliEScalarini');
     this.giacenze = SessionInfo.getDocument('Giacenze');
-    //FIXME don't use fixed values
-    this.listini = [null, SessionInfo.getDocument('Listino_1'), SessionInfo.getDocument('Listino_2')];
 
     this.filtrate = [];
     this.limiteRisultati = 50;

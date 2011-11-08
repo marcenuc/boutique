@@ -1,5 +1,5 @@
 /*jslint nomen: true */
-/*global angular: false, validate_doc_update: false, Ctrl: false */
+/*global angular: false, validate_doc_update: false, Ctrl: false*/
 
 (function () {
   'use strict';
@@ -99,6 +99,10 @@
       return r.query(range('Azienda'), success, error);
     };
 
+    r.listini = function (success, error) {
+      return r.query(range('Listino'), success, error);
+    };
+
     r.clienti = function (codiceAzienda, success) {
       var baseId = codiceAzienda.replace(/^Azienda_/, 'Cliente_');
       return r.query(range(baseId), success);
@@ -159,22 +163,24 @@
         }
       });
     };
-    info.aziende = function (success, error) {
-      info.loading += 1;
-      return Document.aziende(function () {
-        loaded();
-        if (success) {
-          success.apply(this, arguments);
-        }
-      }, function (code, response) {
-        loaded();
-        if (error) {
-          error.apply(this, arguments);
-        } else {
-          xhrError({ url: 'AZIENDE' }, { status: code, body: response });
-        }
-      });
-    };
+    ['aziende', 'listini'].forEach(function (klass) {
+      info[klass] = function (success, error) {
+        info.loading += 1;
+        return Document[klass](function () {
+          loaded();
+          if (success) {
+            success.apply(this, arguments);
+          }
+        }, function (code, response) {
+          loaded();
+          if (error) {
+            error.apply(this, arguments);
+          } else {
+            xhrError({ url: klass }, { status: code, body: response });
+          }
+        });
+      };
+    });
     info.save = function (data, success, error) {
       info.loading += 1;
       return Document.save(data, function () {

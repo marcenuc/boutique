@@ -183,6 +183,16 @@ var CODICI;
     }
   };
 
+  codici.parseIdListino = function (id) {
+    // TODO DRY '\d+' è un numero
+    var m = /^Listino_(\d+)$/.exec(id);
+    if (m) {
+      return {
+        versione: m[1]
+      };
+    }
+  };
+
   codici.idInventario = function (codiceAzienda, tipoMagazzino) {
     if (codici.isCodiceAzienda(codiceAzienda) && codici.isTipoMagazzino(tipoMagazzino)) {
       return ['Inventario', codiceAzienda, tipoMagazzino].join('_');
