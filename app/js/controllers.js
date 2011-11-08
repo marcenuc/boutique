@@ -378,8 +378,9 @@ var Ctrl = {};
   Ctrl.RicercaArticoli.$inject = ['SessionInfo'];
 
   Ctrl.RicercaArticoli.prototype = {
-    showPhoto: function (row) {
-      var photo = {
+    showPhoto: function (index) {
+      var row = this.filtrate[index],
+        photo = {
           descrizione: row[1],
           stagione: row[2],
           modello: row[3],
@@ -395,11 +396,27 @@ var Ctrl = {};
         photo.img = [img, 'spinner.gif'];
         photo.show = [true, false];
       }
+      this.selectedRow = index;
       this.photo = photo;
     },
 
+    isSelectedRow: function (index) {
+      return this.selectedRow === index ? 'selected' : '';
+    },
+
     hidePhoto: function () {
-      this.photo = null;
+      delete this.selectedRow;
+      delete this.photo;
+    },
+
+    prevPhoto: function () {
+      var newIndex = (this.selectedRow || 0) - 1;
+      this.showPhoto(newIndex < 0 ? this.filtrate.length - 1 : newIndex);
+    },
+
+    nextPhoto: function () {
+      var newIndex = (this.selectedRow || 0) + 1;
+      this.showPhoto(newIndex % this.filtrate.length);
     },
 
     getFiltroSmacAz: function () {
@@ -410,7 +427,8 @@ var Ctrl = {};
         dotPad(this.colore, CODICI.LEN_COLORE),
         this.aziendeSelezionate.length ? '(?:' + this.aziendeSelezionate.join('|') + ')' : '\\d{6}',
         '$'];
-      return new RegExp(toks.join(''));
+      this.query = toks.join('');
+      return new RegExp(this.query);
     },
 
     getFiltroTaglia: function () {
