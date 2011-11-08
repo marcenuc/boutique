@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v0.10.5-7d0c256e
+ * @license AngularJS v0.10.5
  * (c) 2010-2011 AngularJS http://angularjs.org
  * License: MIT
  */
@@ -1037,7 +1037,7 @@ function assertArgFn(arg, name) {
  * - `codeName` – `{string}` – Code name of the release, such as "jiggling-armfat".
  */
 var version = {
-  full: '0.10.5-7d0c256e',    // all of these placeholder strings will be replaced by rake's
+  full: '0.10.5',    // all of these placeholder strings will be replaced by rake's
   major: 0,    // compile task
   minor: 10,
   dot: 5,
@@ -1784,7 +1784,8 @@ Scope.prototype = {
         watcher = {
           fn: listenFn,
           last: Number.NaN, // NaN !== NaN. We used this to force $watch to fire on first run.
-          get: get
+          get: get,
+          exp: watchExp
         };
 
     if (!array) {
@@ -1849,7 +1850,8 @@ Scope.prototype = {
         asyncQueue,
         length,
         dirty, ttl = 100,
-        next, current, target = this;
+        next, current, target = this,
+        watchLog = [];
 
     if (target.$$phase) {
       throw Error(target.$$phase + ' already in progress');
@@ -1880,6 +1882,14 @@ Scope.prototype = {
                 dirty = true;
                 watch.last = copy(value);
                 watch.fn(current, value, last);
+                if (ttl < 5) {
+                  if (!watchLog[4-ttl]) watchLog[4-ttl] = [];
+                  if (isFunction(watch.exp)) {
+                    watchLog[4-ttl].push('fn: ' + (watch.exp.name || watch.exp.toString()));
+                  } else {
+                    watchLog[4-ttl].push(watch.exp);
+                  }
+                }
               }
             } catch (e) {
               current.$service('$exceptionHandler')(e);
@@ -1900,7 +1910,8 @@ Scope.prototype = {
       } while ((current = next));
 
       if(!(ttl--)) {
-        throw Error('100 $digest() iterations reached. Aborting!');
+        throw Error('100 $digest() iterations reached. Aborting!\n' +
+            'Watchers fired in the last 5 iterations: ' + toJson(watchLog));
       }
     } while (dirty);
   },
@@ -9010,17 +9021,27 @@ angularDirective("ng:bind-template", function(expression, element){
  *
  * Instead of writing `ng:bind-attr` statements in your HTML, you can use double-curly markup to
  * specify an <tt ng:non-bindable>{{expression}}</tt> for the value of an attribute.
- * At compile time, the attribute is translated into an `<span ng:bind-attr="{attr:expression}"/>`
+ * At compile time, the attribute is translated into an
+ * `<span ng:bind-attr="{attr:expression}"></span>`.
  *
  * The following HTML snippet shows how to specify `ng:bind-attr`:
+ * <pre>
+ *   <a ng:bind-attr='{"href":"http://www.google.com/search?q={{query}}"}'>Google</a>
+ * </pre>
+ *
+ * This is cumbersome, so as we mentioned using double-curly markup is a prefered way of creating
+ * this binding:
  * <pre>
  *   <a href="http://www.google.com/search?q={{query}}">Google</a>
  * </pre>
  *
- * During compilation, the snippet gets translated to the following:
- * <pre>
- *   <a ng:bind-attr='{"href":"http://www.google.com/search?q={{query}}"}'>Google</a>
- * </pre>
+ * During compilation, the template with attribute markup gets translated to the ng:bind-attr form
+ * mentioned above.
+ *
+ * _Note_: You might want to consider using {@link angular.directive.ng:href ng:href} instead of
+ * `href` if the binding is present in the main application template (`index.html`) and you want to
+ * make sure that a user is not capable of clicking on raw/uncompiled link.
+ *
  *
  * @element ANY
  * @param {string} attribute_json one or more JSON key-value pairs representing
@@ -9042,7 +9063,11 @@ angularDirective("ng:bind-template", function(expression, element){
        <div ng:controller="Ctrl">
         Google for:
         <input type="text" ng:model="query"/>
+        <a ng:bind-attr='{"href":"http://www.google.com/search?q={{query}}"}'>
+          Google
+        </a> (ng:bind-attr) |
         <a href="http://www.google.com/search?q={{query}}">Google</a>
+        (curly binding in attribute val)
        </div>
      </doc:source>
      <doc:scenario>
@@ -9424,21 +9449,11 @@ angularDirective("ng:hide", function(expression, element){
      </doc:scenario>
    </doc:example>
  */
-angularDirective("ng:style", function(expression, element){
-  // TODO(i): this is inefficient (runs on every $digest) and obtrusive (overrides 3rd part css)
-  //   we should change it in a similar way as I changed ng:class
-  return function(element){
-    var resetStyle = getStyle(element);
-    this.$watch(function(scope){
-      var style = scope.$eval(expression) || {}, key, mergedStyle = {};
-      for(key in style) {
-        if (resetStyle[key] === undefined) resetStyle[key] = '';
-        mergedStyle[key] = style[key];
-      }
-      for(key in resetStyle) {
-        mergedStyle[key] = mergedStyle[key] || resetStyle[key];
-      }
-      element.css(mergedStyle);
+angularDirective("ng:style", function(expression, element) {
+  return function(element) {
+    this.$watch(expression, function(scope, newStyles, oldStyles) {
+      if (oldStyles) forEach(oldStyles, function(val, style) { element.css(style, '');});
+      if (newStyles) element.css(newStyles);
     });
   };
 });
