@@ -633,7 +633,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
       })
         .use('/img', sendFoto(servers.couchdb.webserver.photoFolder, { '11': '12', '10': '12', '92': '12' }))
         .use('/taskRunner',
-          cmdExec({ 'Content-Type': 'text/plain;charset=utf-8', '_parseHeadersInOutput': true }, __dirname, './taskRunner.sh', []))
+          cmdExec({ 'Content-Type': 'text/plain;charset=utf-8', '_parseHeadersInOutput': true }, __dirname, 'node', ['lib/taskRunner.js']))
         .use('/as400',
           cmdExec({ 'Content-Type': 'application/json;charset=utf-8' }, __dirname, 'java', ['-jar', 'as400-querier.jar']));
 
