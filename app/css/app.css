@@ -422,6 +422,9 @@ table td {
   border: 1px solid #ddd;
   padding: 1px 3px;
 }
+tr:nth-child(2n) {
+  background-color: #eff;
+}
 tr.selected {
   background-color: yellow;
 }
