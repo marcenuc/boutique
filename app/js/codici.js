@@ -177,9 +177,9 @@ var CODICI;
     }
   };
 
-  codici.idListino = function (versione, dataUso) {
-    if (codici.isNumero(versione) && codici.isYyyyMmDdDate(dataUso)) {
-      return ['Listino', versione, dataUso].join('_');
+  codici.idListino = function (versione) {
+    if (codici.isNumero(versione)) {
+      return ['Listino', versione].join('_');
     }
   };
 

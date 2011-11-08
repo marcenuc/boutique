@@ -370,7 +370,7 @@ var Ctrl = {};
     this.modelliEScalarini = SessionInfo.getDocument('ModelliEScalarini');
     this.giacenze = SessionInfo.getDocument('Giacenze');
     //FIXME don't use fixed values
-    this.listini = [null, SessionInfo.getDocument('Listino_1_20111018'), SessionInfo.getDocument('Listino_2_20111011')];
+    this.listini = [null, SessionInfo.getDocument('Listino_1'), SessionInfo.getDocument('Listino_2')];
 
     this.filtrate = [];
     this.limiteRisultati = 50;
@@ -594,7 +594,7 @@ var Ctrl = {};
     fetch: function (codice) {
       var self = this,
         // TODO DRY usare CODICI.idListino o altro.
-        id = codice ? 'Listino_' + codice : CODICI.idListino(this.versione, this.dataUso);
+        id = codice ? 'Listino_' + codice : CODICI.idListino(this.versione);
       this.SessionInfo.getDocument(id, function (listino) {
         if (codice) {
           self.listino = listino;

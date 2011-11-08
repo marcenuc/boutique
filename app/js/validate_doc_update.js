@@ -461,7 +461,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         break;
       case 'Listino':
         mustBeAdmin();
-        if (!codici.idListino(codes[0], codes[1])) {
+        if (!codici.idListino(codes[0])) {
           error('Invalid code');
         }
         hasColumnNames(['costo', 'prezzo1', 'prezzo2', 'offerta']);
