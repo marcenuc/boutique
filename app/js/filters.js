@@ -4,9 +4,19 @@
   'use strict';
 
   angular.filter('linkById', function (input) {
-    //TODO rexp cut & pasted from validate_doc_update: DRY
-    var ids = input.match(/^([A-Z][a-zA-Z0-9]+)(?:_([0-9A-Z_]+))?$/);
-    return angular.element('<a href="#/' + input + '">' + ids[2] + '</a>');
+    var typeAndCode = CODICI.typeAndCodeFromId(input);
+    if (typeAndCode && typeAndCode[2]) {
+      return angular.element('<a href="#/' + input + '">' + typeAndCode[2] + '</a>');
+    }
+    return '--';
+  });
+
+  angular.filter('linkListino', function (input) {
+    var typeAndCode = CODICI.typeAndCodeFromId(input);
+    if (typeAndCode && typeAndCode[2]) {
+      return angular.element('<a href="#/' + CODICI.idListino(typeAndCode[2]) + '">Listino</a>');
+    }
+    return '--';
   });
 
   angular.inputType('codiceAzienda', function () {
