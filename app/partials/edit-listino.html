@@ -9,6 +9,7 @@
 
 <form ng:submit="save()" name=righeListino>
 <fieldset><legend>{{listino._id}}</legend>
+<p><label>Versione listino base: <input ng:model="listino.versioneBase"></label></p>
 <table>
 <thead><tr><th>Stagione<th>Modello<th>Articolo<th>Costo<th>Prezzo1<th>Prezzo2<th>Offerta
 <tbody><tr ng:repeat="r in prezzi">

@@ -193,6 +193,23 @@ var CODICI;
     }
   };
 
+  codici.readListino = function (listini, codiceAzienda, stagione, modello, articolo) {
+    var versioneBase, listinoBase, prezziBase,
+      listinoAzienda = listini[codiceAzienda],
+      prezziAzienda = codici.getProperty(listinoAzienda.prezzi, stagione, modello, articolo);
+    if (prezziAzienda) {
+      return [listinoAzienda.col, prezziAzienda, codiceAzienda];
+    }
+    if (listinoAzienda.hasOwnProperty('versioneBase')) {
+      versioneBase = listinoAzienda.versioneBase;
+      listinoBase = listini[versioneBase];
+      prezziBase = codici.getProperty(listinoBase.prezzi, stagione, modello, articolo);
+      if (prezziBase) {
+        return [listinoBase.col, prezziBase, versioneBase];
+      }
+    }
+  };
+
   codici.idInventario = function (codiceAzienda, tipoMagazzino) {
     if (codici.isCodiceAzienda(codiceAzienda) && codici.isTipoMagazzino(tipoMagazzino)) {
       return ['Inventario', codiceAzienda, tipoMagazzino].join('_');

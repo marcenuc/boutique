@@ -14,16 +14,37 @@ describe('Controller', function () {
       descrizioniTaglie: [null, { '44': '44', '46': '46', '48': '48', '50': '50', '52': '52', '54': '54', '56': '56', '58': '58', '60': '60', '62': '62', '64': '64', '66': 'SM' }],
       listeDescrizioni: [null, ['44', '46', '48', '50', '52', '54', '56', '58', '60', '62', '64', 'SM']]
     },
-    listini = [
-      { _id: 'Listino_1', prezzi: {} },
-      { _id: 'Listino_2', prezzi: {} }
-    ],
+    listini = {
+      total_rows: 5,
+      offset: 1,
+      rows: [{
+        id: 'Listino_1',
+        key: 'Listino_1',
+        value: { rev: '1-d6363be2d62ec0f2eb5b961527bdddbf' },
+        doc: { _id: 'Listino_1', _rev: '1-d6363be2d62ec0f2eb5b961527bdddbf', prezzi: {} }
+      }, {
+        id: 'Listino_2',
+        key: 'Listino_2',
+        value: { rev: '1-d6363be2d62ec0f2eb5b961527bdddba' },
+        doc: { _id: 'Listino_2', _rev: '1-d6363be2d62ec0f2eb5b961527bdddba', prezzi: {} }
+      }, {
+        id: 'Listino_019998',
+        key: 'Listino_019998',
+        value: { rev: '1-d6363be2d62ec0f2eb5b961527bdddba' },
+        doc: { _id: 'Listino_019998', _rev: '1-d6363be2d62ec0f2eb5b961527bdddba', prezzi: {}, versioneBase: '1' }
+      }, {
+        id: 'Listino_099997',
+        key: 'Listino_099997',
+        value: { rev: '2-d6363be2d62ec0f2eb5b961527bdddba' },
+        doc: { _id: 'Listino_099997', _rev: '2-d6363be2d62ec0f2eb5b961527bdddba', prezzi: {}, versioneBase: '2' }
+      }]
+    },
     aziende = {
       total_rows: 15,
       offset: 1,
-      rows: [ {
-        id: "Azienda_019998",
-        key: "Azienda_019998",
+      rows: [{
+        id: 'Azienda_019998',
+        key: 'Azienda_019998',
         value: { rev: "1-d6363be2d62ec0f2eb5b961527bdddbf" },
         doc: {
           _id: "Azienda_019998",
@@ -52,7 +73,7 @@ describe('Controller', function () {
           provincia: "LE",
           cap: "73100"
         }
-      } ]
+      }]
     };
 
   function okResponse(id, rev) {
@@ -64,6 +85,9 @@ describe('Controller', function () {
     switch (id) {
     case 'AZIENDE':
       u = '_all_docs?endkey=%22Azienda_%EF%BF%B0%22&include_docs=true&startkey=%22Azienda_%22';
+      break;
+    case 'LISTINI':
+      u = '_all_docs?endkey=%22Listino_%EF%BF%B0%22&include_docs=true&startkey=%22Listino_%22';
       break;
     case 'VIEW_RIFERIMENTI':
       u = '_design/boutique_db/_view/riferimentiMovimentiMagazzino?key=%22BollaAs400_20110704_1234_Y_10%22';
@@ -526,8 +550,7 @@ describe('Controller', function () {
       expectGET('TaglieScalarini', taglieScalarini);
       expectGET('ModelliEScalarini', modelliEScalarini);
       expectGET('Giacenze', giacenze);
-      expectGET('Listino_1', listini[0]);
-      expectGET('Listino_2', listini[1]);
+      expectGET('LISTINI', listini);
       ctrl = scope.$new(Ctrl.RicercaArticoli);
     }
 

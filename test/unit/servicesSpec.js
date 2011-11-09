@@ -371,10 +371,11 @@ describe('Service', function () {
         expect(check({ _id: 'Listino_a' })).toHaveError(msg);
       });
 
-      it('should not be empty', function () {
+      it('should not be empty if without versioneBase', function () {
         var msg = 'Listino vuoto';
         expect(check({ _id: validId })).toHaveError(msg);
         expect(check({ _id: validId, prezzi: {} })).toHaveError(msg);
+        expect(check({ _id: validId, versioneBase: '2', prezzi: {} })).not.toHaveError(msg);
         expect(check({ _id: validId, prezzi: { '112708995017': [100] } })).not.toHaveError(msg);
       });
 
@@ -383,6 +384,19 @@ describe('Service', function () {
         expect(check({ _id: validId })).toHaveError('Required field: columnNames');
         expect(check({ _id: validId, columnNames: ['costo', 'prezzo1', 'prezzo2'] })).toHaveError(msg);
         expect(check({ _id: validId, columnNames: columnNames })).not.toHaveError(msg);
+      });
+
+      describe('field versioneBase', function () {
+        it('should contain a valid versione listino', function () {
+          var msg = 'Invalid versioneBase';
+          expect(check({ _id: validId, versioneBase: 'abc' })).toHaveError(msg);
+          expect(check({ _id: validId, versioneBase: '2' })).not.toHaveError(msg);
+        });
+
+        it('should NOT be equal to versione in _id', function () {
+          var msg = 'Invalid versioneBase';
+          expect(check({ _id: validId, versioneBase: '1' })).toHaveError(msg);
+        });
       });
 
       describe('valid row', function () {

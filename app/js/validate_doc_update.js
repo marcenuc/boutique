@@ -88,7 +88,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
     }
   }
 
-  function hasValidListino(prezzi) {
+  function hasValidListino(prezzi, versioneBase) {
     if (!prezzi) {
       return error('Listino vuoto');
     }
@@ -130,7 +130,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         }
       }
     }
-    if (vuoto) {
+    if (vuoto && !versioneBase) {
       error('Listino vuoto');
     }
   }
@@ -464,8 +464,11 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         if (!codici.idListino(codes[0])) {
           error('Invalid code');
         }
+        if (doc.hasOwnProperty('versioneBase') && (codici.idListino(doc.versioneBase) === doc._id || !codici.isNumero(doc.versioneBase))) {
+          error('Invalid versioneBase');
+        }
         hasColumnNames(['costo', 'prezzo1', 'prezzo2', 'offerta']);
-        hasValidListino(doc.prezzi);
+        hasValidListino(doc.prezzi, doc.versioneBase);
         break;
       default:
         error('Unknown type');

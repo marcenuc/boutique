@@ -46,10 +46,12 @@ var Ctrl = {};
   function SetListini(callback, xhrResp) {
     var rows = xhrResp.rows, i = 0, n = rows.length, r, codes;
     this.listini = {};
+    // TODO DRY copiato in listino.js
     for (; i < n; i += 1) {
       r = rows[i];
       codes = CODICI.parseIdListino(r.id);
       if (codes) {
+        r.doc.col = CODICI.colNamesToColIndexes(r.doc.columnNames);
         this.listini[codes.versione] = r.doc;
       }
     }
@@ -450,7 +452,7 @@ var Ctrl = {};
     },
 
     filtraGiacenza: function () {
-      var giacenze, taglia, qta, r, riga, versioneListino, listino, prezzi,
+      var giacenze, taglia, qta, r, riga, versioneListino, prezzi, colPrezzi,
         scalarino, taglie = [], nn = '--', TAGLIE_PER_SCALARINO = 12,
         rows = this.giacenze.rows, i = 0, n = rows.length,
         count = 0, filtrate = [], maxCount = this.limiteRisultati,
@@ -486,14 +488,14 @@ var Ctrl = {};
           }
           if (accoda) {
             riga.push(totaleRiga);
-            versioneListino = this.allAziende[r[4]].versioneListino;
-            riga.push(versioneListino);
-            listino = this.listini[versioneListino];
-            prezzi = listino && CODICI.getProperty(listino.prezzi, r[0], r[1], r[2]);
+            prezzi = CODICI.readListino(this.listini, r[4], r[0], r[1], r[2]);
             if (prezzi) {
-              riga.push(CODICI.formatMoney(prezzi[2]) + (prezzi[3] || ''));
+              versioneListino = prezzi[2];
+              colPrezzi = prezzi[0];
+              riga.push(versioneListino, CODICI.formatMoney(prezzi[1][colPrezzi.prezzo2]) + (prezzi[1][colPrezzi.offerta] || ''));
             } else {
-              riga.push('n.d.');
+              versioneListino = this.listini[r[4]].versioneBase || r[4];
+              riga.push(versioneListino, 'n.d.');
             }
             totaleRighe += totaleRiga;
             count = filtrate.push(riga);
@@ -607,8 +609,7 @@ var Ctrl = {};
   Ctrl.Listino.prototype = {
     fetch: function (codice) {
       var self = this,
-        // TODO DRY usare CODICI.idListino o altro.
-        id = codice ? 'Listino_' + codice : CODICI.idListino(this.versione);
+        id = CODICI.idListino(codice || this.versione);
       this.SessionInfo.getDocument(id, function (listino) {
         if (codice) {
           self.listino = listino;
@@ -654,6 +655,10 @@ var Ctrl = {};
             v = vals[4] ? vals : vals.slice(0, 4);
           CODICI.setProperty(ps, stagione, modello, articolo, v);
         });
+        // TODO trovare un modo generale di non trasmettere campi vuoti o null.
+        if (!this.listino.versioneBase) {
+          delete this.listino.versioneBase;
+        }
         this.SessionInfo.save(this.listino, function (res) {
           if (!self.rev) {
             self.$location.path(res.id).replace();
