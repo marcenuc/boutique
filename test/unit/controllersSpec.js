@@ -50,7 +50,6 @@ describe('Controller', function () {
           _id: "Azienda_019998",
           _rev: "1-d6363be2d62ec0f2eb5b961527bdddbf",
           tipo: "MAGAZZINO",
-          versioneListino: 1,
           nome: "Mag. Disponibile",
           indirizzo: "S.S. 275 km. 21,4 Lucugnano",
           comune: "Tricase (LE) ITALY",
@@ -134,24 +133,6 @@ describe('Controller', function () {
   afterEach(function () {
     expect($browser.xhr.requests.length).toBe(0, 'You have not flushed the $browser.xhr requests.');
   });
-
-
-  describe('utils', function () {
-    describe('dotPad', function () {
-      it('should pad with dots strings shorter than the given length', function () {
-        var u = Ctrl.utils.dotPad;
-        expect(u(null, 5)).toBe('.....');
-        expect(u('', 5)).toBe('.....');
-        expect(u('1', 5)).toBe('1....');
-        expect(u('..1', 5)).toBe('..1..');
-      });
-
-      it('should left untouched strings longer than pad length', function () {
-        expect(Ctrl.utils.dotPad('..1', 2)).toBe('..1');
-      });
-    });
-  });
-
 
   describe('Azienda', function () {
     var $routeParams = null;

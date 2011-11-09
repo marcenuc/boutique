@@ -5,22 +5,6 @@ var Ctrl = {};
 (function () {
   'use strict';
 
-  function dotPad(str, len) {
-    var s = str || '', l = len || 2;
-    return s + new Array(l + 1 - s.length).join('.');
-  }
-
-  //TODO DRY copied in codici.js
-  function padLeft(str, len, padder) {
-    var s = str.toString(), l = len || 2, p = padder || ' ';
-    return new Array(l + 1 - s.length).join(p) + s;
-  }
-  //TODO exported for testing... better options?
-  Ctrl.utils = {
-    dotPad: dotPad,
-    padLeft: padLeft
-  };
-
   Ctrl.Header = function (SessionInfo) {
     this.SessionInfo = SessionInfo;
     this.session = SessionInfo.getResource('/boutique_app/_session');
@@ -437,14 +421,13 @@ var Ctrl = {};
 
     getFiltroSmacAz: function () {
       var toks = ['^',
-        dotPad(this.stagione, CODICI.LEN_STAGIONE),
-        dotPad(this.modello, CODICI.LEN_MODELLO),
-        dotPad(this.articolo, CODICI.LEN_ARTICOLO),
-        dotPad(this.colore, CODICI.LEN_COLORE),
+        CODICI.dotPad(this.stagione, CODICI.LEN_STAGIONE),
+        CODICI.dotPad(this.modello, CODICI.LEN_MODELLO),
+        CODICI.dotPad(this.articolo, CODICI.LEN_ARTICOLO),
+        CODICI.dotPad(this.colore, CODICI.LEN_COLORE),
         this.aziendeSelezionate.length ? '(?:' + this.aziendeSelezionate.join('|') + ')' : '\\d{6}',
         '$'];
-      this.query = toks.join('');
-      return new RegExp(this.query);
+      return new RegExp(toks.join(''));
     },
 
     getFiltroTaglia: function () {
@@ -625,7 +608,7 @@ var Ctrl = {};
     },
 
     getFiltro: function (val, len) {
-      return new RegExp('^' + dotPad(val, len) + '$');
+      return new RegExp('^' + CODICI.dotPad(val, len) + '$');
     },
 
     findRows: function () {

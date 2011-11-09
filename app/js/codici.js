@@ -105,6 +105,12 @@ var CODICI;
     return typeof code === 'string' && code.length <= len && (/^\d+$/).test(code);
   };
 
+  function dotPad(str, len) {
+    var s = str || '', l = len || 2;
+    return s + new Array(l + 1 - s.length).join('.');
+  }
+  codici.dotPad = dotPad;
+
   function padZero(code, len) {
     if (codici.isCode(code, len)) {
       return new Array(len + 1 - code.length).join('0') + code;

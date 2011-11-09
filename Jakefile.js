@@ -493,6 +493,23 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
     });
   });
 
+  desc('Produce una stampa delle etichette dalle giacenze filtrando con una query');
+  // FIXME includere query sulle taglie.
+  task('stampaEtichetteFromQueryGiacenze', function (stagione, modello, articolo, colore, aziende, comparatorName, layout, formato) {
+    requirejs(['lib/etichette'], function (etichette) {
+      var db = newBoutiqueDbConnection();
+      etichette.stampaFromQueryGiacenze(db, stagione, modello, articolo, colore, aziende, comparatorName, layout, formato, function (err, warns, stampa) {
+        if (err) {
+          return fail(util.inspect(err));
+        }
+        if (warns && warns.length) {
+          console.warn(warns.join('\n'));
+        }
+        process.stdout.write(stampa);
+      });
+    });
+  });
+
   namespace('deps', function () {
     var hashFileName = 'dependencies.sha1sum',
       fs = require('fs'),

@@ -11,6 +11,20 @@ requirejs.config({
 requirejs(['app/js/codici'], function (codici) {
   'use strict';
 
+  describe('dotPad', function () {
+    it('should pad with dots strings shorter than the given length', function () {
+      var u = codici.dotPad;
+      expect(u(null, 5)).toBe('.....');
+      expect(u('', 5)).toBe('.....');
+      expect(u('1', 5)).toBe('1....');
+      expect(u('..1', 5)).toBe('..1..');
+    });
+
+    it('should left untouched strings longer than pad length', function () {
+      expect(codici.dotPad('..1', 2)).toBe('..1');
+    });
+  });
+
   describe('setProperty', function () {
     it('should set new property', function () {
       var a = {};
