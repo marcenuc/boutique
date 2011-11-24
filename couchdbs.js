@@ -1,18 +1,39 @@
 //TODO eliminare `emit` e fare minify delle view.
 /*global define: false, emit: false*/
 
-define(['fs', 'uglify-js', 'app/js/validate_doc_update', 'lib/servers'], function (fs, uglifyJs, validate, servers) {
+define(['fs', 'uglify-js', 'lib/servers', 'views', 'app/js/validate_doc_update'], function (fs, uglifyJs, servers, views, validate_doc_update) {
   'use strict';
-  var minify = function (src) {
-      var pro = uglifyJs.uglify;
-      return pro.gen_code(pro.ast_squeeze(pro.ast_mangle(uglifyJs.parser.parse(src))));
-    },
-    anonymizeFunction = function (src) {
-      return src.replace(/^function \w+\(/, 'function(');
-    },
-    validate_doc_update = anonymizeFunction(minify(validate.toString())),
-    codici = minify(fs.readFileSync('app/js/codici.js', 'utf8')),
-    couchdbs = {};
+  function minify(src) {
+    var pro = uglifyJs.uglify;
+    return pro.gen_code(pro.ast_squeeze(pro.ast_mangle(uglifyJs.parser.parse(src))));
+  }
+  function minifyFunction(src) {
+    // UglifyJS requires functions to have a name: we remove it after minification.
+    return minify(src).replace(/^function \w+\(/, 'function(');
+  }
+  function minifyFile(fileName) {
+    return minify(fs.readFileSync(fileName, 'utf8'));
+  }
+
+  var couchdbs = {},
+    parsedViews = { lib: { codici: minifyFile('app/js/codici.js') } };
+
+  Object.keys(views).forEach(function (viewName) {
+    if (viewName[0] !== '_') {
+      var src = views[viewName], obj = {};
+      if (typeof src === 'function') {
+        obj.map = minifyFunction(src.toString());
+      } else if (Object.prototype.toString.apply(src) === '[object Object]'
+              && typeof src.map === 'function'
+              && typeof src.reduce === 'function') {
+        obj.map = minifyFunction(src.map.toString());
+        obj.reduce = minifyFunction(src.reduce.toString());
+      } else {
+        throw new Error('Invalid views');
+      }
+      parsedViews[viewName] = obj;
+    }
+  });
 
   couchdbs[servers.couchdb.db] = {
     _security: {
@@ -21,38 +42,8 @@ define(['fs', 'uglify-js', 'app/js/validate_doc_update', 'lib/servers'], functio
       readers: { names: [], roles: ['azienda', 'boutique'] }
     },
     '_design/boutique_db': {
-      codici: codici,
-      validate_doc_update: validate_doc_update,
-      // TODO DRY in tutte le view potrei usare CODICI
-      views: {
-        movimentiMagazzinoAccodati: {
-          map: function (doc) {
-            var ids = doc._id.split('_');
-            if (ids[0] === 'MovimentoMagazzino' && doc.accodato) {
-              emit([ids[1], parseInt(ids[2], 10), parseInt(ids[3], 10)], 1);
-              if (doc.causale && doc.causale[2]) {
-                emit([doc.destinazione, ids[1], parseInt(ids[2], 10), parseInt(ids[3], 10)], 1);
-              }
-            }
-          }
-        },
-        riferimentiMovimentiMagazzino: {
-          map: function (doc) {
-            var ids = doc._id.split('_');
-            if (ids[0] === 'MovimentoMagazzino' && doc.riferimento) {
-              emit(doc.riferimento, 1);
-            }
-          }
-        },
-        serialiMovimentiMagazzino: {
-          map: function (doc) {
-            var ids = doc._id.split('_');
-            if (ids[0] === 'MovimentoMagazzino') {
-              emit([ids[1], parseInt(ids[2], 10), parseInt(ids[3], 10)], 1);
-            }
-          }
-        }
-      }
+      validate_doc_update: minifyFunction(validate_doc_update.toString()),
+      views: parsedViews
     }
   };
 
