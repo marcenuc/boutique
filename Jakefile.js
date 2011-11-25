@@ -73,7 +73,13 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
 
     desc('Run server side tests');
     task('srv', function () {
-      console_exec('./node_modules/.bin/jasmine-node', ['test-srv']);
+      var specs = require('findit').find('test-srv');
+      specs.on('file', function (fileName) {
+        if (/\.spec\.js$/.test(fileName)) {
+          console.log(fileName);
+          console_exec('./node_modules/.bin/jasmine-node', [fileName]);
+        }
+      });
     });
   });
 
@@ -258,8 +264,8 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
         if (err) {
           return fail(util.inspect(err));
         }
-        var rows = giacenze.rows, i = 0, n = rows.length;
-        for (; i < n; i += 1) {
+        var rows = giacenze.rows, i, ii;
+        for (i = 0, ii = rows.length; i < ii; i += 1) {
           console.log(rows[i][0]);
         }
       });
@@ -269,13 +275,14 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
     task('stampaGiacenze', function () {
       var codici = requirejs('app/js/codici'),
         db = newBoutiqueDbConnection();
+      //FIXME use new Listino.
       db.get(['Giacenze', 'Listino_1_20111017'], function (err, docs) {
         if (err) {
           return fail(util.inspect(err));
         }
         var giacenze = docs.rows[0].doc, docListino = docs.rows[1].doc, listino = docListino.prezzi, prezzi,
           colGiacenze = codici.colNamesToColIndexes(giacenze.columnNames), stagione, modello, articolo,
-          rows = giacenze.rows, i = 0, n = rows.length, row, taglia, qtas, qta;
+          rows = giacenze.rows, row, i, ii, taglia, qtas, qta;
         giacenze.columnNames.pop();
         console.log(giacenze.columnNames.concat('codiceTaglia', 'qta', docListino.columnNames).join('\t'));
 
@@ -283,7 +290,7 @@ requirejs(['require', 'lib/taskutil', 'util', 'path', 'cradle', 'lib/servers'], 
           return typeof p === 'number' ? String(p / 100).replace('.', ',') : p;
         }
 
-        for (; i < n; i += 1) {
+        for (i = 0, ii = rows.length; i < ii; i += 1) {
           row = rows[i];
           qtas = row.pop();
           stagione = row[colGiacenze.stagione];
