@@ -131,7 +131,7 @@
   }, { $inject: ['$xhr'] });
 
 
-  angular.service('SessionInfo', function ($resource, Document, xhrError) {
+  angular.service('SessionInfo', function ($resource, Document, xhrError, $location) {
     var info = { loading: 0, flash: {} };
 
     function loaded() {
@@ -199,7 +199,11 @@
     };
 
     info.resetFlash = function () {
-      info.flash = {};
+      if (info.keepFlash) {
+        delete info.keepFlash;
+      } else {
+        info.flash = {};
+      }
     };
     info.setFlash = function (flash) {
       info.flash = flash;
@@ -223,8 +227,13 @@
       }
       info.flash.notices.push({ message: msg });
     };
+
+    info.goTo = function (path) {
+      info.keepFlash = true;
+      $location.path(path).replace();
+    };
     return info;
-  }, { $inject: ['$resource', 'Document', '$xhr.error'] });
+  }, { $inject: ['$resource', 'Document', '$xhr.error', '$location'] });
 
   // TODO
   angular.service('userCtx', function () {

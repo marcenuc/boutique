@@ -3,7 +3,7 @@
 <legend>Azienda</legend>
 <div>
   <label>Codice: <input type=codiceAzienda ng:model="azienda._id" size=6 maxlength=6 required></label>
-  <label>Tipo: <select ng:model="azienda.tipo"><option>MAGAZZINO<option>NEGOZIO</select></label>
+  <label>Tipo: <select ng:model="azienda.tipo" ng:options="tipo for tipo in tipiAzienda" required><option></select></label>
   <label><input type=checkbox ng:model="azienda.inattivo">&nbsp;Inattivo</label><br>
   <label>Nome: <input ng:model="azienda.nome" required></label><br>
   <label>Indirizzo: <input ng:model="azienda.indirizzo" size=30></label><br>
@@ -14,7 +14,7 @@
   <label>Codice magazzino: <input ng:model="azienda.codiceMagazzino" size=1 maxlength=1></label><br>
   <label>Note: <input ng:model="azienda.note" size=40></label><br><br>
   <label>Contatti:</label>
-  [&nbsp;<a href="" ng:click="azienda.contatti.$add()">aggiungi</a>&nbsp;]
+  [&nbsp;<a href="" ng:click="azienda.contatti.push({})">aggiungi</a>&nbsp;]
     <ul><li ng:repeat="contatto in azienda.contatti"><select ng:model="contatto.tipo"><option>Telefono<option>Fax<option>Mail</select><input ng:model="contatto.valore" required size=30> [&nbsp;<a href="" ng:click="azienda.contatti.$remove(contatto)">X</a>&nbsp;]</li></ul>
 </div>
 <hr>
@@ -22,7 +22,7 @@
 </fieldset>
 </form>
 
-<table>
+<table summary="Lista aziende">
 <caption>Aziende</caption>
 <thead><tr><th>Codice<th>Nome<th>Tipo<th>Codice magazzino<th>Comune<th>Provincia<th>Nazione<th>Inattivo<th>Note<th>ALTRO
 <tbody><tr ng:repeat="row in aziende.rows"><td>{{row.id | linkById}}<td>{{row.doc.nome}}<td>{{row.doc.tipo}}<td>{{row.doc.codiceMagazzino}}<td>{{row.doc.comune}}<td>{{row.doc.provincia}}<td>{{row.doc.nazione}}<td>{{row.doc.inattivo && 'X'}}<td>{{row.doc.note}}<td>{{row.id | linkListino}}

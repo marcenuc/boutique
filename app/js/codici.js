@@ -27,6 +27,7 @@ var CODICI;
   codici.TIPO_MAGAZZINO_CLIENTI = 1;
   codici.TIPO_MAGAZZINO_DISPONIBILE = 2;
   codici.TIPO_MAGAZZINO_NEGOZIO = 3;
+  codici.TIPI_AZIENDA = ['MAGAZZINO', 'NEGOZIO'];
   // TODO Questo dovrebbe essere un documento in CouchDB
   codici.CAUSALI_MOVIMENTO_MAGAZZINO = [
     ['VENDITA', -1, 0],
@@ -40,27 +41,27 @@ var CODICI;
   ];
 
   codici.setProperty = function (obj) {
-    var arg, o = obj, i = 1, n = arguments.length - 2;
-    for (; i < n; i += 1) {
+    var arg, i, ii, o = obj;
+    for (i = 1, ii = arguments.length - 2; i < ii; i += 1) {
       arg = arguments[i];
       if (!o.hasOwnProperty(arg)) {
         o[arg] = {};
       }
       o = o[arg];
     }
-    o[arguments[n]] = arguments[n + 1];
+    o[arguments[ii]] = arguments[ii + 1];
   };
 
   codici.getProperty = function (obj) {
-    var arg, o = obj, i = 1, n = arguments.length - 1;
-    for (; i < n; i += 1) {
+    var arg, i, ii, o = obj;
+    for (i = 1, ii = arguments.length - 1; i < ii; i += 1) {
       arg = arguments[i];
       if (!o.hasOwnProperty(arg)) {
         return;
       }
       o = o[arg];
     }
-    return o[arguments[n]];
+    return o[arguments[ii]];
   };
 
   function doFindProperties(parents, props, obj, filters) {
@@ -350,8 +351,8 @@ var CODICI;
   };
 
   codici.colNamesToColIndexes = function (columnNames) {
-    var col = {}, i = 0, n = columnNames.length;
-    for (; i < n; i += 1) {
+    var col = {}, i, ii;
+    for (i = 0, ii = columnNames.length; i < ii; i += 1) {
       col[columnNames[i]] = i;
     }
     return col;

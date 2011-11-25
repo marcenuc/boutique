@@ -28,10 +28,10 @@ var Ctrl = {};
   }
 
   function SetListini(callback, xhrResp) {
-    var rows = xhrResp.rows, i = 0, n = rows.length, r, codes;
+    var rows = xhrResp.rows, r, i, ii, codes;
     this.listini = {};
     // TODO DRY copiato in listino.js
-    for (; i < n; i += 1) {
+    for (i = 0, ii = rows.length; i < ii; i += 1) {
       r = rows[i];
       codes = CODICI.parseIdListino(r.id);
       if (codes) {
@@ -110,8 +110,8 @@ var Ctrl = {};
     },
 
     findCausale: function (causale) {
-      var i = 0, n = this.causali.length, c;
-      for (; i < n; i += 1) {
+      var c, i, ii;
+      for (i = 0, ii = this.causali.length; i < ii; i += 1) {
         c = this.causali[i];
         if (angular.equals(causale, c)) {
           return c;
@@ -183,8 +183,8 @@ var Ctrl = {};
     },
 
     save: function () {
-      var self, r, codes, descs, i = 0, rows = this.rows, n = rows.length, newRows = [], qta, qtaTotale = 0;
-      for (; i < n; i += 1) {
+      var self, codes, descs, rows = this.rows, r, i, ii, newRows = [], qta, qtaTotale = 0;
+      for (i = 0, ii = rows.length; i < ii; i += 1) {
         r = rows[i];
         if (r.barcode) {
           qta = CODICI.parseQta(r.qta);
@@ -285,8 +285,8 @@ var Ctrl = {};
     },
 
     findCausale: function (causaleAs400) {
-      var i = 0, n = this.causali.length, c;
-      for (; i < n; i += 1) {
+      var c, i, ii;
+      for (i = 0, ii = this.causali.length; i < ii; i += 1) {
         c = this.causali[i];
         if (c[0] === causaleAs400) {
           return c;
@@ -435,9 +435,9 @@ var Ctrl = {};
     },
 
     filtraGiacenza: function () {
-      var giacenze, taglia, qta, r, riga, versioneListino, prezzi, colPrezzi,
+      var giacenze, taglia, qta, riga, versioneListino, prezzi, colPrezzi,
         scalarino, taglie = [], nn = '--', TAGLIE_PER_SCALARINO = 12,
-        rows = this.giacenze.rows, i = 0, n = rows.length,
+        rows = this.giacenze.rows, r, i, ii,
         count = 0, filtrate = [], maxCount = this.limiteRisultati,
         desscal, ms = this.modelliEScalarini.lista,
         nodesscal = ['-- senza descrizione --', 0],
@@ -446,7 +446,7 @@ var Ctrl = {};
         accoda, filtroSmacAz = this.getFiltroSmacAz(), filtroTaglia = this.getFiltroTaglia(),
         totaleRiga, totaleRighe = 0, totaliColonna = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-      for (; i < n && count < maxCount; i += 1) {
+      for (i = 0, ii = rows.length; i < ii && count < maxCount; i += 1) {
         r = rows[i];
         if (filtroSmacAz.test(r.slice(0, 5).join(''))) {
           accoda = false;
@@ -507,12 +507,12 @@ var Ctrl = {};
     }
   };
 
-  Ctrl.Azienda = function ($routeParams, SessionInfo, Validator, $location) {
+  Ctrl.Azienda = function ($routeParams, SessionInfo, Validator) {
     SessionInfo.resetFlash();
     this.$routeParams = $routeParams;
     this.SessionInfo = SessionInfo;
     this.Validator = Validator;
-    this.$location = $location;
+    this.tipiAzienda = CODICI.TIPI_AZIENDA;
 
     if ($routeParams.codice) {
       this.id = CODICI.idAzienda($routeParams.codice);
@@ -520,12 +520,12 @@ var Ctrl = {};
     }
     this.aziende = SessionInfo.aziende();
   };
-  Ctrl.Azienda.$inject = ['$routeParams', 'SessionInfo', 'Validator', '$location'];
+  Ctrl.Azienda.$inject = ['$routeParams', 'SessionInfo', 'Validator'];
 
   Ctrl.Azienda.prototype = {
     getOldAziendaDocument: function () {
-      var rows = this.aziende.rows, i = 0, n = rows.length, r;
-      for (; i < n; i += 1) {
+      var rows = this.aziende.rows, r, i, ii;
+      for (i = 0, ii = rows.length; i < ii; i += 1) {
         r = rows[i];
         if (r.id === this.azienda._id) {
           return r.doc;
@@ -534,8 +534,8 @@ var Ctrl = {};
     },
 
     aggiornaAzienda: function () {
-      var rows = this.aziende.rows, i = 0, n = rows.length, r;
-      for (; i < n; i += 1) {
+      var rows = this.aziende.rows, r, i, ii;
+      for (i = 0, ii = rows.length; i < ii; i += 1) {
         r = rows[i];
         if (r.id === this.azienda._id) {
           r.value.rev = this.azienda._rev;
@@ -563,10 +563,10 @@ var Ctrl = {};
       if (this.validate()) {
         this.SessionInfo.save(this.azienda, function (res) {
           var isNew = !self.azienda._rev;
-          self.SessionInfo.notice('Salvato');
           self.azienda._rev = res.rev;
+          self.SessionInfo.notice('Salvato');
           if (isNew) {
-            self.$location.path('/' + self.azienda._id).replace();
+            self.SessionInfo.goTo('/' + self.azienda._id);
           } else {
             self.aggiornaAzienda();
           }
