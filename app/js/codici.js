@@ -30,15 +30,41 @@ var CODICI;
   codici.TIPI_AZIENDA = ['MAGAZZINO', 'NEGOZIO'];
   // TODO Questo dovrebbe essere un documento in CouchDB
   codici.CAUSALI_MOVIMENTO_MAGAZZINO = [
-    ['VENDITA', -1, 0],
-    ['C/VENDITA', 1, 0],
-    ['CARICO', 1, 0],
-    ['ACQUISTO', 1, 0],
-    ['RESO SU ACQUISTO', -1, 0],
-    ['TRASFERIMENTO', -1, 1],
-    ['RETTIFICA INVENTARIO +', 1, 0],
-    ['RETTIFICA INVENTARIO -', -1, 0]
+    { descrizione: 'VENDITA', segno: -1, gruppo: 'A', causaleA: 1},
+    { descrizione: 'ACQUISTO', segno: 1, gruppo: 'B', causaleA: 0},
+    { descrizione: 'RESO SU VENDITA', segno: 1, gruppo: 'A', causaleA: 3},
+    { descrizione: 'RESO SU ACQUISTO', segno: -1, gruppo: 'B', causaleA: 2},
+    { descrizione: 'C/VENDITA', segno: -1, gruppo: 'A', causaleA: 5},
+    { descrizione: 'C/ACQUISTO', segno: 1, gruppo: 'B', causaleA: 4},
+    { descrizione: 'RESO SU C/VENDITA', segno: 1, gruppo: 'A', causaleA: 7},
+    { descrizione: 'RESO SU C/ACQUISTO', segno: -1, gruppo: 'B', causaleA: 6},
+    { descrizione: 'SCARICO PER CAMBIO MAGAZZINO', segno: -1, gruppo: 'A', causaleA: 9},
+    { descrizione: 'CARICO PER CAMBIO MAGAZZINO', segno: 1, gruppo: 'B', causaleA: 8},
+    { descrizione: 'VENDITA A CLIENTI', segno: -1, gruppo: 'C'},
+    { descrizione: 'RETTIFICA INVENTARIO -', segno: -1, gruppo: 'D'},
+    { descrizione: 'RETTIFICA INVENTARIO +', segno: 1, gruppo: 'D'}
   ];
+  codici.COLUMN_NAMES = {
+    MovimentoMagazzino: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
+    Listino: ['costo', 'prezzo1', 'prezzo2', 'offerta'],
+    Giacenze: ['stagione', 'modello', 'articolo', 'colore', 'codiceAzienda', 'inProduzione', 'tipoMagazzino', 'giacenze'],
+    Inventario: ['modello', 'articolo', 'colore', 'stagione', 'da', 'inProduzione', 'tipoMagazzino',
+                 'scalarino', 'taglia', 'descrizioneTaglia', 'descrizione', 'qta']
+  };
+
+  codici.splitId = function (id) {
+    return id.split('_');
+  };
+
+  codici.findCausaleMovimentoMagazzino = function (descrizione) {
+    var c, i, ii, causali = codici.CAUSALI_MOVIMENTO_MAGAZZINO;
+    for (i = 0, ii = causali.length; i < ii; i += 1) {
+      c = causali[i];
+      if (c.descrizione === descrizione) {
+        return c;
+      }
+    }
+  };
 
   codici.setProperty = function (obj) {
     var arg, i, ii, o = obj;
@@ -100,6 +126,30 @@ var CODICI;
 
   codici.isInt = function (num) {
     return typeof num === 'number' && (/^-?\d+$/).test(num);
+  };
+
+  codici.isQta = function (qta) {
+    return codici.isInt(qta) && qta >= 0;
+  };
+
+  codici.isScalarino = function (scalarino) {
+    return codici.isInt(scalarino) && scalarino > 0 && scalarino < 10;
+  };
+
+  codici.isTrimmedString = function (str, maxLength) {
+    if (typeof str === 'string') {
+      var s = str.trim();
+      return s === str && s.length > 0 && s.length <= maxLength;
+    }
+    return false;
+  };
+
+  codici.isDescrizioneTaglia = function (descrizioneTaglia) {
+    return codici.isTrimmedString(descrizioneTaglia, 3);
+  };
+
+  codici.isDescrizioneArticolo = function (descrizione) {
+    return codici.isTrimmedString(descrizione, 30);
   };
 
   codici.isCode = function (code, len) {
@@ -170,6 +220,10 @@ var CODICI;
     return typeof codice === 'string' && (/^\d{6}$/).test(codice);
   };
 
+  codici.isGruppoNumerazione = function (gruppo) {
+    return typeof gruppo === 'string' && (/^[A-Z]$/).test(gruppo);
+  };
+
   codici.isBarcodeAs400 = function (c) {
     return typeof c === 'string' && codici.rexpBarcodeAs400.test(c);
   };
@@ -184,6 +238,14 @@ var CODICI;
     }
   };
 
+  codici.parseIdAzienda = function (id) {
+    //TODO DRY
+    var m = /^Azienda_(\d{6})$/.exec(id);
+    if (m) {
+      return { codice: m[1] };
+    }
+  };
+
   codici.idListino = function (versione) {
     if (codici.isNumero(versione)) {
       return ['Listino', versione].join('_');
@@ -194,9 +256,7 @@ var CODICI;
     // TODO DRY '\d+' è un numero
     var m = /^Listino_(\d+)$/.exec(id);
     if (m) {
-      return {
-        versione: m[1]
-      };
+      return { versione: m[1] };
     }
   };
 
@@ -217,12 +277,6 @@ var CODICI;
     }
   };
 
-  codici.idInventario = function (codiceAzienda, tipoMagazzino) {
-    if (codici.isCodiceAzienda(codiceAzienda) && codici.isTipoMagazzino(tipoMagazzino)) {
-      return ['Inventario', codiceAzienda, tipoMagazzino].join('_');
-    }
-  };
-
   codici.parseIdInventario = function (id) {
     // TODO DRY '\d{6}' è il codice azienda, '[123]' il tipoMagazzino
     var m = /^Inventario_(\d{6})_([123])$/.exec(id);
@@ -234,22 +288,61 @@ var CODICI;
     }
   };
 
-  codici.idMovimentoMagazzino = function (codiceAzienda, anno, numeroBolla) {
-    if (codici.isCodiceAzienda(codiceAzienda) && codici.isYear(anno) && codici.isNumero(numeroBolla)) {
-      return ['MovimentoMagazzino', codiceAzienda, anno, numeroBolla].join('_');
+  codici.isAzienda = function (ids) {
+    return ids[0] === 'Azienda' && codici.isCodiceAzienda(ids[1]);
+  };
+
+  codici.isMovimentoMagazzino = function (ids) {
+    return ids[0] === 'MovimentoMagazzino' && codici.isCodiceAzienda(ids[1]) && codici.isYear(ids[2]) &&
+      codici.isGruppoNumerazione(ids[3]) && codici.isNumero(ids[4]);
+  };
+
+  codici.idMovimentoMagazzino = function (codiceAzienda, anno, gruppoNumerazione, numero) {
+    var ids = ['MovimentoMagazzino', codiceAzienda, anno, gruppoNumerazione, numero];
+    if (codici.isMovimentoMagazzino(ids)) {
+      return ids.join('_');
     }
   };
 
   codici.parseIdMovimentoMagazzino = function (id) {
-    // TODO DRY '\d{6}' è il codice azienda, '\d{4}' l'anno, '\d+' il numero
-    var m = /^MovimentoMagazzino_(\d{6})_(\d{4})_(\d+)$/.exec(id);
-    if (m) {
+    var ids = codici.splitId(id);
+    if (codici.isMovimentoMagazzino(ids)) {
       return {
-        origine: m[1],
-        anno: m[2],
-        numero: m[3]
+        da: ids[1],
+        anno: ids[2],
+        gruppo: ids[3],
+        numero: parseInt(ids[4], 10)
       };
     }
+  };
+
+  codici.espandiCausale = function (causale) {
+    var c, ret = {
+      gruppo: causale.gruppo,
+      causale: [causale.descrizione, causale.segno]
+    };
+    if (causale.hasOwnProperty('causaleA')) {
+      c = codici.CAUSALI_MOVIMENTO_MAGAZZINO[causale.causaleA];
+      ret.causaleA = [c.descrizione, c.segno];
+    }
+    return ret;
+  };
+
+  codici.newMovimentoMagazzino = function (da, data, numero, causale, a) {
+    var c = codici.espandiCausale(causale),
+      id = codici.idMovimentoMagazzino(da, data.substring(0, 4), c.gruppo, numero),
+      doc = {
+        _id: id,
+        data: data,
+        causale: c.causale,
+        columnNames: codici.COLUMN_NAMES.MovimentoMagazzino,
+        rows: []
+      };
+    if (c.causaleA) {
+      doc.causaleA = c.causaleA;
+      doc.a = a;
+    }
+    return doc;
   };
 
   codici.idBollaAs400 = function (data, numero, enteNumerazione, codiceNumerazione) {
@@ -285,6 +378,13 @@ var CODICI;
     }
   };
 
+  codici.descrizioneModello = function (stagione, modello, listaModelli) {
+    var desscal = listaModelli[stagione + modello];
+    if (desscal) {
+      return desscal[0];
+    }
+  };
+
   codici.descrizioniModello = function (stagione, modello, taglia, descrizioniTaglie, listaModelli) {
     var descrizioniTaglia, descrizioneTaglia,
       desscal = listaModelli[stagione + modello];
@@ -299,11 +399,11 @@ var CODICI;
             descrizioneTaglia: descrizioneTaglia
           }];
         }
-        return ['Codice taglia (' + taglia + ') non valido'];
+        return ['Codice taglia "' + taglia + '" non valido per scalarino ' + desscal[1] + ': "' + [stagione, modello].join('", "') + '"'];
       }
-      return ['Scalarino (' + desscal[1] + ') non trovato'];
+      return ['Scalarino "' + desscal[1] + '" non valido per: "' + [stagione, modello].join('", "') + '"'];
     }
-    return ['Modello (' + stagione + ' ' + modello + ') non in anagrafe'];
+    return ['Modello non in anagrafe: "' + [stagione, modello].join('", "') + '"'];
   };
 
   codici.codiceTaglia = function (stagione, modello, codiciTaglie, listaModelli, descrizioneTaglia) {
@@ -317,11 +417,11 @@ var CODICI;
         if (taglia) {
           return [null, taglia];
         }
-        return ['Descrizione taglia (' + descrizioneTaglia + ') non trovata per scalarino ' + scalarino + ': stagione="' + stagione + '", modello="' + modello + '"'];
+        return ['Descrizione taglia "' + descrizioneTaglia + '" non trovata per scalarino ' + scalarino + ': "' + [stagione, modello].join('", "') + '"'];
       }
-      return ['Descrizioni taglia (' + descrizioneTaglia + ') non trovate per scalarino ' + scalarino + ': stagione="' + stagione + '", modello="' + modello + '"'];
+      return ['Descrizioni taglia non trovate per scalarino ' + scalarino + ': "' + [stagione, modello].join('", "') + '"'];
     }
-    return ['Modello non in anagrafe: stagione="' + stagione + '", modello="' + modello + '"'];
+    return ['Modello non in anagrafe: "' + [stagione, modello].join('", "') + '"'];
   };
 
 

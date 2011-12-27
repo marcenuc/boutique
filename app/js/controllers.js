@@ -1,4 +1,4 @@
-/*global angular: false, CODICI: false */
+/*global angular: false, CODICI: false*/
 
 var Ctrl = {};
 
@@ -7,218 +7,168 @@ var Ctrl = {};
 
   Ctrl.Header = function (SessionInfo) {
     this.SessionInfo = SessionInfo;
-    this.session = SessionInfo.getResource('/boutique_app/_session');
+    this.session = SessionInfo.getResource('../_session');
   };
   Ctrl.Header.$inject = ['SessionInfo'];
 
-  // Capitalized because designed for use with angular.bind().
-  function SetAziende(callback, xhrResp) {
-    // TODO DRY remove data duplication
-    this.aziende = {};
-    this.allAziende = {};
-    xhrResp.rows.forEach(function (r) {
-      var codice = r.id.split('_', 2)[1];
-      this.aziende[codice] = codice + ' ' + r.doc.nome;
-      this.allAziende[codice] = r.doc;
-    }, this);
-    this.codiciAzienda = Object.keys(this.aziende).sort();
-    if (callback) {
-      callback();
-    }
-  }
-
-  function SetListini(callback, xhrResp) {
-    var rows = xhrResp.rows, r, i, ii, codes;
-    this.listini = {};
-    // TODO DRY copiato in listino.js
-    for (i = 0, ii = rows.length; i < ii; i += 1) {
-      r = rows[i];
-      codes = CODICI.parseIdListino(r.id);
-      if (codes) {
-        r.doc.col = CODICI.colNamesToColIndexes(r.doc.columnNames);
-        this.listini[codes.versione] = r.doc;
-      }
-    }
-    if (callback) {
-      callback();
-    }
-  }
-
-  Ctrl.MovimentoMagazzino = function (SessionInfo, $routeParams, $location) {
-    var self = this, codes = ($routeParams.codice || '').split('_'), docCount = 3;
-    SessionInfo.resetFlash();
-    // TODO DRY usare CODICI per estrarre i dati dal codice
-    this.origine = codes[0];
-    this.data = codes[1];
-    this.numero = codes[2];
+  Ctrl.NewMovimentoMagazzino = function (SessionInfo, $location) {
     this.SessionInfo = SessionInfo;
     this.$location = $location;
+    SessionInfo.resetFlash();
 
+    this.aziende = SessionInfo.aziende();
     this.causali = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO;
-
-    // TODO Trovare un modo migliore di chiamare una funzione quando il modello è pronto.
-    function doFind() {
-      docCount -= 1;
-      if (docCount === 0 && $routeParams.codice) {
-        self.find();
-      }
-    }
-
-    SessionInfo.aziende(angular.bind(this, SetAziende, doFind));
-    this.taglieScalarini = SessionInfo.getDocument('TaglieScalarini', doFind);
-    this.modelliEScalarini = SessionInfo.getDocument('ModelliEScalarini', doFind);
-
-    this.causale = this.causali[0];
-    this.rows = [{ qta: 1 }];
   };
-  Ctrl.MovimentoMagazzino.$inject = ['SessionInfo', '$routeParams', '$location'];
+  Ctrl.NewMovimentoMagazzino.$inject = ['SessionInfo', '$location'];
 
-  Ctrl.MovimentoMagazzino.prototype = {
-    submit: function () {
-      this[this.action]();
-    },
-
+  Ctrl.NewMovimentoMagazzino.prototype = {
     getYear: function () {
-      return this.data ? this.data.substring(0, 4) : null;
+      return this.form.data ? this.form.data.substring(0, 4) : null;
     },
 
-    buildBolla: function () {
-      var doc = {
-        _id: CODICI.idMovimentoMagazzino(this.origine, this.getYear(), this.numero),
-        data: this.data,
-        columnNames: ['barcode', 'qta'],
-        causale: this.causale,
-        rows: this.rows.map(function (r) {
-          return [r.barcode, r.qta];
-        })
-      };
-      if (this.accodato) {
-        doc.accodato = this.accodato;
-      }
-      if (this.destinazione) {
-        doc.destinazione = this.destinazione;
-      }
-      if (this.riferimento) {
-        doc.riferimento = this.riferimento;
-      }
-      if (this.id === doc._id && this.rev) {
-        doc._rev = this.rev;
-      } else {
-        delete this.rev;
-      }
-      return doc;
-    },
-
-    findCausale: function (causale) {
-      var c, i, ii;
-      for (i = 0, ii = this.causali.length; i < ii; i += 1) {
-        c = this.causali[i];
-        if (angular.equals(causale, c)) {
-          return c;
-        }
-      }
-    },
-
-    buildModel: function (bolla) {
-      // TODO questo non dovrebbe servire perché i dati nell'id sono quelli della ricerca.
-      // Per ora lo lascio.
-      var parsedId = CODICI.parseIdMovimentoMagazzino(bolla._id),
-        qtaTotale = 0;
-      if (!parsedId) {
-        return this.SessionInfo.error('Id documento non valido');
-      }
-      this.origine = parsedId.origine;
-      this.numero = parsedId.numero;
-      this.data = bolla.data;
-      this.destinazione = bolla.destinazione;
-      this.riferimento = bolla.riferimento;
-      this.causale = this.findCausale(bolla.causale);
-      //TODO DRY questo codice è duplicato in save()
-      this.rows = bolla.rows.map(function (row) {
-        var descs,
-          r = { barcode: row[0] },
-          codes = CODICI.parseBarcodeAs400(r.barcode),
-          msg;
-        if (!codes) {
-          msg = 'Codice non valido: "' + r.barcode + '"';
-          this.SessionInfo.error(msg);
-          return msg;
-        }
-        descs = CODICI.descrizioniModello(codes.stagione, codes.modello, codes.taglia, this.taglieScalarini.descrizioniTaglie, this.modelliEScalarini.lista);
-        if (descs[0]) {
-          msg = descs[0] + ': "' + r.barcode + '"';
-          this.SessionInfo.error(msg);
-          return msg;
-        }
-        r.descrizione = descs[1].descrizione;
-        r.descrizioneTaglia = descs[1].descrizioneTaglia;
-        r.qta = row[1];
-        qtaTotale += r.qta;
-        r.codes = codes;
-        return r;
-      }, this);
-      this.qtaTotale = qtaTotale;
-      this.rows.push({ qta: 1 });
-      this.accodato = bolla.accodato;
-      this.id = bolla._id;
-      this.rev = bolla._rev;
-    },
-
-    find: function () {
-      var self = this;
-      // Avoid unexpected writes on search.
-      delete this.rev;
-      delete this.destinazione;
-      delete this.accodato;
-      this.rows = [{ qta: 1 }];
-      this.SessionInfo.getDocument(CODICI.idMovimentoMagazzino(this.origine, this.getYear(), this.numero), function (bolla) {
-        self.buildModel(bolla);
-        self.$location.path(self.id).replace();
-      }, function (status, resp) {
-        if (status === 404) {
-          return self.SessionInfo.error('Non trovato');
-        }
-        self.SessionInfo.error(status + JSON.stringify(resp));
+    create: function () {
+      var self = this,
+        mm = this.form;
+      this.SessionInfo.prossimoNumero(mm.da, mm.data.substring(0, 4), mm.causale.gruppo, function (numero) {
+        var doc = CODICI.newMovimentoMagazzino(mm.da, mm.data, numero, mm.causale, mm.a);
+        self.SessionInfo.save(doc, function (res) {
+          self.$location.path(res.id);
+        });
       });
+    },
+  };
+
+  Ctrl.EditMovimentoMagazzino = function (SessionInfo, $routeParams, Downloads) {
+    this.SessionInfo = SessionInfo;
+    this.Downloads = Downloads;
+    SessionInfo.resetFlash();
+    // TODO use CODICI
+    this.rexpBarcode = /^\d{3} ?\d{5} ?\d{4} ?\d{4} ?\d{2}$/;
+
+    // TODO put _id in $routeParams.codice
+    var self = this, id = 'MovimentoMagazzino_' + $routeParams.codice;
+
+    this.codes = CODICI.parseIdMovimentoMagazzino(id);
+    if (!this.codes) {
+      return SessionInfo.error('Codice non valido: ' + $routeParams.codice);
+    }
+    this.model = SessionInfo.getDocument(id);
+    this.aziende = SessionInfo.aziende();
+    this.listini = SessionInfo.listini();
+    this.taglieScalarini = SessionInfo.getDocument('TaglieScalarini');
+    this.modelliEScalarini = SessionInfo.getDocument('ModelliEScalarini');
+    this.col = CODICI.colNamesToColIndexes(CODICI.COLUMN_NAMES.MovimentoMagazzino);
+    this.newQta = 1;
+  };
+  Ctrl.EditMovimentoMagazzino.$inject = ['SessionInfo', '$routeParams', 'Downloads'];
+
+  function nomeAzienda(aziende, codiceAzienda) {
+    var azienda = aziende[codiceAzienda];
+    return azienda ? azienda.value : codiceAzienda;
+  }
+
+  //TODO DRY use CODICI.formatMoney()
+  function formatPrezzo(prezzo) {
+    var s = String(prezzo);
+    return prezzo ? s.slice(0, -2) + ',' + s.slice(-2) : '0';
+  }
+
+  Ctrl.EditMovimentoMagazzino.prototype = {
+    toLabels: function () {
+      var prezziArticolo, label, labels = [], colListino, col = this.col,
+        codiceAzienda = CODICI.parseIdMovimentoMagazzino(this.model._id).da,
+        rows = this.model.rows, r, i, ii, j, jj;
+      for (i = 0, ii = rows.length; i < ii; i += 1) {
+        r = rows[i];
+        label = CODICI.parseBarcodeAs400(r[col.barcode]);
+        if (!label) {
+          this.SessionInfo.error('Codice non valido: ' + r[col.barcode]);
+          return [];
+        }
+        prezziArticolo = CODICI.readListino(this.listini, codiceAzienda, label.stagione, label.modello, label.articolo);
+        if (!prezziArticolo) {
+          this.SessionInfo.error('Articolo non a listino: ' + r[col.barcode]);
+          return [];
+        }
+        colListino = prezziArticolo[0];
+
+        label.descrizione = r[col.descrizione].substring(0, 19);
+        label.barcode = r[col.barcode];
+        label.descrizioneTaglia = r[col.descrizioneTaglia];
+        label.prezzo1 = formatPrezzo(prezziArticolo[1][colListino.prezzo1]);
+        label.prezzo2 = formatPrezzo(prezziArticolo[1][colListino.prezzo2]);
+        label.offerta = prezziArticolo[1][colListino.offerta] || '';
+        for (j = 0, jj = r[col.qta]; j < jj; j += 1) {
+          labels.push(label);
+        }
+      }
+      return labels;
+    },
+
+    prepareDownloads: function () {
+      this.Downloads.prepare(this.toLabels(), this.model._id);
     },
 
     save: function () {
-      var self, codes, descs, rows = this.rows, r, i, ii, newRows = [], qta, qtaTotale = 0;
-      for (i = 0, ii = rows.length; i < ii; i += 1) {
-        r = rows[i];
-        if (r.barcode) {
-          qta = CODICI.parseQta(r.qta);
-          if (qta[0]) {
-            return this.SessionInfo.error('Quantità non valida: "' + r.qta + '"');
-          }
-          //TODO DRY questo codice è duplicato in buildModel()
-          codes = CODICI.parseBarcodeAs400(r.barcode);
-          if (!codes) {
-            return this.SessionInfo.error('Codice non valido: "' + r.barcode + '"');
-          }
-          descs = CODICI.descrizioniModello(codes.stagione, codes.modello, codes.taglia, this.taglieScalarini.descrizioniTaglie, this.modelliEScalarini.lista);
-          if (descs[0]) {
-            return this.SessionInfo.error(descs[0] + ': "' + r.barcode + '"');
-          }
-          r.descrizione = descs[1].descrizione;
-          r.descrizioneTaglia = descs[1].descrizioneTaglia;
-          r.qta = qta[1];
-          qtaTotale += r.qta;
-          r.codes = codes;
-          newRows.push(r);
+      var newRow, qta, codes, descs, self = this, col = this.col;
+      if (this.newBarcode) {
+        codes = CODICI.parseBarcodeAs400(this.newBarcode);
+        if (!codes) {
+          return this.SessionInfo.error('Codice non valido: "' + this.newBarcode + '"');
         }
+        descs = CODICI.descrizioniModello(codes.stagione, codes.modello, codes.taglia, this.taglieScalarini.descrizioniTaglie, this.modelliEScalarini.lista);
+        if (descs[0]) {
+          return this.SessionInfo.error(descs[0] + ': "' + this.newBarcode + '"');
+        }
+        newRow = [];
+        newRow[col.barcode] = this.newBarcode;
+        newRow[col.scalarino] = descs[1].scalarino;
+        newRow[col.descrizioneTaglia] = descs[1].descrizioneTaglia;
+        newRow[col.descrizione] = descs[1].descrizione;
+        newRow[col.costo] = 0;
+        newRow[col.qta] = this.newQta;
+        this.model.rows.push(newRow);
+        this.newBarcode = '';
+        this.newQta = 1;
       }
-      this.rows = newRows;
-      this.qtaTotale = qtaTotale;
-      self = this;
-      this.SessionInfo.save(this.buildBolla(), function (res) {
-        if (!self.rev) {
-          self.$location.path(res.id).replace();
-        }
-        self.rev = res.rev;
+      this.SessionInfo.save(this.model, function (res) {
+        self.model._rev = res.rev;
         self.SessionInfo.notice('Salvato ' + res.id);
       });
-      angular.Array.add(this.rows, { qta: 1 });
+    },
+
+    qtaTotale: function () {
+      var colQta = this.col.qta;
+      return this.model.rows.reduce(function (a, b) {
+        return a + b[colQta];
+      }, 0);
+    },
+
+    //TODO DRY copiata in Ctrl.MovimentoMagazzino
+    nomeAzienda: function (codiceAzienda) {
+      return nomeAzienda(this.aziende, codiceAzienda);
+    }
+  };
+
+  Ctrl.MovimentoMagazzino = function (SessionInfo, $location) {
+    this.$location = $location;
+    SessionInfo.resetFlash();
+
+    this.pendenti = SessionInfo.movimentoMagazzinoPendente();
+    this.aziende = SessionInfo.aziende();
+    this.causali = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO;
+  };
+  Ctrl.MovimentoMagazzino.$inject = ['SessionInfo', '$location'];
+
+  Ctrl.MovimentoMagazzino.prototype = {
+    find: function () {
+      var f = this.form;
+      this.$location.path(CODICI.idMovimentoMagazzino(f.da, f.anno, f.causale.gruppo, f.numero));
+    },
+
+    //TODO DRY copiata in Ctrl.EditMovimentoMagazzino
+    nomeAzienda: function (codiceAzienda) {
+      return nomeAzienda(this.aziende, codiceAzienda);
     }
   };
 
@@ -229,21 +179,24 @@ var Ctrl = {};
     this.CdbView = CdbView;
     this.$location = $location;
 
-    SessionInfo.aziende(angular.bind(this, SetAziende, null));
+    this.aziende = SessionInfo.aziende();
     this.taglieScalarini = SessionInfo.getDocument('TaglieScalarini');
+    this.modelliEScalarini = SessionInfo.getDocument('ModelliEScalarini');
     this.causaliAs400 = SessionInfo.getDocument('CausaliAs400');
-    // TODO probabilmente questi non servono perché impliciti per AngularJS
-    this.intestazione = {};
-    this.movimentoMagazzino = {};
-    this.bollaAs400 = null;
     this.causali = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO;
   };
   Ctrl.RicercaBollaAs400.$inject = ['As400', 'SessionInfo', 'CdbView', '$location'];
 
   Ctrl.RicercaBollaAs400.prototype = {
-    // TODO DRY copiata da MovimentoMagazzino
-    getYear: function (data) {
-      return data ? data.substring(0, 4) : null;
+    cercaBollaAs400: function () {
+      var self = this;
+      this.As400.bolla(this.intestazione, function (code, dati) {
+        if (code !== 200) {
+          return self.SessionInfo.error('Errore ' + code);
+        }
+        self.bollaAs400 = dati;
+        self.setMovimentoMagazzino();
+      });
     },
 
     fetch: function () {
@@ -255,27 +208,14 @@ var Ctrl = {};
        */
       this.id = this.buildId();
 
-      function cercaBollaAs400() {
-        self.As400.bolla(self.intestazione, function (code, dati) {
-          if (code === 200) {
-            self.bollaAs400 = dati;
-            self.setMovimentoMagazzino();
-          } else {
-            self.SessionInfo.error('Errore ' + code);
-          }
-        });
-      }
-
       this.CdbView.riferimentoMovimentoMagazzino(this.id, function (resp) {
         var riferimento = resp.rows[0];
         if (!riferimento) {
-          return cercaBollaAs400();
+          return self.cercaBollaAs400();
         }
-        //FIXME questo non viene visualizzato perché cambio pagina...
         self.SessionInfo.notice('Bolla già caricata su Boutique');
-        self.$location.path(riferimento.id).replace();
-      }, function (status, resp) {
-        self.SessionInfo.error('Errore ' + status + ': ' + JSON.stringify(resp));
+        self.SessionInfo.keepFlash = true;
+        self.$location.path(riferimento.id);
       });
     },
 
@@ -288,7 +228,7 @@ var Ctrl = {};
       var c, i, ii;
       for (i = 0, ii = this.causali.length; i < ii; i += 1) {
         c = this.causali[i];
-        if (c[0] === causaleAs400) {
+        if (c.descrizione === causaleAs400) {
           return c;
         }
       }
@@ -303,13 +243,13 @@ var Ctrl = {};
         codiceCausaleAs400 = r0[col.causale];
 
       this.movimentoMagazzino = {
-        origine: codiceCliente,
+        da: codiceCliente,
         causale: this.findCausale(this.causaliAs400[tipoMagazzino][codiceCausaleAs400]),
         data: CODICI.newYyyyMmDdDate()
       };
     },
 
-    buildBolla: function () {
+    buildRows: function () {
       var r0 = this.bollaAs400.rows[0],
         col = CODICI.colNamesToColIndexes(this.bollaAs400.columnNames),
         codiceCliente = r0[col.codiceCliente],
@@ -320,54 +260,58 @@ var Ctrl = {};
         listeDescrizioni = this.taglieScalarini.listeDescrizioni,
         rows = [],
         ok = this.bollaAs400.rows.every(function (row) {
-          var qta, i, barcode,
+          var descrizioneTaglia, stagione, modello, descrizione, qta, i, barcode,
             scalarino = parseInt(row[col.scalarino], 10),
             ld = listeDescrizioni[scalarino],
             ts = taglie[scalarino];
           for (i = 0; i < 12; i += 1) {
             qta = parseInt(row[col['qta' + (i + 1)]], 10);
             if (qta > 0) {
-              barcode = CODICI.codiceAs400(row[col.stagione], row[col.modello], row[col.articolo], row[col.colore], ts[ld[i]]);
-              rows.push([barcode, qta]);
+              descrizioneTaglia = ld[i];
+              stagione = row[col.stagione];
+              modello = row[col.modello];
+              descrizione = CODICI.descrizioneModello(stagione, modello, this.modelliEScalarini.lista);
+              barcode = CODICI.codiceAs400(stagione, modello, row[col.articolo], row[col.colore], ts[descrizioneTaglia]);
+              // FIXME inserire costo.
+              rows.push([barcode, scalarino, descrizioneTaglia, descrizione, 0, qta]);
             }
           }
           return row[col.codiceCliente] === codiceCliente &&
             row[col.tipoMagazzino] === tipoMagazzino &&
             row[col.codiceMagazzino] === codiceMagazzino &&
             row[col.causale] === codiceCausaleAs400;
-        }, this),
-        mm = this.movimentoMagazzino,
-        doc = {
-          _id: CODICI.idMovimentoMagazzino(mm.origine, this.getYear(mm.data), mm.numero),
-          riferimento: this.id,
-          data: mm.data,
-          columnNames: ['barcode', 'qta'],
-          causale: mm.causale,
-          rows: rows
-        };
-      if (mm.destinazione) {
-        doc.destinazione = mm.destinazione;
-      }
+        }, this);
 
-      return (ok && doc._id && doc.riferimento) ? doc : null;
+      if (ok) {
+        return rows;
+      }
     },
 
     save: function () {
-      var self = this;
-      this.SessionInfo.save(this.buildBolla(), function (res) {
-        self.SessionInfo.notice('Salvato ' + res.id);
-        self.$location.path(res.id).replace();
+      var self = this, mm = this.movimentoMagazzino,
+        rows = self.buildRows();
+      if (!rows) {
+        return self.SessionInfo.error('Righe non valide');
+      }
+      this.SessionInfo.prossimoNumero(mm.da, mm.data.substring(0, 4), mm.causale.gruppo, function (numero) {
+        var doc = CODICI.newMovimentoMagazzino(mm.da, mm.data, numero, mm.causale, mm.a);
+        doc.riferimento = self.id;
+        doc.rows = rows;
+        self.SessionInfo.save(doc, function (res) {
+          self.$location.path(res.id);
+        });
       });
     }
   };
 
-  Ctrl.RicercaArticoli = function (SessionInfo) {
+  Ctrl.RicercaArticoli = function (SessionInfo, Downloads) {
+    this.SessionInfo = SessionInfo;
+    this.Downloads = Downloads;
     SessionInfo.resetFlash();
-    // TODO assicurarsi che questi siano caricati prima di attivare l'interfaccia
-    SessionInfo.listini(angular.bind(this, SetListini, null));
-    SessionInfo.aziende(angular.bind(this, SetAziende, null));
     this.aziendeSelezionate = [];
 
+    this.aziende = SessionInfo.aziende();
+    this.listini = SessionInfo.listini();
     this.taglieScalarini = SessionInfo.getDocument('TaglieScalarini');
     this.modelliEScalarini = SessionInfo.getDocument('ModelliEScalarini');
     this.giacenze = SessionInfo.getDocument('Giacenze');
@@ -375,7 +319,7 @@ var Ctrl = {};
     this.filtrate = [];
     this.limiteRisultati = 50;
   };
-  Ctrl.RicercaArticoli.$inject = ['SessionInfo'];
+  Ctrl.RicercaArticoli.$inject = ['SessionInfo', 'Downloads'];
 
   Ctrl.RicercaArticoli.prototype = {
     showPhoto: function (index) {
@@ -387,7 +331,7 @@ var Ctrl = {};
           articolo: row[4],
           colore: row[5]
         },
-        img = ['/boutique_app/img/', photo.stagione, photo.modello, photo.articolo, photo.colore, '.jpg'].join('');
+        img = ['../img/', photo.stagione, photo.modello, photo.articolo, photo.colore, '.jpg'].join('');
 
       if (this.photo && this.photo.show[0]) {
         photo.img = ['spinner.gif', img];
@@ -455,7 +399,7 @@ var Ctrl = {};
           scalarino = desscal[1];
           descrizioniTaglia = descrizioniTaglie[scalarino];
           giacenze = r[7];
-          riga = [this.aziende[r[4]], desscal[0], r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PRODUZIONE' : 'PRONTO'), scalarino, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+          riga = [nomeAzienda(this.aziende, r[4]), desscal[0], r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PRODUZIONE' : 'PRONTO'), scalarino, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
           for (taglia in giacenze) {
             if (giacenze.hasOwnProperty(taglia)) {
               if (filtroTaglia.test(descrizioniTaglia[taglia])) {
@@ -503,7 +447,70 @@ var Ctrl = {};
       this.scalarino = scalarino;
       this.taglie = taglie;
       this.totaliColonna = totaliColonna;
+    },
 
+    toLabels: function () {
+      var giacenze, taglia, prezziArticolo, label, colListino,
+        col = CODICI.colNamesToColIndexes(this.giacenze.columnNames),
+        count = 0, labels = [], maxCount = this.limiteRisultati,
+        desscal, ms = this.modelliEScalarini.lista,
+        descrizioniTaglia, descrizioniTaglie = this.taglieScalarini.descrizioniTaglie,
+        accoda, filtroSmacAz = this.getFiltroSmacAz(), filtroTaglia = this.getFiltroTaglia(),
+        rows = this.giacenze.rows, r, i, ii, j, jj;
+      for (i = 0, ii = rows.length; i < ii && count < maxCount; i += 1) {
+        r = rows[i];
+        if (filtroSmacAz.test(r.slice(0, 5).join(''))) {
+          accoda = false;
+          label = {
+            stagione: r[col.stagione],
+            modello: r[col.modello],
+            articolo: r[col.articolo],
+            colore: r[col.colore]
+          };
+          desscal = ms[label.stagione + label.modello];
+          if (!desscal) {
+            this.SessionInfo.error('Modello non in anagrafe: ' + [label.stagione, label.modello].join(' '));
+            return [];
+          }
+          descrizioniTaglia = descrizioniTaglie[desscal[1]];
+          giacenze = r[col.giacenze];
+
+          for (taglia in giacenze) {
+            if (giacenze.hasOwnProperty(taglia)) {
+              if (filtroTaglia.test(descrizioniTaglia[taglia])) {
+                if (!accoda) {
+                  accoda = true;
+                  count += 1;
+                  prezziArticolo = CODICI.readListino(this.listini, r[col.codiceAzienda], label.stagione, label.modello, label.articolo);
+                  if (!prezziArticolo) {
+                    this.SessionInfo.error('Articolo non a listino: ' + [label.stagione, label.modello, label.articolo].join(' '));
+                    return [];
+                  }
+                  colListino = prezziArticolo[0];
+                  label.prezzo1 = formatPrezzo(prezziArticolo[1][colListino.prezzo1]);
+                  label.prezzo2 = formatPrezzo(prezziArticolo[1][colListino.prezzo2]);
+                  label.offerta = prezziArticolo[1][colListino.offerta] || '';
+                  label.descrizione = desscal[0].substring(0, 19);
+                }
+                label.barcode = CODICI.codiceAs400(label.stagione, label.modello, label.articolo, label.colore, taglia);
+                label.descrizioneTaglia = descrizioniTaglia[taglia];
+                if (giacenze[taglia] <= 0) {
+                  this.SessionInfo.notice('Giacenza negativa o nulla per: ' + [label.stagione, label.modello, label.articolo, label.colore, taglia].join(' '));
+                } else {
+                  for (j = 0, jj = giacenze[taglia]; j < jj; j += 1) {
+                    labels.push(label);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      return labels;
+    },
+
+    prepareDownloads: function () {
+      this.Downloads.prepare(this.toLabels(), 'etichette');
     }
   };
 
@@ -518,32 +525,23 @@ var Ctrl = {};
       this.id = CODICI.idAzienda($routeParams.codice);
       this.azienda = SessionInfo.getDocument(this.id);
     }
-    this.aziende = SessionInfo.aziende();
+    this.aziende = SessionInfo.aziende({ include_docs: 'true' });
   };
   Ctrl.Azienda.$inject = ['$routeParams', 'SessionInfo', 'Validator'];
 
   Ctrl.Azienda.prototype = {
     getOldAziendaDocument: function () {
-      var rows = this.aziende.rows, r, i, ii;
-      for (i = 0, ii = rows.length; i < ii; i += 1) {
-        r = rows[i];
-        if (r.id === this.azienda._id) {
-          return r.doc;
+      var codes = CODICI.parseIdAzienda(this.azienda._id), azienda;
+      if (codes) {
+        azienda = this.aziende[codes.codice];
+        if (azienda) {
+          return azienda.doc;
         }
       }
     },
 
     aggiornaAzienda: function () {
-      var rows = this.aziende.rows, r, i, ii;
-      for (i = 0, ii = rows.length; i < ii; i += 1) {
-        r = rows[i];
-        if (r.id === this.azienda._id) {
-          r.value.rev = this.azienda._rev;
-          r.doc = angular.copy(this.azienda);
-          return true;
-        }
-      }
-      return false;
+      angular.copy(this.azienda, this.getOldAziendaDocument());
     },
 
     isIdChanged: function () {
@@ -560,6 +558,7 @@ var Ctrl = {};
       if (this.isIdChanged()) {
         delete this.azienda._rev;
       }
+      // TODO use $validate event
       if (this.validate()) {
         this.SessionInfo.save(this.azienda, function (res) {
           var isNew = !self.azienda._rev;

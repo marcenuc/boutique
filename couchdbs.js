@@ -1,7 +1,6 @@
-//TODO eliminare `emit` e fare minify delle view.
-/*global define: false, emit: false*/
+/*global define: false*/
 
-define(['fs', 'uglify-js', 'lib/servers', 'views', 'app/js/validate_doc_update'], function (fs, uglifyJs, servers, views, validate_doc_update) {
+define(['fs', 'uglify-js', 'views', 'app/js/validate_doc_update', 'dbconfig'], function (fs, uglifyJs, views, validate_doc_update, dbconfig) {
   'use strict';
   function minify(src) {
     var pro = uglifyJs.uglify;
@@ -23,11 +22,11 @@ define(['fs', 'uglify-js', 'lib/servers', 'views', 'app/js/validate_doc_update']
       var src = views[viewName], obj = {};
       if (typeof src === 'function') {
         obj.map = minifyFunction(src.toString());
-      } else if (Object.prototype.toString.apply(src) === '[object Object]'
-              && typeof src.map === 'function'
-              && typeof src.reduce === 'function') {
+      } else if (Object.prototype.toString.apply(src) === '[object Object]' &&
+                 typeof src.map === 'function' &&
+                 (typeof src.reduce === 'function' || typeof src.reduce === 'string')) {
         obj.map = minifyFunction(src.map.toString());
-        obj.reduce = minifyFunction(src.reduce.toString());
+        obj.reduce = typeof src.reduce === 'string' ? src.reduce : minifyFunction(src.reduce.toString());
       } else {
         throw new Error('Invalid views');
       }
@@ -35,17 +34,16 @@ define(['fs', 'uglify-js', 'lib/servers', 'views', 'app/js/validate_doc_update']
     }
   });
 
-  couchdbs[servers.couchdb.db] = {
+  couchdbs[dbconfig.db] = {
     _security: {
       // TODO DRY 'boutique' and 'azienda' are repeated in validate_doc_update.js
       admins: { names: ['boutique'], roles: [] },
       readers: { names: [], roles: ['azienda', 'boutique'] }
-    },
-    '_design/boutique_db': {
-      validate_doc_update: minifyFunction(validate_doc_update.toString()),
-      views: parsedViews
     }
   };
-
+  couchdbs[dbconfig.db]['_design/' + dbconfig.designDoc] = {
+    validate_doc_update: minifyFunction(validate_doc_update.toString()),
+    views: parsedViews
+  };
   return couchdbs;
 });

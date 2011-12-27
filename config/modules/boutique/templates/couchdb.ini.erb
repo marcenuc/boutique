@@ -1,0 +1,21 @@
+[couchdb]
+delayed_commits = false
+database_dir = <%= couchdb_lib_folder %>
+view_index_dir = <%= couchdb_lib_folder %>
+
+[log]
+file = <%= couchdb_log %>
+
+[httpd]
+port = <%= couchdb_port %>
+bind_address = 0.0.0.0
+WWW-Authenticate = Basic realm="<%= auth_realm %>"
+
+[couch_httpd_auth]
+secret = <%= couchdb_secret %>
+
+[httpd_global_handlers]
+<%= proxyed_path %> = {couch_httpd_proxy, handle_proxy_req, <<"http://localhost:<%= proxyed_port %>">>}
+
+[admins]
+<%= admin_user %> = <%= admin_password %>

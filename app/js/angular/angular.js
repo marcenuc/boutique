@@ -3160,12 +3160,13 @@ ResourceFactory.prototype = {
 
     forEach(actions, function(action, name){
       var isPostOrPut = action.method == 'POST' || action.method == 'PUT';
-      Resource[name] = function(a1, a2, a3, a4) {
+      Resource[name] = function(a1, a2, a3, a4, mangler) {
         var params = {};
         var data;
         var success = noop;
         var error = null;
         switch(arguments.length) {
+        case 5:
         case 4:
           error = a4;
           success = a3;
@@ -3195,7 +3196,7 @@ ResourceFactory.prototype = {
           break;
         case 0: break;
         default:
-          throw "Expected between 0-4 arguments [params, data, success, error], got " +
+          throw "Expected between 0-5 arguments [params, data, success, error, mangler], got " +
             arguments.length + " arguments.";
         }
 
@@ -3205,6 +3206,7 @@ ResourceFactory.prototype = {
           route.url(extend({}, extractParams(data), action.params || {}, params)),
           data,
           function(status, response) {
+            if (isFunction(mangler)) response = mangler(response);
             if (response) {
               if (action.isArray) {
                 value.length = 0;

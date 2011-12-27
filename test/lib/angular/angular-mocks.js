@@ -403,7 +403,7 @@ function MockLogFactory() {
     log: function(){ $log.log.logs.push(arguments); },
     warn: function(){ $log.warn.logs.push(arguments); },
     info: function(){ $log.info.logs.push(arguments); },
-    error: function(){ $log.error.logs.push(arguments); }
+    error: function(){ throw new Error(arguments[0]); }
   };
 
   $log.log.logs = [];

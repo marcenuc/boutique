@@ -1,0 +1,4 @@
+Vagrant::Config.run do |config|
+  config.vm.box = "testCouch"
+  config.vm.provision :puppet, :options => ["--modulepath", "/vagrant/modules"]
+end

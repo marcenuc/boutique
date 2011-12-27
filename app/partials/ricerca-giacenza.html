@@ -1,7 +1,7 @@
 <form ng:submit="filtraGiacenza()" name=ricercaArticoli>
 <fieldset><legend>Usa il '.' come carattere jolly.</legend>
 <div>
-  <label>Aziende: <select ng:model=aziendeSelezionate multiple ng:options="a as aziende[a] for a in codiciAzienda"></select></label>
+  <label>Aziende: <select ng:model=aziendeSelezionate multiple ng:options="c as r.value for (c, r) in aziende"></select></label>
   <label>Modello: <input ng:model=modello size=5 maxlength=5 pattern="^[.\d]{0,5}$"></label>
   <label>Articolo: <input ng:model=articolo size=4 maxlength=4 pattern="^[.\d]{0,4}$"></label>
   <label>Colore: <input ng:model=colore size=4 maxlength=4 pattern="^[.\d]{0,4}$"></label>
@@ -32,16 +32,7 @@
 <img ng:show="photo.show[0]" ng:src="{{photo.img[0]}}">
 <img ng:show="photo.show[1]" ng:src="{{photo.img[1]}}">
 </div>
-<div>
-<p>Stampe etichette
-<ul>
-<li><a ng:href="/boutique_app/taskRunner/stampaEtichetteFromQueryGiacenze/stagione={{stagione}}/modello={{modello}}/articolo={{articolo}}/colore={{colore}}/taglia={{taglia}}/aziende={{aziendeSelezionate.join('|')}}/comparator=MACTS/layout=standard/formato=strette">Etichette con ordinamento MACTS, layout standard, formato stretto.</a>
-<li><a ng:href="/boutique_app/taskRunner/stampaEtichetteFromQueryGiacenze/stagione={{stagione}}/modello={{modello}}/articolo={{articolo}}/colore={{colore}}/taglia={{taglia}}/aziende={{aziendeSelezionate.join('|')}}/comparator=MACTS/layout=standard/formato=larghe">Etichette con ordinamento MACTS, layout standard, formato largo.</a>
-<li><a ng:href="/boutique_app/taskRunner/stampaEtichetteFromQueryGiacenze/stagione={{stagione}}/modello={{modello}}/articolo={{articolo}}/colore={{colore}}/taglia={{taglia}}/aziende={{aziendeSelezionate.join('|')}}/comparator=MACTS/layout=outlet/formato=strette">Etichette con ordinamento MACTS, layout outlet, formato stretto.</a>
-<li><a ng:href="/boutique_app/taskRunner/stampaEtichetteFromQueryGiacenze/stagione={{stagione}}/modello={{modello}}/articolo={{articolo}}/colore={{colore}}/taglia={{taglia}}/aziende={{aziendeSelezionate.join('|')}}/comparator=MACTS/layout=outlet/formato=larghe">Etichette con ordinamento MACTS, layout outlet, formato largo.</a>
-<li><a ng:href="/boutique_app/taskRunner/stampaEtichetteFromQueryGiacenze/stagione={{stagione}}/modello={{modello}}/articolo={{articolo}}/colore={{colore}}/taglia={{taglia}}/aziende={{aziendeSelezionate.join('|')}}/comparator=TSMAC/layout=standard/formato=strette">Etichette con ordinamento TSMAC, layout standard, formato stretto.</a>
-<li><a ng:href="/boutique_app/taskRunner/stampaEtichetteFromQueryGiacenze/stagione={{stagione}}/modello={{modello}}/articolo={{articolo}}/colore={{colore}}/taglia={{taglia}}/aziende={{aziendeSelezionate.join('|')}}/comparator=TSMAC/layout=standard/formato=larghe">Etichette con ordinamento TSMAC, layout standard, formato largo.</a>
-<li><a ng:href="/boutique_app/taskRunner/stampaEtichetteFromQueryGiacenze/stagione={{stagione}}/modello={{modello}}/articolo={{articolo}}/colore={{colore}}/taglia={{taglia}}/aziende={{aziendeSelezionate.join('|')}}/comparator=TSMAC/layout=outlet/formato=strette">Etichette con ordinamento TSMAC, layout outlet, formato stretto.</a>
-<li><a ng:href="/boutique_app/taskRunner/stampaEtichetteFromQueryGiacenze/stagione={{stagione}}/modello={{modello}}/articolo={{articolo}}/colore={{colore}}/taglia={{taglia}}/aziende={{aziendeSelezionate.join('|')}}/comparator=TSMAC/layout=outlet/formato=larghe">Etichette con ordinamento TSMAC, layout outlet, formato largo.</a>
-</ul>
+<div class=header>
+ <p><a ng:click="prepareDownloads()">Prepara etichette</a>
+ <object id=downloads type="application/x-shockwave-flash" data="save.swf"><param name=allowScriptAccess value=always /><param name=wmode value=opaque /></object>
 </div>

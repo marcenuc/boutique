@@ -2,7 +2,7 @@
 function validate_doc_update(doc, oldDoc, userCtx, secObj) {
   'use strict';
   var es = [], i, n, rows, r,
-    codici = typeof require === 'function' ? require('codici') : CODICI,
+    codici = secObj ? require('views/lib/codici') : CODICI,
     typeAndCode = codici.typeAndCodeFromId(doc._id),
     codes = typeAndCode && typeAndCode[2] ? typeAndCode[2].split('_') : null;
 
@@ -96,32 +96,32 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
     for (stagione in prezzi) {
       if (prezzi.hasOwnProperty(stagione)) {
         if (!codici.isCode(stagione, codici.LEN_STAGIONE)) {
-          return error('Invalid stagione "' + stagione + '"');
+          return error('Invalid stagione: "' + stagione + '"');
         }
         modelli = prezzi[stagione];
         for (modello in modelli) {
           if (modelli.hasOwnProperty(modello)) {
             if (!codici.isCode(modello, codici.LEN_MODELLO)) {
-              return error('Invalid modello "' + modello + '" in stagione "' + stagione + '"');
+              return error('Invalid modello: "' + [stagione, modello].join('", "') + '"');
             }
             articoli = modelli[modello];
             for (articolo in articoli) {
               if (articoli.hasOwnProperty(articolo)) {
                 if (!codici.isCode(articolo, codici.LEN_ARTICOLO)) {
-                  return error('Invalid articolo "' + articolo + '" in modello "' + modello + '", stagione "' + stagione + '"');
+                  return error('Invalid articolo: "' + [stagione, modello, articolo].join('", "') + '"');
                 }
                 vuoto = false;
                 r = articoli[articolo];
                 if (typeOf(r) !== 'array' || (r.length !== 3 && r.length !== 4)) {
-                  error('Invalid row for articolo "' + articolo + '" in modello "' + modello + '", stagione "' + stagione + '": ' + JSON.stringify(r));
+                  error('Invalid row for ' + [stagione, modello, articolo].join(' ') + ': ' + JSON.stringify(r));
                 } else {
                   for (j = 0, l = 3; j < l; j += 1) {
                     if (!codici.isInt(r[j]) || r[j] < 0) {
-                      error('Invalid row for articolo "' + articolo + '" in modello "' + modello + '", stagione "' + stagione + '": ' + JSON.stringify(r));
+                      error('Invalid row for ' + [stagione, modello, articolo].join(' ') + ': ' + JSON.stringify(r));
                     }
                   }
                   if (typeof r[4] !== 'undefined' && typeof r[4] !== 'string') {
-                    error('Invalid row for articolo "' + articolo + '" in modello "' + modello + '", stagione "' + stagione + '": ' + JSON.stringify(r));
+                    error('Invalid row for ' + [stagione, modello, articolo].join(' ') + ': ' + JSON.stringify(r));
                   }
                 }
               }
@@ -145,81 +145,121 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         return error('Invalid row: ' + JSON.stringify(row));
       }
       if (!codici.isCode(row[0], codici.LEN_STAGIONE)) {
-        error('Invalid stagione at row ' + idx + ': ' + JSON.stringify(row));
+        error('Invalid stagione[' + idx + ']: "' + row[0] + '"');
       }
       if (!codici.isCode(row[1], codici.LEN_MODELLO)) {
-        error('Invalid modello at row ' + idx + ': ' + JSON.stringify(row));
+        error('Invalid modello[' + idx + ']: "' + row[1] + '"');
       }
       if (!codici.isCode(row[2], codici.LEN_ARTICOLO)) {
-        error('Invalid articolo at row ' + idx + ': ' + JSON.stringify(row));
+        error('Invalid articolo[' + idx + ']: "' + row[2] + '"');
       }
       if (!codici.isCode(row[3], codici.LEN_COLORE)) {
-        error('Invalid colore at row ' + idx + ': ' + JSON.stringify(row));
+        error('Invalid colore[' + idx + ']: "' + row[3] + '"');
       }
       if (!codici.isCodiceAzienda(row[4])) {
-        error('Invalid codiceAzienda at row ' + idx + ': ' + JSON.stringify(row));
+        error('Invalid codiceAzienda[' + idx + ']: "' + row[4] + '"');
       }
       if (row[5] !== 0 && row[5] !== 1) {
-        error('Invalid inProduzione at row ' + idx + ': ' + JSON.stringify(row));
+        error('Invalid inProduzione[' + idx + ']: "' + row[5] + '"');
       }
-      if (row[6] !== 1 && row[6] !== 2 && row[6] !== 3) {
-        error('Invalid tipoMagazzino at row ' + idx + ': ' + JSON.stringify(row));
+      if (!codici.isTipoMagazzino(row[6])) {
+        error('Invalid tipoMagazzino[' + idx + ']: "' + row[6] + '"');
       }
       var taglia, giacenze = row[7];
       for (taglia in giacenze) {
         if (giacenze.hasOwnProperty(taglia)) {
-          if (!codici.codiceAs400(row[0], row[1], row[2], row[3], taglia)) {
-            error('Invalid barcode at row ' + idx + ': ' + JSON.stringify(row));
-          } else if (typeof giacenze[taglia] !== 'number' || giacenze[taglia] <= 0) {
-            error('Invalid quantity at row ' + idx + ': ' + JSON.stringify(row));
+          if (!codici.isCode(taglia, codici.LEN_TAGLIA)) {
+            error('Invalid taglia[' + idx + ']: "' + taglia + '"');
+          } else if (!codici.isInt(giacenze[taglia]) || giacenze[taglia] === 0) {
+            error('Invalid qta[' + idx + ']: "' + giacenze[taglia] + '"');
           }
         }
       }
     });
   }
 
-  function hasMovimenti(elenco) {
-    if (!elenco || !elenco.length) {
-      return error('Elenco vuoto');
+  function hasMovimenti(rows) {
+    if (typeOf(rows) !== 'array') {
+      return error('Invalid rows');
     }
-    elenco.forEach(function (row, idx) {
-      if (typeOf(row) !== 'array' || row.length < 2) {
-        return error('Invalid row: ' + JSON.stringify(row));
+    // TODO verificare anche l'ordinamento
+    rows.forEach(function (row, idx) {
+      if (typeOf(row) !== 'array') {
+        return error('Invalid row[' + idx + ']');
       }
-      var barcode = row[0];
+      var barcode = row[0], scalarino = row[1], descrizioneTaglia = row[2], descrizione = row[3], costo = row[4], qta = row[5];
       if (!codici.isBarcodeAs400(barcode)) {
-        error('Invalid barcode at row ' + idx + ': "' + barcode + '"');
+        return error('Invalid barcode[' + idx + ']: "' + barcode + '"');
       }
-      if (typeof row[1] !== 'number' || row[1] <= 0) {
-        error('Invalid quantity at row ' + idx + ': "' + barcode + '"');
+      if (!codici.isScalarino(scalarino)) {
+        error('Invalid scalarino[' + idx + ']: "' + scalarino + '"');
+      }
+      if (!codici.isDescrizioneTaglia(descrizioneTaglia)) {
+        error('Invalid descrizioneTaglia[' + idx + ']: "' + descrizioneTaglia + '"');
+      }
+      if (!codici.isDescrizioneArticolo(descrizione)) {
+        error('Invalid descrizione[' + idx + ']: "' + descrizione + '"');
+      }
+      if (!codici.isInt(costo) || costo < 0) {
+        error('Invalid costo[' + idx + ']: "' + costo + '"');
+      }
+      if (!codici.isQta(qta) || qta <= 0) {
+        error('Invalid qta[' + idx + ']: "' + qta + '"');
       }
     });
   }
 
-  function hasInventario(inventario) {
-    if (!inventario || !inventario.length) {
-      error('Inventario vuoto');
-      return;
+  function hasInventario(rows) {
+    if (typeOf(rows) !== 'array' || !rows.length) {
+      return error('Invalid rows');
     }
-    // TODO verificare anche l'ordinamento
-    inventario.forEach(function (row, idx) {
-      if (typeOf(row) !== 'array' || row.length < 3) {
-        return error('Invalid row: ' + JSON.stringify(row));
+    var columnNames = codici.COLUMN_NAMES.Inventario,
+      rowLength = columnNames.length,
+      col = codici.colNamesToColIndexes(columnNames);
+    rows.forEach(function (row, idx) {
+      if (typeOf(row) !== 'array' || row.length !== rowLength) {
+        return error('Invalid row[' + idx + ']');
       }
-      var barcode = row[0];
-      if (!codici.isBarcodeAs400(barcode)) {
-        error('Invalid barcode at row ' + idx + ': "' + barcode + '"');
+      var modello = row[col.modello], articolo = row[col.articolo], colore = row[col.colore], stagione = row[col.stagione],
+        da = row[col.da], inProduzione = row[col.inProduzione], tipoMagazzino = row[col.tipoMagazzino],
+        scalarino = row[col.scalarino], taglia = row[col.taglia], descrizioneTaglia = row[col.descrizioneTaglia],
+        descrizione = row[col.descrizione], qta = row[col.qta];
+
+      if (!codici.isCode(stagione, codici.LEN_STAGIONE)) {
+        return error('Invalid stagione[' + idx + ']: "' + stagione + '"');
       }
-      if (!codici.isInt(row[1]) || row[1] <= 0) {
-        error('Invalid quantity at row ' + idx + ': "' + barcode + '"');
+      if (!codici.isCode(modello, codici.LEN_MODELLO)) {
+        return error('Invalid modello[' + idx + ']: "' + modello + '"');
       }
-      // FIXME stiamo consentendo costo==0 solo temporaneamente per andare avanti col lavoro.
-      if (!codici.isInt(row[2]) || row[2] < 0) {
-        error('Invalid costo at row ' + idx + ': "' + barcode + '"');
+      if (!codici.isCode(articolo, codici.LEN_ARTICOLO)) {
+        return error('Invalid articolo[' + idx + ']: "' + articolo + '"');
       }
-      // inProduzione should be set only when... set.
-      if (typeof row[3] !== 'undefined' && row[3] !== 1) {
-        error('Invalid inProduzione at row ' + idx + ': "' + barcode + '"');
+      if (!codici.isCode(colore, codici.LEN_COLORE)) {
+        return error('Invalid colore[' + idx + ']: "' + colore + '"');
+      }
+      if (!codici.isCode(taglia, codici.LEN_TAGLIA)) {
+        return error('Invalid taglia[' + idx + ']: "' + taglia + '"');
+      }
+      if (!codici.isCodiceAzienda(da)) {
+        error('Invalid da[' + idx + ']: "' + da + '"');
+      }
+      if (inProduzione !== 0 && inProduzione !== 1) {
+        error('Invalid inProduzione[' + idx + ']: "' + inProduzione + '"');
+      }
+      if (!codici.isTipoMagazzino(tipoMagazzino)) {
+        error('Invalid tipoMagazzino[' + idx + ']: "' + tipoMagazzino + '"');
+      }
+      if (!codici.isScalarino(scalarino)) {
+        error('Invalid scalarino[' + idx + ']: "' + scalarino + '"');
+      }
+      if (!codici.isDescrizioneTaglia(descrizioneTaglia)) {
+        error('Invalid descrizioneTaglia[' + idx + ']: "' + descrizioneTaglia + '"');
+      }
+      if (!codici.isDescrizioneArticolo(descrizione)) {
+        error('Invalid descrizione[' + idx + ']: "' + descrizione + '"');
+      }
+      if (!codici.isInt(qta) || qta === 0) {
+        error('Invalid qta[' + idx + ']: "' + qta + '"');
       }
     });
   }
@@ -396,52 +436,64 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         break;
       case 'Giacenze':
         mustBeAdmin();
-        hasColumnNames(['stagione', 'modello', 'articolo', 'colore', 'codiceAzienda', 'inProduzione', 'tipoMagazzino', 'giacenze']);
+        hasColumnNames(codici.COLUMN_NAMES.Giacenze);
         hasGiacenze(doc.rows);
         break;
+      //TODO rimuovere? finora uso solo "Giacenze"...
       case 'Inventario':
-        mustBeOwner();
-        hasValidAziendaCode();
-        if (!codici.isTipoMagazzino(codes[1])) {
-          error('Invalid tipo magazzino in _id');
-        }
-        hasColumnNames(['barcode', 'giacenza', 'costo', 'inProduzione']);
+        mustBeAdmin();
+        hasColumnNames(codici.COLUMN_NAMES.Inventario);
         hasInventario(doc.rows);
         break;
       case 'MovimentoMagazzino':
         if ((oldDoc && oldDoc.accodato) ||
-            (doc.accodato && (typeOf(doc.causale) !== 'array' || doc.causale[0] !== 'VENDITA'))) {
+            (doc.accodato && (typeOf(doc.causale) !== 'array' || doc.causale[0] !== 'VENDITA A CLIENTI'))) {
           mustBeAdmin();
         } else {
           mustBeOwner();
         }
         hasValidAziendaCode();
         // TODO l'utente negozio può scaricare solo dal suo magazzino di tipo 3.
-        if (codes.length !== 3) {
+        if (codes.length !== 4) {
           error('Invalid code');
         } else if (!codici.isYear(codes[1])) {
           error('Invalid year');
-        } else if (!codici.isNumero(codes[2])) {
+        } else if (!codici.isGruppoNumerazione(codes[2])) {
+          error('Invalid gruppo');
+        } else if (!codici.isNumero(codes[3])) {
           error('Invalid numero');
         }
         if (!codici.isYyyyMmDdDate(doc.data, codes[1])) {
           error('Invalid data');
         }
-        hasColumnNames(['barcode', 'qta']);
+        hasColumnNames(['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta']);
         // TODO questo codice è illeggibile
-        if (typeOf(doc.causale) !== 'array' ||
+        if (typeOf(doc.causale) !== 'array' || doc.causale.length !== 2 ||
             !codici.CAUSALI_MOVIMENTO_MAGAZZINO.some(function (causale) {
-              var ret = doc.causale.length === causale.length && causale.every(function (v, k) {
-                return doc.causale[k] === v;
-              });
-              if (ret) {
-                r = causale;
+              if (causale.descrizione === doc.causale[0] && causale.segno === doc.causale[1]) {
+                if (!causale.hasOwnProperty('causaleA')) {
+                  return true;
+                }
+                if (!codici.isCodiceAzienda(doc.a)) {
+                  error('Invalid a');
+                  return false;
+                }
+                var causaleA = codici.CAUSALI_MOVIMENTO_MAGAZZINO[causale.causaleA];
+                return typeOf(doc.causaleA) === 'array' && doc.causaleA.length === 2 &&
+                  causaleA.descrizione === doc.causaleA[0] && causaleA.segno === doc.causaleA[1];
               }
-              return ret;
             })) {
           error('Invalid causale');
-        } else if (r[2] && !codici.isCodiceAzienda(doc.destinazione)) {
-          error('Invalid destinazione');
+        }
+        // TODO usare CODICI
+        if (doc.hasOwnProperty('tipoMagazzino') && !codici.isTipoMagazzino(doc.tipoMagazzino)) {
+          error('Invalid tipoMagazzino');
+        }
+        if (doc.hasOwnProperty('tipoMagazzinoA') && !codici.isTipoMagazzino(doc.tipoMagazzinoA)) {
+          error('Invalid tipoMagazzinoA');
+        }
+        if (doc.hasOwnProperty('inProduzione') && doc.inProduzione !== 1) {
+          error('Invalid inProduzione');
         }
         hasMovimenti(doc.rows);
         if (doc.riferimento) {

@@ -11,6 +11,35 @@ requirejs.config({
 requirejs(['app/js/codici'], function (codici) {
   'use strict';
 
+  describe('CAUSALI_MOVIMENTO_MAGAZZINO', function () {
+    var causali = codici.CAUSALI_MOVIMENTO_MAGAZZINO;
+    it('should be an array', function () {
+      expect(Object.prototype.toString.apply(causali)).toBe('[object Array]');
+    });
+
+    it('should contain objects with descrizione (unique), segno, gruppo, causaleA', function () {
+      var c, i, ii = causali.length, descrizioni = {};
+      for (i = 0; i < ii; i += 1) {
+        c = causali[i];
+        expect(typeof c.descrizione).toBe('string');
+        expect(descrizioni.hasOwnProperty(c.descrizione)).toBe(false);
+        descrizioni[c.descrizione] = true;
+        expect(c.segno === -1 || c.segno === 1).toBe(true);
+        expect(c.gruppo).toMatch(/^[A-Z]$/);
+        if (c.hasOwnProperty('causaleA')) {
+          expect(typeof c.causaleA).toBe('number');
+          expect(c.causaleA >= 0 && c.causaleA < ii).toBe(true);
+        }
+      }
+    });
+  });
+
+  describe('splitId', function () {
+    it('should split id at "_"', function () {
+      expect(codici.splitId('abc_12_42')).toEqual(['abc', '12', '42']);
+    });
+  });
+
   describe('dotPad', function () {
     it('should pad with dots strings shorter than the given length', function () {
       var u = codici.dotPad;
@@ -113,6 +142,85 @@ requirejs(['app/js/codici'], function (codici) {
     });
   });
 
+  describe('isInt', function () {
+    var u = codici.isInt;
+    it('should return true for integer values', function () {
+      expect(u(123)).toBe(true);
+      expect(u(-42)).toBe(true);
+    });
+
+    it('should return false for float value', function () {
+      expect(u(1.2)).toBe(false);
+    });
+
+    it('should return false for string value', function () {
+      expect(u("123")).toBe(false);
+    });
+  });
+
+  describe('isQta', function () {
+    var u = codici.isQta;
+    it('should return true for integer non negative value', function () {
+      expect(u(123)).toBe(true);
+    });
+
+    it('should return false for integer negative value', function () {
+      expect(u(-1)).toBe(false);
+    });
+
+    it('should return false for float value', function () {
+      expect(u(1.1)).toBe(false);
+    });
+  });
+
+  describe('isScalarino', function () {
+    var u = codici.isScalarino;
+    it('should return true for positive integer less than 10', function () {
+      var i;
+      for (i = 1; i < 10; i += 1) {
+        expect(u(i)).toBe(true);
+      }
+    });
+
+    it('should return false for 0', function () {
+      expect(u(0)).toBe(false);
+    });
+
+    it('should return false for 10', function () {
+      expect(u(10)).toBe(false);
+    });
+  });
+
+  describe('isTrimmedString', function () {
+    var u = codici.isTrimmedString;
+    it('should return true only for trimmed string of 1 to maxLength characters', function () {
+      expect(u('10', 3)).toBe(true);
+      expect(u('10 ', 3)).toBe(false);
+      expect(u('', 3)).toBe(false);
+      expect(u('LXL', 3)).toBe(true);
+    });
+  });
+
+  describe('isDescrizioneTaglia', function () {
+    var u = codici.isDescrizioneTaglia;
+    it('should return true only for trimmed string of 1 to 3 characters', function () {
+      expect(u('10')).toBe(true);
+      expect(u('10 ')).toBe(false);
+      expect(u('')).toBe(false);
+      expect(u('LXL')).toBe(true);
+    });
+  });
+
+  describe('isDescrizioneArticolo', function () {
+    var u = codici.isDescrizioneArticolo;
+    // TODO check that 30 is a sensible value
+    it('should return true only for trimmed string of one to 1 to 30 characters', function () {
+      expect(u('Articolo')).toBe(true);
+      expect(u('')).toBe(false);
+      expect(u('4234242424 34242423 42342 4242 42 34 234 23 42 34 2 42 342 342')).toBe(false);
+    });
+  });
+
   describe('isCode', function () {
     it('should return true for code "10", length 2', function () {
       expect(codici.isCode('10', 2)).toBe(true);
@@ -143,22 +251,40 @@ requirejs(['app/js/codici'], function (codici) {
     });
   });
 
-  describe('parseIdMovimentoMagazzino', function () {
-    it('should return origine, anno, and numero', function () {
-      expect(codici.parseIdMovimentoMagazzino('MovimentoMagazzino_019998_2011_22')).toEqual({
-        origine: '019998',
-        anno: '2011',
-        numero: '22'
-      });
+  describe('isAzienda', function () {
+    it('should return true only when ids is valid splitted _id of Azienda', function () {
+      var u = codici.isAzienda, s = codici.splitId;
+      expect(u(s('Azienda_010101'))).toBe(true);
+      expect(u(s('Azienda_A10101'))).toBe(false);
     });
   });
 
-  describe('parseIdInventario', function () {
-    it('should return codiceAzienda, tipoMagazzino', function () {
-      var codiceAzienda = '099999', tipoMagazzino = 3;
-      expect(codici.parseIdInventario(codici.idInventario(codiceAzienda, tipoMagazzino))).toEqual({
-        codiceAzienda: codiceAzienda,
-        tipoMagazzino: tipoMagazzino
+  describe('isMovimentoMagazzino', function () {
+    it('should return true only when ids is valid splitted _id of MovimentoMagazzino', function () {
+      var u = codici.isMovimentoMagazzino,
+        s = codici.splitId;
+      expect(u(s('MovimentoMagazzino_010101_2011_A_12345'))).toBe(true);
+      expect(u(s('MovimentoMagazzino_010101_2011_a_12345'))).toBe(false);
+      expect(u(s('MovimentoMagazzino_010101_2011_12345'))).toBe(false);
+    });
+  });
+
+  describe('idMovimentoMagazzino', function () {
+    var u = codici.idMovimentoMagazzino;
+    it('should require in order: codiceAzienda, year, gruppoNumerazione, numero', function () {
+      expect(u('010101', '2011', 'A', '22')).toBe('MovimentoMagazzino_010101_2011_A_22');
+      expect(u('010101', '2011', '22')).toBeUndefined();
+    });
+  });
+
+  describe('parseIdMovimentoMagazzino', function () {
+    var u = codici.parseIdMovimentoMagazzino;
+    it('should return origine, anno, gruppo, and numero', function () {
+      expect(u('MovimentoMagazzino_019998_2011_A_22')).toEqual({
+        da: '019998',
+        anno: '2011',
+        gruppo: 'A',
+        numero: 22
       });
     });
   });
@@ -190,6 +316,17 @@ requirejs(['app/js/codici'], function (codici) {
     });
   });
 
+  describe('isGruppoNumerazione', function () {
+    var u = codici.isGruppoNumerazione;
+
+    it('should return true for a single uppercase letter', function () {
+      expect(u('A')).toBe(true);
+    });
+
+    it('should return false for a number', function () {
+      expect(u('1')).toBe(false);
+    });
+  });
 
   describe('idAzienda', function () {
     it('should return "Azienda_010101" for codice "010101"', function () {
@@ -212,6 +349,14 @@ requirejs(['app/js/codici'], function (codici) {
   describe('parseIdBollaAs400', function () {
     it('should parse "BollaAs400_20110704_40241_Y_10" as data "20110704", numero "40241", enteNumerazione "Y", codiceNumerazione "10"', function () {
       expect(codici.parseIdBollaAs400('BollaAs400_20110704_40241_Y_10')).toEqual({ data: '20110704', numero: '40241', enteNumerazione: 'Y', codiceNumerazione: '10' });
+    });
+  });
+
+  describe('descrizioneModello', function () {
+    var u = codici.descrizioneModello,
+      listaModelli = { '10212345': ['DESCRIZIONE', 3] };
+    it('should return descrizione for given (stagione, modello)', function () {
+      expect(u('102', '12345', listaModelli)).toBe('DESCRIZIONE');
     });
   });
 });

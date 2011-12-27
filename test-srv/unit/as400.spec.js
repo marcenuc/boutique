@@ -1,12 +1,7 @@
-/*jslint node: true */
-/*jshint node: true */
-/*global describe: false, beforeEach: false, afterEach: false, it: false, xit: false, expect: false, jasmine: false */
-
+/*global describe: false, beforeEach: false, afterEach: false, it: false, expect: false, jasmine: false, require: false, __dirname: false, process: false*/
+process.env.LANG = 'C';
 var requirejs = require('requirejs');
-requirejs.config({
-  baseUrl: __dirname + '/../..',
-  nodeRequire: require
-});
+requirejs.config({ baseUrl: __dirname + '/../..', nodeRequire: require, paths: { 'dbconfig': 'app/js/config', 'views/lib/codici': 'app/js/codici' } });
 
 requirejs(['underscore', 'lib/as400', 'app/js/codici'], function (_, as400, codici) {
   'use strict';
@@ -63,10 +58,10 @@ requirejs(['underscore', 'lib/as400', 'app/js/codici'], function (_, as400, codi
       it('should use modelliEScalarini', function () {
         expect(as400.buildModelliEScalariniAs400([modelliEScalarini])).toEqual([
           [
-            'Stagione non valida: stagione="10"',
-            'Modello non valido: stagione="102", modello="1234"',
-            'Manca descrizione: stagione="102", modello="12345", descrizione=""',
-            'Manca scalarino: stagione="102", modello="12345", descrizione="ABC", scalarino=""'
+            'Stagione non valida: "10"',
+            'Modello non valido: "102" "1234"',
+            'Manca descrizione articolo: "102" "12345"',
+            'Manca scalarino: "102" "12345" "ABC"'
           ], {
             _id: 'ModelliEScalarini',
             lista: {
@@ -77,11 +72,12 @@ requirejs(['underscore', 'lib/as400', 'app/js/codici'], function (_, as400, codi
       });
     });
 
-    describe('updateGiacenzeWithInventarioAndMovimentiMagazzino', function () {
+    // TODO do porting to lib/inventario.js:update()
+    xdescribe('updateGiacenzeWithInventarioAndMovimentiMagazzino', function () {
       var inProduzione = 0, codiceAzienda = '099999', tipoMagazzino = codici.TIPO_MAGAZZINO_NEGOZIO,
         idInventario = codici.idInventario(codiceAzienda, tipoMagazzino),
-        idMm1 = codici.idMovimentoMagazzino(codiceAzienda, 2011, 1),
-        idMm2 = codici.idMovimentoMagazzino(codiceAzienda, 2011, 2),
+        idMm1 = codici.idMovimentoMagazzino(codiceAzienda, 2011, 'A', 1),
+        idMm2 = codici.idMovimentoMagazzino(codiceAzienda, 2011, 'A', 2),
         warns = null, giacenze = null, inventario = null, movimenti = null;
 
       beforeEach(function () {

@@ -1,0 +1,24 @@
+/*global define: false*/
+
+define({
+  couchdb: {
+    protocol: 'http',
+    host: 'localhost',
+    port: <%= couchdb_port %>,
+    admin: {
+      username: '<%= admin_user %>',
+      password: '<%= admin_password %>'
+    },
+    webserver: {
+      port: <%= proxyed_port %>,
+      images: {
+        rootFolder: '<%= photo_folder %>',
+        inputs: {
+          foto: '/(\\d{16})\\.[a-z]+$',
+          schizzi: '/(\\d{8})\\.[a-z]+$'
+        },
+        output: 'pubblicate'
+      }
+    }
+  }
+});

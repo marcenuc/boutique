@@ -1,13 +1,19 @@
-/*global describe: false, beforeEach: false, afterEach: false, it: false, xit: false, expect: false, angular: false, Ctrl: false, CODICI: false */
+/*global describe: false, beforeEach: false, afterEach: false, it: false, expect: false, angular: false, Ctrl: false, CODICI: false */
 
 describe('Controller', function () {
   'use strict';
 
   var scope = null,
     $browser = null,
+    $log = null,
     ctrl = null,
     modelliEScalarini = {
-      lista: { '10270233': ['ABITO BOT.FANT.', 1], '92370233': ['ABITO BOT.FANT.', 1] }
+      lista: {
+        '11270899': ['ABITO', 2],
+        '11480243': ['ABITO BOT.FANT.', 2],
+        '10270233': ['ABITO BOT.FANT.', 1],
+        '92370233': ['ABITO BOT.FANT.', 1]
+      }
     },
     taglieScalarini = {
       colonneTaglie: [null, { '44': 0, '46': 1, '48': 2, '50': 3, '52': 4, '54': 5, '56': 6, '58': 7, '60': 8, '62': 9, '64': 10, '66': 11 }],
@@ -21,31 +27,44 @@ describe('Controller', function () {
         id: 'Listino_1',
         key: 'Listino_1',
         value: { rev: '1-d6363be2d62ec0f2eb5b961527bdddbf' },
-        doc: { _id: 'Listino_1', _rev: '1-d6363be2d62ec0f2eb5b961527bdddbf', prezzi: {} }
+        doc: { _id: 'Listino_1', _rev: '1-d6363be2d62ec0f2eb5b961527bdddbf', columnNames: ['costo', 'prezzo1', 'prezzo2', 'offerta'],
+          prezzi: {} }
       }, {
         id: 'Listino_2',
         key: 'Listino_2',
         value: { rev: '1-d6363be2d62ec0f2eb5b961527bdddba' },
-        doc: { _id: 'Listino_2', _rev: '1-d6363be2d62ec0f2eb5b961527bdddba', prezzi: {} }
+        doc: { _id: 'Listino_2', _rev: '1-d6363be2d62ec0f2eb5b961527bdddba', columnNames: ['costo', 'prezzo1', 'prezzo2', 'offerta'],
+          prezzi: {} }
       }, {
         id: 'Listino_019998',
         key: 'Listino_019998',
         value: { rev: '1-d6363be2d62ec0f2eb5b961527bdddba' },
-        doc: { _id: 'Listino_019998', _rev: '1-d6363be2d62ec0f2eb5b961527bdddba', prezzi: {}, versioneBase: '1' }
+        doc: { _id: 'Listino_019998', _rev: '1-d6363be2d62ec0f2eb5b961527bdddba', columnNames: ['costo', 'prezzo1', 'prezzo2', 'offerta'],
+          prezzi: {}, versioneBase: '1' }
       }, {
         id: 'Listino_099997',
         key: 'Listino_099997',
         value: { rev: '2-d6363be2d62ec0f2eb5b961527bdddba' },
-        doc: { _id: 'Listino_099997', _rev: '2-d6363be2d62ec0f2eb5b961527bdddba', prezzi: {}, versioneBase: '2' }
+        doc: { _id: 'Listino_099997', _rev: '2-d6363be2d62ec0f2eb5b961527bdddba', columnNames: ['costo', 'prezzo1', 'prezzo2', 'offerta'],
+          prezzi: {}, versioneBase: '2' }
       }]
     },
     aziende = {
-      total_rows: 15,
-      offset: 1,
       rows: [{
         id: 'Azienda_019998',
         key: 'Azienda_019998',
-        value: { rev: "1-d6363be2d62ec0f2eb5b961527bdddbf" },
+        value: '019998 Mag. Disponibile'
+      }, {
+        id: 'Azienda_099997',
+        key: 'Azienda_099997',
+        value: '099997 Negozio LE'
+      }]
+    },
+    aziendeDocs = {
+      rows: [{
+        id: 'Azienda_019998',
+        key: 'Azienda_019998',
+        value: '019998 Mag. Disponibile',
         doc: {
           _id: "Azienda_019998",
           _rev: "1-d6363be2d62ec0f2eb5b961527bdddbf",
@@ -58,9 +77,9 @@ describe('Controller', function () {
           contatti: [ "0833/706311", "0833/706322 (fax)" ]
         }
       }, {
-        id: "Azienda_099997",
-        key: "Azienda_099997",
-        value: { "rev" : "2-9415d085eb2ad39b3d7e40cab79cbf5b" },
+        id: 'Azienda_099997',
+        key: 'Azienda_099997',
+        value: '099997 Negozio LE',
         doc: {
           _id: "Azienda_099997",
           _rev: "2-9415d085eb2ad39b3d7e40cab79cbf5b",
@@ -83,13 +102,22 @@ describe('Controller', function () {
     var u;
     switch (id) {
     case 'AZIENDE':
-      u = '_all_docs?endkey=%22Azienda_%EF%BF%B0%22&include_docs=true&startkey=%22Azienda_%22';
+      u = '_design/boutique_db/_view/aziende';
+      break;
+    case 'AZIENDE_DOCS':
+      u = '_design/boutique_db/_view/aziende?include_docs=true';
       break;
     case 'LISTINI':
       u = '_all_docs?endkey=%22Listino_%EF%BF%B0%22&include_docs=true&startkey=%22Listino_%22';
       break;
     case 'VIEW_RIFERIMENTI':
       u = '_design/boutique_db/_view/riferimentiMovimentiMagazzino?key=%22BollaAs400_20110704_1234_Y_10%22';
+      break;
+    case 'VIEW_NUMERI':
+      u = '_design/boutique_db/_view/contatori?descending=true&endkey=%5B%22010101%22,2011,%22A%22%5D&limit=1&startkey=%5B%22010101%22,2011,%22A%22,%7B%7D%5D';
+      break;
+    case 'VIEW_PENDENTI':
+      u = '_design/boutique_db/_view/movimentoMagazzinoPendente';
       break;
     default:
       u = id;
@@ -111,9 +139,11 @@ describe('Controller', function () {
     return response;
   }
 
-  function expectPUT(urlId, data, response200, errStatus, errBody) {
+  function expectPUT(data, response200, errStatus, errBody) {
     //TODO DRY questa è praticamente identica a expectGET;
-    var xpct = $browser.xhr.expectPUT(getUrl(urlId), data), response;
+    var response,
+      urlId = data._id,
+      xpct = $browser.xhr.expectPUT(getUrl(urlId), data);
     if (errStatus) {
       response = errBody;
       xpct.respond(errStatus, response);
@@ -127,6 +157,7 @@ describe('Controller', function () {
   beforeEach(function () {
     scope = angular.scope();
     $browser = scope.$service('$browser');
+    $log = scope.$service('$log');
     ctrl = null;
   });
 
@@ -138,7 +169,7 @@ describe('Controller', function () {
     var $routeParams = null;
 
     function newController(status, body) {
-      expectGET('AZIENDE', aziende, status, body);
+      expectGET('AZIENDE_DOCS', aziendeDocs, status, body);
       ctrl = scope.$new(Ctrl.Azienda);
     }
 
@@ -147,17 +178,10 @@ describe('Controller', function () {
     });
 
     describe('inizialization', function () {
-
-      it('should have an empty list of aziende before fetching', function () {
-        newController();
-        expect(ctrl.aziende).toEqualData({});
-        $browser.xhr.flush();
-      });
-
       it('should fetch all aziende', function () {
         newController();
         $browser.xhr.flush();
-        expect(ctrl.aziende).toEqualData(aziende);
+        expect(Object.keys(ctrl.aziende).length).toEqualData(aziendeDocs.rows.length);
       });
 
       it('should flash fetch errors', function () {
@@ -172,7 +196,7 @@ describe('Controller', function () {
       });
 
       it('should set id and azienda according to $routeParams.codice', function () {
-        var azienda = aziende.rows[1].doc;
+        var azienda = aziendeDocs.rows[1].doc;
         $routeParams.codice = CODICI.typeAndCodeFromId(azienda._id)[2];
         expectGET(azienda._id, azienda);
         newController();
@@ -208,7 +232,7 @@ describe('Controller', function () {
         var response = null;
 
         function doSave() {
-          response = expectPUT(ctrl.azienda._id, ctrl.azienda);
+          response = expectPUT(ctrl.azienda);
           ctrl.save();
           $browser.xhr.flush();
         }
@@ -223,10 +247,11 @@ describe('Controller', function () {
 
         it('should create new document if id changed', function () {
           ctrl.id = 'Azienda_000000';
-          ctrl.azienda = angular.copy(aziende.rows[0].doc);
+          ctrl.azienda = angular.copy(aziendeDocs.rows[0].doc);
           var data = angular.copy(ctrl.azienda);
           delete data._rev;
-          expectPUT(ctrl.azienda._id, data);
+          expectPUT(data);
+          expectGET(ctrl.azienda._id); //TODO mock $location instead
           ctrl.save();
           $browser.xhr.flush();
         });
@@ -236,6 +261,7 @@ describe('Controller', function () {
           beforeEach(function () {
             ctrl.azienda = { _id: 'Azienda_010101', nome: 'Nuova azienda', tipo: 'NEGOZIO' };
             ctrl.id = ctrl.azienda._id;
+            expectGET(ctrl.azienda._id); //TODO mock $location instead
             doSave();
           });
 
@@ -250,9 +276,9 @@ describe('Controller', function () {
 
         describe('existing document', function () {
           beforeEach(function () {
-            ctrl.azienda = angular.copy(aziende.rows[0].doc);
+            ctrl.azienda = angular.copy(aziendeDocs.rows[0].doc);
             ctrl.id = ctrl.azienda._id;
-            ctrl.azienda.nome = "NUOVO NOME";
+            ctrl.azienda.nome = 'NUOVO NOME';
             doSave();
           });
 
@@ -261,7 +287,7 @@ describe('Controller', function () {
           });
 
           it('should update aziende when saving updates to azienda', function () {
-            expect(ctrl.azienda).toEqualData(ctrl.aziende.rows[0].doc);
+            expect(ctrl.azienda).toEqualData(ctrl.aziende['019998'].doc);
           });
         });
       });
@@ -279,134 +305,121 @@ describe('Controller', function () {
     });
   });
 
+  describe('NewMovimentoMagazzino', function () {
+    var causale = { descrizione: 'VENDITA', segno: -1, gruppo: 'A', causaleA: 1 },
+      emptyMM = CODICI.newMovimentoMagazzino('010101', '20111231', 12, causale, '020202');
 
-  describe('MovimentoMagazzino', function () {
-    var $routeParams = null,
-      movimenti = [
-        {
-          _id: 'MovimentoMagazzino_099999_2011_12',
-          _rev: "1-d6363be2d62ec0f2eb5b961527bdddbf",
-          columnNames: ['barcode', 'qta'],
-          data: '20111010',
-          causale: ['VENDITA', -1, 0],
-          rows: [
-            ['102702335017800044', 1]
-          ]
-        }
-      ];
-
-    function newController(status, body) {
-      expectGET('AZIENDE', aziende, status, body);
-      expectGET('TaglieScalarini', taglieScalarini);
-      expectGET('ModelliEScalarini', modelliEScalarini);
-      ctrl = scope.$new(Ctrl.MovimentoMagazzino);
+    function newController() {
+      expectGET('AZIENDE', aziende);
+      ctrl = scope.$new(Ctrl.NewMovimentoMagazzino);
+      $browser.xhr.flush();
     }
 
     beforeEach(function () {
-      $routeParams = scope.$service('$routeParams');
+      newController();
     });
 
-    describe('inizialization', function () {
-      it('should set causale to the first one', function () {
-        newController();
+    describe('create', function () {
+      it('should create a new document with model data', function () {
+        ctrl.form = {
+          data: '20111231',
+          da: '010101',
+          a: '020202',
+          causale: causale
+        };
+        expectGET('VIEW_NUMERI', { rows: [
+          { key: ['010101', 2011, 'A', 11], value: 1 }
+        ]});
+        expectPUT(emptyMM);
+        expectGET(emptyMM._id); //TODO mock $location instead
+        expectGET('LISTINI', listini); //TODO mock $location instead
+        expectGET('TaglieScalarini', taglieScalarini); //TODO mock $location instead
+        expectGET('ModelliEScalarini', modelliEScalarini); //TODO mock $location instead
+        ctrl.create();
         $browser.xhr.flush();
-        expect(ctrl.causale).toEqual(['VENDITA', -1, 0]);
-      });
-
-      it('should fetch all aziende', function () {
-        newController();
-        $browser.xhr.flush();
-        expect(ctrl.aziende).toEqual({ '019998': '019998 Mag. Disponibile', '099997': '099997 Negozio LE' });
-      });
-
-      it('should flash fetch errors', function () {
-        var $route = scope.$service('$route'), SessionInfo = scope.$service('SessionInfo');
-        newController(500, 'No service');
-        $route.reload();
-        scope.$digest();
-        $route.current.scope = ctrl;
-        $browser.xhr.flush();
-        expect(SessionInfo.flash).toEqual({ errors: [{ message: 'ERROR 500: No service' }] });
-      });
-
-      it('should set origine, data, and numero according to $routeParams.codice', function () {
-        var movimento = movimenti[0],
-          codice = CODICI.typeAndCodeFromId(movimento._id)[2],
-          codes = codice.split('_');
-        $routeParams.codice = codice;
-        newController();
-        $browser.xhr.flush();
-        expect(ctrl.origine).toBe(codes[0]);
-        expect(ctrl.data).toBe(codes[1]);
-        expect(ctrl.numero).toBe(codes[2]);
-      });
-    });
-
-
-    describe('actions', function () {
-      beforeEach(function () {
-        newController();
-        $browser.xhr.flush();
-      });
-
-      describe('save', function () {
-        var response = null;
-
-        function doSave() {
-          var bolla = ctrl.buildBolla();
-          // buildBolla() adds an empty row at the end: remove it.
-          bolla.rows.pop();
-          response = expectPUT(bolla._id, bolla, { ok: true, rev: '1', id: bolla._id });
-          ctrl.save();
-          $browser.xhr.flush();
-        }
-
-        it('should create new document if data changed', function () {
-          ctrl.buildModel(movimenti[0]);
-          ctrl.data = '20100102';
-          var r, mm = angular.copy(movimenti[0]), id = CODICI.idMovimentoMagazzino('099999', '2010', '12');
-          delete mm._rev;
-          mm._id = id;
-          mm.data = ctrl.data;
-          r = expectPUT(id, mm);
-          ctrl.save();
-          $browser.xhr.flush();
-          expect(ctrl.rev).toBe(r.rev);
-        });
-
-
-        describe('new document', function () {
-          beforeEach(function () {
-            var mm = angular.copy(movimenti[0]);
-            delete mm._rev;
-            ctrl.buildModel(mm);
-            doSave();
-          });
-
-          it('should set rev field to the returned revision', function () {
-            expect(ctrl.rev).toBe(response.rev);
-          });
-
-          it('should redirect to movimento page', function () {
-            expect(scope.$service('$location').path()).toBe('/' + movimenti[0]._id);
-          });
-
-        });
-
-        describe('existing document', function () {
-          beforeEach(function () {
-            ctrl.buildModel(movimenti[0]);
-            doSave();
-          });
-
-          it('should update _rev field to the returned revision', function () {
-            expect(ctrl.rev).toBe(response.rev);
-          });
-        });
+        expect(scope.$service('$location').path()).toBe('/' + emptyMM._id);
       });
     });
   });
 
+  describe('EditMovimentoMagazzino', function () {
+    var codes = null,
+      causale = { descrizione: 'VENDITA', segno: -1, gruppo: 'A', causaleA: 1 },
+      emptyMM = CODICI.newMovimentoMagazzino('010101', '20111231', 12, causale, '020202'),
+      movimento = angular.copy(emptyMM);
+    movimento._rev = '1-d6363be2d62ec0f2eb5b961527bdddbf';
+    movimento.rows.push(['102702335017800044', 2, '44', 'ABITO', 10000, 1]);
+
+    function newController() {
+      expectGET(movimento._id, movimento);
+      expectGET('AZIENDE', aziende);
+      expectGET('LISTINI', listini);
+      expectGET('TaglieScalarini', taglieScalarini);
+      expectGET('ModelliEScalarini', modelliEScalarini);
+      ctrl = scope.$new(Ctrl.EditMovimentoMagazzino);
+      $browser.xhr.flush();
+    }
+
+    beforeEach(function () {
+      var codice = CODICI.typeAndCodeFromId(movimento._id)[2];
+      codes = CODICI.parseIdMovimentoMagazzino(movimento._id);
+      scope.$service('$routeParams').codice = codice;
+      newController();
+    });
+
+    describe('inizialization', function () {
+      it('should set codes from $routeParams.codice', function () {
+        expect(ctrl.codes).toEqual(codes);
+      });
+
+      it('should set model to movimento magazzino', function () {
+        expect(ctrl.model).toEqualData(movimento);
+      });
+    });
+
+    describe('save', function () {
+      var response = null;
+
+      beforeEach(function () {
+        response = expectPUT(ctrl.model);
+        ctrl.save();
+        $browser.xhr.flush();
+      });
+
+      it('should update _rev field to the returned revision', function () {
+        expect(ctrl.model._rev).toBe(response.rev);
+      });
+    });
+  });
+
+  describe('MovimentoMagazzino', function () {
+    var causale = { descrizione: 'VENDITA', segno: -1, gruppo: 'A', causaleA: 1 },
+      emptyMM = CODICI.newMovimentoMagazzino('010101', '20111231', 12, causale, '020202'),
+      pendenti = { rows: [{ id: emptyMM._id, key: ['010101', 2011, 'A', 12], value: 1 }]};
+
+    function newController() {
+      expectGET('AZIENDE', aziende);
+      expectGET('VIEW_PENDENTI', pendenti);
+      ctrl = scope.$new(Ctrl.MovimentoMagazzino);
+      $browser.xhr.flush();
+    }
+
+    beforeEach(function () {
+      newController();
+    });
+
+    it('should get all MovimentoMagazzino not accodato', function () {
+      expect(ctrl.pendenti).toEqualData(pendenti);
+    });
+
+    describe('find', function () {
+      it('should get requested MovimentoMagazzino', function () {
+        ctrl.form = { da: '010101', anno: '2011', causale: { gruppo: 'A' }, numero: '12' };
+        ctrl.find();
+        expect(scope.$service('$location').path()).toBe('/' + emptyMM._id);
+      });
+    });
+  });
 
   describe('RicercaBollaAs400', function () {
     var scalarini = {
@@ -433,16 +446,18 @@ describe('Controller', function () {
           ['002812', '1', 'C', '98', '113', '10256', '2645', '7315', '3', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1.00']
         ]
       },
-      bollaDoc = {
-        _id: 'MovimentoMagazzino_123456_2011_1',
+      mm = {
+        _id: 'MovimentoMagazzino_010101_2011_A_1',
         riferimento: 'BollaAs400_20110704_1234_Y_10',
         data: '20110704',
-        causale: ['VENDITA', -1, 0],
-        columnNames: ['barcode', 'qta'],
+        causale: ['VENDITA', -1],
+        a: '020202',
+        causaleA: ['ACQUISTO', 1],
+        columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
         rows: [
-          ['112708995017800044', 1],
-          ['112708995017800046', 2],
-          ['114802435157718466', 2]
+          ['112708995017800044', 2, '44', 'ABITO', 0, 1],
+          ['112708995017800046', 2, '46', 'ABITO', 0, 2],
+          ['114802435157718466', 2, 'SM', 'ABITO BOT.FANT.', 0, 2]
         ]
       };
 
@@ -451,6 +466,7 @@ describe('Controller', function () {
       function newController() {
         expectGET('AZIENDE', aziende);
         expectGET('TaglieScalarini', scalarini);
+        expectGET('ModelliEScalarini', modelliEScalarini);
         expectGET('CausaliAs400', causaliAs400);
         ctrl = scope.$new(Ctrl.RicercaBollaAs400);
       }
@@ -463,49 +479,42 @@ describe('Controller', function () {
       describe('buildId', function () {
         it('should put, in this order, "data", "numero", "enteNumerazione", and "codiceNumerazione" in the id', function () {
           ctrl.intestazione = intestazione;
-          expect(ctrl.buildId()).toBe(bollaDoc.riferimento);
+          expect(ctrl.buildId()).toBe(mm.riferimento);
         });
       });
 
-      describe('buildBolla', function () {
-        it('should put codiceCliente, tipoMagazzino, codiceMagazzino, and causale in the doc', function () {
-          ctrl.id = bollaDoc.riferimento;
+      describe('buildRows', function () {
+        it('should return rows for MovimentoMagazzino', function () {
+          ctrl.id = mm.riferimento;
           ctrl.bollaAs400 = bollaAs400;
-          ctrl.movimentoMagazzino = {
-            numero: '1',
-            data: '20110704',
-            origine: '123456',
-            causale: ['VENDITA', -1, 0]
-          };
-          expect(ctrl.buildBolla()).toEqual(bollaDoc);
+          expect(ctrl.buildRows()).toEqual(mm.rows);
         });
       });
 
       describe('save', function () {
-        function doSave() {
-          expectPUT(bollaDoc._id, bollaDoc, JSON.stringify(okResponse));
-          ctrl.save();
-          $browser.xhr.flush();
-        }
-
-        it('should put the document', function () {
-          ctrl.id = bollaDoc.riferimento;
+        xit('should put the document', function () {
+          ctrl.id = mm.riferimento;
           ctrl.bollaAs400 = bollaAs400;
           ctrl.movimentoMagazzino = {
-            numero: '1',
             data: '20110704',
-            origine: '123456',
-            causale: ['VENDITA', -1, 0]
+            da: '010101',
+            a: '020202',
+            causale: CODICI.CAUSALI_MOVIMENTO_MAGAZZINO[0],
+            causaleA: CODICI.CAUSALI_MOVIMENTO_MAGAZZINO[1]
           };
-          doSave();
+          expectGET('VIEW_NUMERI', { rows: []});
+          expectPUT(mm);
+          ctrl.save();
+          $browser.xhr.flush();
+          expect(scope.$service('$location').path()).toBe(mm._id);
         });
       });
 
       describe('fetch', function () {
         it('should GET bolla only from CouchDB if already present', function () {
-          expectGET(bollaDoc._id, bollaDoc);
+          expectGET(mm);
           expectGET('VIEW_RIFERIMENTI', { rows: [] });
-          $browser.xhr.expectGET('/boutique_app/as400/bolla/data=110704/numero=1234/enteNumerazione=Y/codiceNumerazione=10').respond(JSON.stringify(bollaAs400));
+          $browser.xhr.expectGET('../as400/bolla/data=110704/numero=1234/enteNumerazione=Y/codiceNumerazione=10').respond(JSON.stringify(bollaAs400));
           ctrl.intestazione = intestazione;
           ctrl.fetch();
           $browser.xhr.flush();
@@ -521,8 +530,8 @@ describe('Controller', function () {
         ['923', '70233', '5215', '2100', '019998', 1, 1, { '50': 1, '52': 1 }]
       ],
       rowsExpected = [
-        ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '102', '70233', '5215', '2100', 1, 'PRONTO', 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 3, 1, 'n.d.'],
-        ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '923', '70233', '5215', '2100', 1, 'IN PRODUZIONE', 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 'n.d.']
+        ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '102', '70233', '5215', '2100', 1, 'PRONTO', 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 3, '1', 'n.d.'],
+        ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '923', '70233', '5215', '2100', 1, 'IN PRODUZIONE', 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2, '1', 'n.d.']
       ],
       giacenze = { rows: rows };
 

@@ -1,6 +1,0 @@
-SHELL=/bin/bash
-MAILTO=@{mail}
-PATH=/usr/local/bin:/bin:/usr/sbin:/usr/bin
-# m h  dom mon dow   command
- 32 7    *   *   *   (cd "@{boutiqueRoot}" && ./jake --trace couchdb:sync-as400)
- 29 13   *   *   *   (cd "@{boutiqueRoot}" && ./jake --trace couchdb:sync-as400)

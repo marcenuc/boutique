@@ -1,0 +1,13 @@
+#!/bin/dash -e
+cmd="${1:?What to do?}"
+shift
+cd `dirname "$0"`
+js="commands/${cmd}.js"
+sh="commands/${cmd}.sh"
+if [ -f "$js" ]; then
+  exec node "$js" "$@"
+elif [ -f "$sh" ]; then
+  exec bash -- "$sh" "$@"
+else
+  echo "Command not found: $cmd."
+fi

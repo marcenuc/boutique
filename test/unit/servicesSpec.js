@@ -58,17 +58,6 @@ describe('Service', function () {
         });
       });
 
-      describe('aziende', function () {
-        it('should query couchdb for all docs of type azienda', function () {
-          $browser.xhr.expectGET('/boutique_db/_all_docs?endkey=%22Azienda_%EF%BF%B0%22&include_docs=true&startkey=%22Azienda_%22').respond({ rows: [] });
-          var query = Document.aziende();
-          expect(query).toEqualData({});
-          $browser.xhr.flush();
-          expect(query).toEqualData({ rows: [] });
-        });
-      });
-
-
       describe('clienti', function () {
         it('should query couchdb for all docs of type cliente', function () {
           $browser.xhr.expectGET('/boutique_db/_all_docs?endkey=%22Cliente_010101_%EF%BF%B0%22&include_docs=true&startkey=%22Cliente_010101_%22').respond({ rows: [] });
@@ -79,9 +68,7 @@ describe('Service', function () {
         });
       });
 
-
       describe('save', function () {
-
         it('should PUT new documents', function () {
           var data = { nome: 'Azienda 010101' },
             azienda = new Document(data),
@@ -122,7 +109,7 @@ describe('Service', function () {
               enteNumerazione: 'Y',
               codiceNumerazione: '10'
             };
-          $browser.xhr.expectGET('/boutique_app/as400/bolla/data=110704/numero=40241/enteNumerazione=Y/codiceNumerazione=10').respond(JSON.stringify(intestazioneBolla));
+          $browser.xhr.expectGET('../as400/bolla/data=110704/numero=40241/enteNumerazione=Y/codiceNumerazione=10').respond(JSON.stringify(intestazioneBolla));
           As400.bolla(intestazioneBolla, function (code, data) {
             expect(code).toBe(200);
             expect(data.numero).toBe(intestazioneBolla.numero);
@@ -153,6 +140,12 @@ describe('Service', function () {
         return this.actual.errors.some(function (e) {
           return expected.test(e.message);
         });
+      },
+
+      toBeAuthorized: function () {
+        return this.actual.errors.some(function (e) {
+          return e.message === 'Not authorized';
+        });
       }
     });
   });
@@ -168,8 +161,8 @@ describe('Service', function () {
     });
 
     it('should require an authenticated user', function () {
-      expect(angular.service('Validator')({}).check({})).toHaveError('Not authorized');
-      expect(angular.service('Validator')({}).check({ _deleted: true })).toHaveError('Not authorized');
+      expect(angular.service('Validator')({}).check({})).toBeAuthorized();
+      expect(angular.service('Validator')({}).check({ _deleted: true })).toBeAuthorized();
     });
 
     it('should forbid change of _id', function () {
@@ -219,69 +212,72 @@ describe('Service', function () {
     });
 
     describe('MovimentoMagazzino', function () {
-      var validId = 'MovimentoMagazzino_099999_2011_1234',
+      var validId = 'MovimentoMagazzino_099999_2011_A_1234',
         check123456 = angular.service('Validator')(ctx123456).check;
 
       it('should require owner user for writes', function () {
-        expect(check({ _id: validId })).not.toHaveError('Not authorized');
-        expect(check099999({ _id: validId })).not.toHaveError('Not authorized');
-        expect(check123456({ _id: validId })).toHaveError('Not authorized');
+        expect(check({ _id: validId })).not.toBeAuthorized();
+        expect(check099999({ _id: validId })).not.toBeAuthorized();
+        expect(check123456({ _id: validId })).toBeAuthorized();
       });
 
       describe('accodato', function () {
-        it('should allow non owner, only if admin', function () {
+        it('should allow setting by non owner only if is admin', function () {
           //TODO
         });
 
-        describe('causale "VENDITA"', function () {
-          var vendita = ['VENDITA', -1, 0],
+        describe('causale "VENDITA A CLIENTI"', function () {
+          var vendita = ['VENDITA A CLIENTI', -1],
             accodatoTrue = { _id: validId, accodato: true, causale: vendita },
             accodatoFalse = { _id: validId, accodato: false, causale: vendita },
             accodatoUndefined = { _id: validId, causale: vendita };
 
           it('should allow setting it by owner if new document', function () {
-            expect(check099999(accodatoTrue)).not.toHaveError('Not authorized');
+            expect(check099999(accodatoTrue)).not.toBeAuthorized();
           });
           it('should allow setting it by owner if not already accodato', function () {
-            expect(check099999(accodatoTrue, accodatoFalse)).not.toHaveError('Not authorized');
-            expect(check099999(accodatoTrue, accodatoUndefined)).not.toHaveError('Not authorized');
+            expect(check099999(accodatoTrue, accodatoFalse)).not.toBeAuthorized();
+            expect(check099999(accodatoTrue, accodatoUndefined)).not.toBeAuthorized();
           });
           it('should not allow any change by owner if aready accodato', function () {
-            expect(check099999(accodatoFalse, accodatoTrue)).toHaveError('Not authorized');
-            expect(check099999(accodatoUndefined, accodatoTrue)).toHaveError('Not authorized');
-            expect(check099999(accodatoTrue, accodatoTrue)).toHaveError('Not authorized');
+            expect(check099999(accodatoFalse, accodatoTrue)).toBeAuthorized();
+            expect(check099999(accodatoUndefined, accodatoTrue)).toBeAuthorized();
+            expect(check099999(accodatoTrue, accodatoTrue)).toBeAuthorized();
           });
         });
-        describe('causale NOT "VENDITA"', function () {
+        describe('causale NOT "VENDITA A CLIENTI"', function () {
           it('should require admin user', function () {
             var accodatoTrue = { _id: validId, accodato: true },
               accodatoUndefined = { _id: validId };
-            expect(check(accodatoTrue)).not.toHaveError('Not authorized');
-            expect(check(accodatoTrue, accodatoUndefined)).not.toHaveError('Not authorized');
-            expect(check099999(accodatoTrue)).toHaveError('Not authorized');
-            expect(check099999(accodatoUndefined, accodatoTrue)).toHaveError('Not authorized');
-            expect(check099999(accodatoTrue, accodatoUndefined)).toHaveError('Not authorized');
-            expect(check099999(accodatoTrue, accodatoTrue)).toHaveError('Not authorized');
-            expect(check123456(accodatoTrue)).toHaveError('Not authorized');
+            expect(check(accodatoTrue)).not.toBeAuthorized();
+            expect(check(accodatoTrue, accodatoUndefined)).not.toBeAuthorized();
+            expect(check099999(accodatoTrue)).toBeAuthorized();
+            expect(check099999(accodatoUndefined, accodatoTrue)).toBeAuthorized();
+            expect(check099999(accodatoTrue, accodatoUndefined)).toBeAuthorized();
+            expect(check099999(accodatoTrue, accodatoTrue)).toBeAuthorized();
+            expect(check123456(accodatoTrue)).toBeAuthorized();
           });
         });
       });
 
-      it('should require _id with (codice, anno, numero)', function () {
+      it('should require _id with (codice, anno, gruppo, numero)', function () {
         expect(check({ _id: validId })).not.toHaveError('Invalid type');
         expect(check({ _id: validId })).not.toHaveError('Invalid azienda code');
         expect(check({ _id: validId })).not.toHaveError('Invalid year');
+        expect(check({ _id: validId })).not.toHaveError('Invalid gruppo');
         expect(check({ _id: validId })).not.toHaveError('Invalid numero');
-        expect(check({ _id: 'MovimentoMagazzino_12345_2011_1234' })).toHaveError('Invalid azienda code');
-        expect(check({ _id: 'MovimentoMagazzino_123456_201I_1234' })).toHaveError('Invalid year');
-        expect(check({ _id: 'MovimentoMagazzino_123456_2011_1234A' })).toHaveError('Invalid numero');
+        expect(check({ _id: 'MovimentoMagazzino_123456_2011_1234' })).toHaveError('Invalid code');
+        expect(check({ _id: 'MovimentoMagazzino_12345_2011_A_1234' })).toHaveError('Invalid azienda code');
+        expect(check({ _id: 'MovimentoMagazzino_123456_201I_A_1234' })).toHaveError('Invalid year');
+        expect(check({ _id: 'MovimentoMagazzino_123456_2011_1_1234' })).toHaveError('Invalid gruppo');
+        expect(check({ _id: 'MovimentoMagazzino_123456_2011_A_1234A' })).toHaveError('Invalid numero');
       });
 
-      it('should require columnNames to be barcode, and qta', function () {
+      it('should require columnNames to be barcode, scalarino, descrizioneTaglia, descrizione, costo, and qta', function () {
         var msg = 'Invalid columnNames';
         expect(check({ _id: validId })).toHaveError('Required field: columnNames');
         expect(check({ _id: validId, columnNames: ['barcode', 'qta', 'other'] })).toHaveError(msg);
-        expect(check({ _id: validId, columnNames: ['barcode', 'qta'] })).not.toHaveError(msg);
+        expect(check({ _id: validId, columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'] })).not.toHaveError(msg);
       });
 
       describe('data', function () {
@@ -299,39 +295,119 @@ describe('Service', function () {
         });
       });
 
-      it('should require causale', function () {
-        var xpct, causali = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO, msg = 'Invalid causale';
-        expect(check({ _id: validId })).toHaveError(msg);
-        causali.forEach(function (causale) {
-          xpct = expect(check({ _id: validId, causale: causale }));
-          xpct.not.toHaveError(msg);
+      describe('causale', function () {
+        var msg = 'Invalid causale';
+        it('should be required', function () {
+          expect(check({ _id: validId })).toHaveError(msg);
         });
-        expect(check({ _id: validId, causale: [causali[0][0], 0, 1] })).toHaveError(msg);
+
+        it('should be coupled with causaleA only when needed', function () {
+          var causali = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO;
+          causali.forEach(function (causale) {
+            var id = CODICI.idMovimentoMagazzino('010101', '2011', causale.gruppo, 1),
+              causaleA = causali[causale.causaleA],
+              doc = { _id: id, causale: [causale.descrizione, causale.segno] };
+            if (causaleA) {
+              expect(check(doc)).toHaveError(msg);
+              doc.a = '020202';
+              doc.causaleA = [causaleA.descrizione, causaleA.segno];
+            }
+            expect(check(doc)).not.toHaveError(msg);
+          });
+        });
+
+        it('should be rejected when unknown', function () {
+          expect(check({ _id: validId, causale: ['XXX', 1] })).toHaveError(msg);
+        });
       });
 
-      it('should require destinazione if required by causale', function () {
+      describe('causaleA', function () {
+        var msg = 'Invalid causale';
+        it('should be rejected when unknown', function () {
+          var causale = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO[0],
+            c = [causale.descrizione, causale.segno];
+          expect(check({ _id: validId, causale: c, causaleA: c })).toHaveError(msg);
+        });
+      });
+
+      it('should require a if required by causale', function () {
         var causali = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO,
-          msg = 'Invalid destinazione';
+          msg = 'Invalid a';
         causali.forEach(function (causale) {
-          var xpct = expect(check({ _id: validId, causale: causale }));
-          if (causale[2]) {
-            expect(check({ _id: validId, causale: causale, destinazione: '099999' })).not.toHaveError(msg);
-            expect(check({ _id: validId, causale: causale, destinazione: '99999' })).toHaveError(msg);
+          var c = [causale.descrizione, causale.segno];
+          if (causale.hasOwnProperty('causaleA')) {
+            expect(check({ _id: validId, causale: c, a: '099999' })).not.toHaveError(msg);
+            expect(check({ _id: validId, causale: c, a: '99999' })).toHaveError(msg);
           } else {
-            xpct = xpct.not;
+            expect(check({ _id: validId, causale: c })).not.toHaveError(msg);
           }
-          xpct.toHaveError(msg);
         });
       });
 
-      it('should require a valid list', function () {
-        var msg = 'Elenco vuoto';
-        expect(check({ _id: validId })).toHaveError(msg);
-        expect(check({ _id: validId, rows: [] })).toHaveError(msg);
-        expect(check({ _id: validId, rows: [['12345678901234567', 123]] })).toHaveError('Invalid barcode at row 0: "12345678901234567"');
-        expect(check({ _id: validId, rows: [['123456789012345678', -123]] })).toHaveError('Invalid quantity at row 0: "123456789012345678"');
-        expect(check({ _id: validId, rows: [['123456789012345678', '123']] })).toHaveError('Invalid quantity at row 0: "123456789012345678"');
-        expect(check({ _id: validId, rows: [['123456789012345678', 123]] })).not.toHaveError(msg);
+      describe('tipoMagazzino and tipoMagazzinoA', function () {
+        var msg = 'Invalid tipoMagazzino', msgA = 'Invalid tipoMagazzinoA';
+        it('should be undefined, 1, 2, or 3', function () {
+          expect(check({ _id: validId })).not.toHaveError(msg);
+          expect(check({ _id: validId, tipoMagazzino: 1 })).not.toHaveError(msg);
+          expect(check({ _id: validId, tipoMagazzino: 2 })).not.toHaveError(msg);
+          expect(check({ _id: validId, tipoMagazzino: 3 })).not.toHaveError(msg);
+          expect(check({ _id: validId, tipoMagazzino: 4 })).toHaveError(msg);
+          expect(check({ _id: validId, tipoMagazzino: 0 })).toHaveError(msg);
+          expect(check({ _id: validId })).not.toHaveError(msgA);
+          expect(check({ _id: validId, tipoMagazzinoA: 1 })).not.toHaveError(msgA);
+          expect(check({ _id: validId, tipoMagazzinoA: 2 })).not.toHaveError(msgA);
+          expect(check({ _id: validId, tipoMagazzinoA: 3 })).not.toHaveError(msgA);
+          expect(check({ _id: validId, tipoMagazzinoA: 4 })).toHaveError(msgA);
+          expect(check({ _id: validId, tipoMagazzinoA: 0 })).toHaveError(msgA);
+        });
+      });
+
+      describe('inProduzione', function () {
+        var msg = 'Invalid inProduzione';
+        it('should be undefined, or 1', function () {
+          expect(check({ _id: validId })).not.toHaveError(msg);
+          expect(check({ _id: validId, inProduzione: 1 })).not.toHaveError(msg);
+          expect(check({ _id: validId, inProduzione: 0 })).toHaveError(msg);
+          expect(check({ _id: validId, inProduzione: 2 })).toHaveError(msg);
+        });
+      });
+
+      describe('rows', function () {
+        it('should be required', function () {
+          expect(check({ _id: validId })).toHaveError('Invalid rows');
+        });
+
+        describe('row', function () {
+          it('should have valid barcode', function () {
+            expect(check({ _id: validId, rows: [['12345678901234567']] })).toHaveError('Invalid barcode[0]: "12345678901234567"');
+            expect(check({ _id: validId, rows: [['123456789012345678']] })).not.toMatchError(/^Invalid barcode\[0\]/);
+          });
+
+          it('should have valid scalarino', function () {
+            expect(check({ _id: validId, rows: [['105984271346730001', 'a']] })).toHaveError('Invalid scalarino[0]: "a"');
+            expect(check({ _id: validId, rows: [['105984271346730001', 1]] })).not.toMatchError(/^Invalid scalarino\[0\]/);
+          });
+
+          it('should have valid descrizioneTaglia', function () {
+            expect(check({ _id: validId, rows: [['105984271346730001', 1, 12]] })).toHaveError('Invalid descrizioneTaglia[0]: "12"');
+            expect(check({ _id: validId, rows: [['105984271346730001', 1, 'TU']] })).not.toMatchError(/^Invalid descrizioneTaglia\[0\]/);
+          });
+
+          it('should have valid descrizione', function () {
+            expect(check({ _id: validId, rows: [['105984271346730001', 1, 'TU', '']] })).toHaveError('Invalid descrizione[0]: ""');
+            expect(check({ _id: validId, rows: [['105984271346730001', 1, 'TU', 'Bretelle']] })).not.toMatchError(/^Invalid descrizione\[0\]/);
+          });
+
+          it('should have valid costo', function () {
+            expect(check({ _id: validId, rows: [['105984271346730001', 1, 'TU', 'Bretelle', 12.34]] })).toHaveError('Invalid costo[0]: "12.34"');
+            expect(check({ _id: validId, rows: [['105984271346730001', 1, 'TU', 'Bretelle', 1234]] })).not.toMatchError(/^Invalid costo\[0\]/);
+          });
+
+          it('should have valid qta', function () {
+            expect(check({ _id: validId, rows: [['105984271346730001', 1, 'TU', 'Bretelle', 1234, 1.2]] })).toHaveError('Invalid qta[0]: "1.2"');
+            expect(check({ _id: validId, rows: [['105984271346730001', 1, 'TU', 'Bretelle', 1234, 10]] })).not.toMatchError(/^Invalid qta\[0\]/);
+          });
+        });
       });
     });
 
@@ -361,8 +437,8 @@ describe('Service', function () {
         columnNames = ['costo', 'prezzo1', 'prezzo2', 'offerta'];
 
       it('should require admin user for writes', function () {
-        expect(check({ _id: validId })).not.toHaveError('Not authorized');
-        expect(check099999({ _id: validId })).toHaveError('Not authorized');
+        expect(check({ _id: validId })).not.toBeAuthorized();
+        expect(check099999({ _id: validId })).toBeAuthorized();
       });
 
       it('should require valid _id with (versione)', function () {
@@ -434,8 +510,8 @@ describe('Service', function () {
       var validId = 'Giacenze';
 
       it('should require admin user for writes', function () {
-        expect(check({ _id: validId })).not.toHaveError('Not authorized');
-        expect(check099999({ _id: validId })).toHaveError('Not authorized');
+        expect(check({ _id: validId })).not.toBeAuthorized();
+        expect(check099999({ _id: validId })).toBeAuthorized();
       });
 
       it('should require columnNames to be stagione, modello, articolo, colore, codiceAzienda, inProduzione, tipoMagazzino, giacenze', function () {
@@ -446,56 +522,64 @@ describe('Service', function () {
       });
 
       it('should require a valid inventory', function () {
-        var msg = 'Inventario vuoto', msgp = /Invalid \w+ at row 0: /;
+        var msg = 'Inventario vuoto', msgp = /Invalid \w+\[0\]: /;
         expect(check({ _id: validId })).toHaveError(msg);
         expect(check({ _id: validId, rows: [] })).toHaveError(msg);
         expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 2, { '01': 1 }]] })).not.toHaveError(msg);
-        expect(check({ _id: validId, rows: [['', '45678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).toMatchError(msgp);
-        expect(check({ _id: validId, rows: [['123', '345678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).toMatchError(msgp);
-        expect(check({ _id: validId, rows: [['123', '45678', '0a', '3456', '123456', 1, 1, { '01': 1 }]] })).toMatchError(msgp);
-        expect(check({ _id: validId, rows: [['123', '45678', '9012', '34567', '123456', 1, 1, { '01': 1 }]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['', '45678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).toHaveError('Invalid stagione[0]: ""');
+        expect(check({ _id: validId, rows: [['123', '345678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).toHaveError('Invalid modello[0]: "345678"');
+        expect(check({ _id: validId, rows: [['123', '45678', '0a', '3456', '123456', 1, 1, { '01': 1 }]] })).toHaveError('Invalid articolo[0]: "0a"');
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '34567', '123456', 1, 1, { '01': 1 }]] })).toHaveError('Invalid colore[0]: "34567"');
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '012': 1 }]] })).toHaveError('Invalid taglia[0]: "012"');
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': -1 }]] })).not.toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': 0 }]] })).toHaveError('Invalid qta[0]: "0"');
         expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).not.toMatchError(msgp);
-        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': -1 }]] })).toMatchError(msgp);
-        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).not.toMatchError(msgp);
-        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '12345', 1, 1, { '01': 1 }]] })).toMatchError(msgp);
-        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 1, { '01': 1 }]] })).not.toMatchError(msgp);
-        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 2, 1, { '01': 1 }]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '12345', 1, 1, { '01': 1 }]] })).toHaveError('Invalid codiceAzienda[0]: "12345"');
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 2, 1, { '01': 1 }]] })).toHaveError('Invalid inProduzione[0]: "2"');
         expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 0, 1, { '01': 1 }]] })).not.toMatchError(msgp);
-        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 0, { '01': 1 }]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 0, { '01': 1 }]] })).toHaveError('Invalid tipoMagazzino[0]: "0"');
         expect(check({ _id: validId, rows: [['123', '45678', '9012', '3456', '123456', 1, 2, { '01': 1 }]] })).not.toMatchError(msgp);
       });
     });
 
     describe('Inventario', function () {
-      var validId = 'Inventario_099999_3';
+      var validId = 'Inventario',
+        columnNames = ['modello', 'articolo', 'colore', 'stagione', 'da', 'inProduzione', 'tipoMagazzino',
+                       'scalarino', 'taglia', 'descrizioneTaglia', 'descrizione', 'qta'];
 
-      it('should require tipo magazzino in _id', function () {
-        var msg = 'Invalid tipo magazzino in _id';
-        expect(check({ _id: 'Inventario_099999' })).toHaveError(msg);
-        expect(check({ _id: validId })).not.toHaveError(msg);
+      it('should require admin user for writes', function () {
+        expect(check({ _id: validId })).not.toBeAuthorized();
+        expect(check099999({ _id: validId })).toBeAuthorized();
       });
 
-      it('should require columnNames to be barcode, giacenza, and costo', function () {
+      it('should require columnNames to be ' + columnNames.join(', '), function () {
         var msg = 'Invalid columnNames';
         expect(check({ _id: validId })).toHaveError('Required field: columnNames');
         expect(check({ _id: validId, columnNames: ['barcode', 'costo', 'giacenza', 'inProduzione'] })).toHaveError(msg);
-        expect(check({ _id: validId, columnNames: ['barcode', 'giacenza', 'costo', 'inProduzione'] })).not.toHaveError(msg);
+        expect(check({ _id: validId, columnNames: columnNames })).not.toHaveError(msg);
       });
 
       it('should require a valid inventory', function () {
-        var msg = 'Inventario vuoto';
+        var msg = 'Invalid rows', msgp = /Invalid \w+\[0\]: "[\-A-Z0-9]*"$/;
         expect(check({ _id: validId })).toHaveError(msg);
         expect(check({ _id: validId, rows: [] })).toHaveError(msg);
-        expect(check({ _id: validId, rows: [['12345678901234567', 123, 100]] })).toHaveError('Invalid barcode at row 0: "12345678901234567"');
-        expect(check({ _id: validId, rows: [['123456789012345678', -123, 100]] })).toHaveError('Invalid quantity at row 0: "123456789012345678"');
-        expect(check({ _id: validId, rows: [['123456789012345678', '123', 100]] })).toHaveError('Invalid quantity at row 0: "123456789012345678"');
-        expect(check({ _id: validId, rows: [['123456789012345678', 123, '100']] })).toHaveError('Invalid costo at row 0: "123456789012345678"');
-        expect(check({ _id: validId, rows: [['123456789012345678', 123, -100]] })).toHaveError('Invalid costo at row 0: "123456789012345678"');
-        //TODO a regime non dovrebbe essere più valido inserire costo=0. Per ora serve.
-        expect(check({ _id: validId, rows: [['123456789012345678', 123, 0]] })).not.toHaveError('Invalid costo at row 0: "123456789012345678"');
-        expect(check({ _id: validId, rows: [['123456789012345678', 123, 100, 0]] })).toHaveError('Invalid inProduzione at row 0: "123456789012345678"');
-        expect(check({ _id: validId, rows: [['123456789012345678', 123, 100]] })).not.toHaveError(msg);
-        expect(check({ _id: validId, rows: [['123456789012345678', 123, 100, 1]] })).not.toHaveError(msg);
+        expect(check({ _id: validId, rows: [['45678', '9012', '3456', '123', '123456', 0, 2, 6, '01', 'TU', 'MUTANDA', 1]] })).not.toHaveError(msg);
+        expect(check({ _id: validId, rows: [['456780', '9012', '3456', '123', '123456', 0, 2, 6, '01', 'TU', 'MUTANDA', 1]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['45678', '19012', '3456', '123', '123456', 0, 2, 6, '01', 'TU', 'MUTANDA', 1]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['45678', '9012', '34560', '123', '123456', 0, 2, 6, '01', 'TU', 'MUTANDA', 1]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['45678', '9012', '3456', '1234', '123456', 0, 2, 6, '01', 'TU', 'MUTANDA', 1]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['45678', '9012', '3456', '123', '12345', 0, 2, 6, '01', 'TU', 'MUTANDA', 1]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['45678', '9012', '3456', '123', '123456', 2, 2, 6, '01', 'TU', 'MUTANDA', 1]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['45678', '9012', '3456', '123', '123456', 0, 0, 6, '01', 'TU', 'MUTANDA', 1]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['45678', '9012', '3456', '123', '123456', 0, 2, 0, '01', 'TU', 'MUTANDA', 1]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['45678', '9012', '3456', '123', '123456', 0, 2, 6, '012', 'TU', 'MUTANDA', 1]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['45678', '9012', '3456', '123', '123456', 0, 2, 6, '01', '', 'MUTANDA', 1]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['45678', '9012', '3456', '123', '123456', 0, 2, 6, '01', 'TU', '', 1]] })).toMatchError(msgp);
+        expect(check({ _id: validId, rows: [['45678', '9012', '3456', '123', '123456', 0, 2, 6, '01', 'TU', 'MUTANDA', 0]] })).toMatchError(msgp);
+      });
+
+      it('should allow negative values of qta', function () {
+        expect(check({ _id: validId, rows: [['45678', '9012', '3456', '123', '123456', 0, 2, 6, '01', 'TU', 'MUTANDA', -1]] })).not.toHaveError('Invalid qta[0]: "-1"');
       });
     });
 

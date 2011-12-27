@@ -1,20 +1,20 @@
 {
   "name": "boutique",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "tailor's shop manager",
   "author": "Marcello Nuccio <marcello.nuccio@gmail.com>",
   "dependencies": {
-    "requirejs": "*",
-    "underscore": "1.1.x",
+    "requirejs": "~1.0.3",
+    "underscore": "1.2.x",
     "connect": "1.7.x",
-    "jake": "~0.1.14",
-    "jasmine-node": "*",
-    "uglify-js": "~1.1.1",
-    "cradle": "0.5.x",
+    "uglify-js": "~1.2.2",
     "csv": "~0.0.10",
+    "nano": ">=1.0.0",
     "follow": ">=0.2.0",
-    "findit": "*",
-    "glob": "2.0.x"
+    "findit": "*"
   },
-  "engines": { "node": "~0.4.12" }
+  "devDependencies": {
+    "jasmine-node": ">=1.0.14",
+  },
+  "engines": { "node": "~0.6.5" }
 }

@@ -1,0 +1,34 @@
+<form name=form>
+<h3>Movimento magazzino</h3>
+ <p>Causale: <b>{{model.causale[0]}}</b>, Segno: <b>{{model.causale[1]}}</b><span ng:show="model.a">, Causale associata: <b>{{model.causaleA[0]}}</b></span>
+ <p>Da: <b>{{nomeAzienda(codes.da)}}</b><span ng:show="model.a">, A: <b>{{nomeAzienda(model.a)}}</b></span>
+ <p>Data: <b>{{model.data}}</b>, Numero: <b>{{codes.numero}}</b>, Gruppo numerazione: <b>{{codes.gruppo}}</b>
+<table>
+ <caption>Righe dettaglio</caption>
+ <thead>
+  <tr><th>#<th>Codice SMACT<th>Scalarino<th>Taglia<th>Descrizione<th>Costo<th>Quantità<th>ALTRO
+  <tbody>
+   <tr ng:repeat="row in model.rows">
+    <td>{{$index + 1}}
+    <td>{{row[col.barcode] | barcodeAs400}}<td>{{row[col.scalarino]}}<td>{{row[col.descrizioneTaglia]}}<td>{{row[col.descrizione]}}<td>{{row[col.costo]}}
+    <td><input ng:model="row[col.qta]" size=3 type=integer min=1>
+    <td>[&nbsp;<a href="" ng:click="$parent.model.rows.splice($index, 1)" title="Elimina riga">X</a>&nbsp;]
+   <tr>
+    <th>Nuovo:
+    <td><input type=barcodeAs400 my:focus="" ng:model="newBarcode" size=26 ng:pattern="rexpBarcode">
+    <td colspan=4>&nbsp;
+    <td><input ng:model=newQta size=3 type=integer min=1>
+    <td>&nbsp;
+  <tfoot>
+   <tr><th colspan=6 style="text-align:right">Quantità totale:<th>{{qtaTotale()}}<th>&nbsp;
+ </table>
+ <label><input type=checkbox ng:model="model.accodato" value=1>&nbsp;Accodato</label>
+<div class=control>
+ <button ng:click="save()" ng:disabled="{{form.$invalid}}">Salva</button>
+ [&nbsp;<a href="#/MovimentoMagazzino_">Nuovo</a>&nbsp;]
+</div>
+</form>
+<div class=header>
+ <p><a ng:click="prepareDownloads()">Prepara etichette</a>
+ <object id=downloads type="application/x-shockwave-flash" data="save.swf"><param name=allowScriptAccess value=always /><param name=wmode value=opaque /></object>
+</div>

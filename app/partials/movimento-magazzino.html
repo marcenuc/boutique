@@ -1,42 +1,26 @@
-<form ng:submit="submit()" name=movimentoMagazzino>
-<!--<fieldset><legend>Movimento magazzino</legend>-->
- <label>Numero bolla: <input ng:model=numero size=8 required></label>
- <label>Data bolla (AAAAMMGG): <input ng:model=data size=8 required></label><p>
- <label>Origine: <select ng:model=origine ng:options="a as aziende[a] for a in codiciAzienda"><option></select></label>
- <label>Destinazione: <select ng:model=destinazione ng:options="a as aziende[a] for a in codiciAzienda"><option></select></label><p>
- <label>Causale: <select ng:model=causale ng:options="causa[0] for causa in causali"></select></label>&nbsp;&nbsp;Segno origine:&nbsp;"{{causale[1]}}";&nbsp;&nbsp;Segno destinazione:&nbsp;"{{causale[2]}}"<p>
- <table>
-  <caption>Righe</caption>
-  <thead>
-   <tr><th>#<th>Codice a barre<th>Codici<th>Descrizione<th>Taglia<th>Quantità<th>ALTRO
-  <tbody>
-   <tr ng:repeat="row in rows">
-    <td>{{$index + 1}}
-    <td><ng:switch on="$position"><input ng:switch-when="last" my:focus="" ng:model="row.barcode" size=21 pattern="^\d{18}$"><input ng:switch-default ng:model="row.barcode" size=21 pattern="^\d{18}$"></ng:switch>
-    <td>{{row.codes.stagione}}&nbsp;{{row.codes.modello}}&nbsp;{{row.codes.articolo}}&nbsp;{{row.codes.colore}}
-    <td>{{row.descrizione}}
-    <td>{{row.descrizioneTaglia}}
-    <td><input ng:model="row.qta" size=3>
-    <td>[&nbsp;<a href="" ng:click="rows.$remove(row)" title="Elimina riga">X</a>&nbsp;]
-  <tfoot>
-    <tr><th colspan=5 style="text-align:right">Quantità totale:<th>{{qtaTotale}}<th>&nbsp;
- </table>
- <label><input type=checkbox ng:model=accodato value=1>&nbsp;Accodato</label><p>
- <button ng:click="action = 'save'">Salva</button>
- <button ng:click="action = 'find'">Cerca</button>
- [&nbsp;<a href="#/MovimentoMagazzino">Nuovo</a>&nbsp;]
-<!--</fieldset>-->
+<form ng:submit="find()" name=movimentoMagazzino>
+<fieldset><legend>Ricerca movimento magazzino</legend>
+ <label>Causale: <select ng:model="form.causale" ng:options="causale.descrizione for causale in causali" required></select></label><br>
+   <span ng:show="form.causale">Segno: <b>{{form.causale.segno}}</b>,
+   Gruppo: <b>{{form.causale.gruppo}}</b></span><span ng:show="form.causale.causaleA">,
+   Causale associata: <b>{{causali[form.causale.causaleA].descrizione}}</b></span><p>
+ <label>Da: <select ng:model="form.da" ng:options="c as r.value for (c, r) in aziende" required><option></select></label>
+ <label>Anno: <input ng:model="form.anno" size=5 maxlength=4 type=integer min=2000 max=2099 required></label>
+ <label>Numero: <input ng:model="form.numero" size=7 type=integer min=0 required></label><p>
+ <input type=submit value=Cerca ng:disabled="{{movimentoMagazzino.$invalid}}">
+ [&nbsp;<a href="#/MovimentoMagazzino_">Nuovo</a>&nbsp;]
+</fieldset>
 </form>
-<div>
-<p>Stampe etichette
-<ul>
-<li><a ng:href="/boutique_app/taskRunner/stampaEtichetteFromMovimentoMagazzino/id={{id}}/comparator=MACTS/layout=standard/formato=strette">Etichette con ordinamento MACTS, layout standard, formato stretto.</a>
-<li><a ng:href="/boutique_app/taskRunner/stampaEtichetteFromMovimentoMagazzino/id={{id}}/comparator=MACTS/layout=standard/formato=larghe">Etichette con ordinamento MACTS, layout standard, formato largo.</a>
-<li><a ng:href="/boutique_app/taskRunner/stampaEtichetteFromMovimentoMagazzino/id={{id}}/comparator=MACTS/layout=outlet/formato=strette">Etichette con ordinamento MACTS, layout outlet, formato stretto.</a>
-<li><a ng:href="/boutique_app/taskRunner/stampaEtichetteFromMovimentoMagazzino/id={{id}}/comparator=MACTS/layout=outlet/formato=larghe">Etichette con ordinamento MACTS, layout outlet, formato largo.</a>
-<li><a ng:href="/boutique_app/taskRunner/stampaEtichetteFromMovimentoMagazzino/id={{id}}/comparator=TSMAC/layout=standard/formato=strette">Etichette con ordinamento TSMAC, layout standard, formato stretto.</a>
-<li><a ng:href="/boutique_app/taskRunner/stampaEtichetteFromMovimentoMagazzino/id={{id}}/comparator=TSMAC/layout=standard/formato=larghe">Etichette con ordinamento TSMAC, layout standard, formato largo.</a>
-<li><a ng:href="/boutique_app/taskRunner/stampaEtichetteFromMovimentoMagazzino/id={{id}}/comparator=TSMAC/layout=outlet/formato=strette">Etichette con ordinamento TSMAC, layout outlet, formato stretto.</a>
-<li><a ng:href="/boutique_app/taskRunner/stampaEtichetteFromMovimentoMagazzino/id={{id}}/comparator=TSMAC/layout=outlet/formato=larghe">Etichette con ordinamento TSMAC, layout outlet, formato largo.</a>
-</ul>
-</div>
+<table summary="Lista movimenti da accodare">
+ <caption>Movimenti da accodare</caption>
+ <thead>
+  <tr><th>#<th>Da<th>Data<th>Causale<th>Gruppo<th>Numero
+  <tbody>
+   <tr ng:repeat="row in pendenti.rows">
+    <td><a ng:href="#/{{row.id}}">{{$index + 1}}</a>
+    <td>{{nomeAzienda(row.key[0])}}
+    <td>{{row.key[1]}}
+    <td>{{row.key[2]}}
+    <td>{{row.key[3]}}
+    <td>{{row.key[4]}}
+ </table>
