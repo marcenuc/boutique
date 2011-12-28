@@ -231,7 +231,7 @@ class boutique(
     content => template('boutique/logrotate.erb'),
   }
 
-  file { "${webapp_folder}/config/servers-configs.js":
+  file { "${webapp_folder}/config/server-configs.js":
     ensure  => file,
     # TODO should we change owner? this file has sensitive data...
     owner   => $admin_user,
