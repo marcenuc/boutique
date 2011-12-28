@@ -8,7 +8,6 @@
     "underscore": "1.2.x",
     "connect": "1.7.x",
     "uglify-js": "~1.2.2",
-    "csv": "~0.0.10",
     "nano": ">=1.0.0",
     "follow": ">=0.2.0",
     "findit": "*"
