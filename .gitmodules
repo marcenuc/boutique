@@ -1,6 +1,3 @@
-[submodule "lib/connect-exec"]
-	path = lib/connect-exec
-	url = git://github.com/marcenuc/connect-exec.git
 [submodule "lib/As400Querier"]
 	path = lib/As400Querier
 	url = git://github.com/marcenuc/As400Querier.git
