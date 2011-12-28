@@ -309,10 +309,8 @@
         })
         .replace(/\r/g, '\\r')
         .replace(/\n/g, '\\n')
-        .replace(/\t/g, '\\t')
-        + "');}return __p.join('');",
-        func = new Function('obj', tmpl);
-      return func(data);
+        .replace(/\t/g, '\\t') + "');}return __p.join('');";
+      return (new Function('obj', tmpl))(data);
     }
 
 
