@@ -16,7 +16,7 @@ webapp_folder="${home_folder}/webapp"
 
 couchdb_secret=$(dd if=/dev/urandom count=1 2> /dev/null |sha1sum |cut -f1 -d\ )
 
-sudo apt-get install puppet
+sudo apt-get install git puppet
 sudo mkdir -p "$home_folder"
 sudo git clone "$PWD" "$webapp_folder"
 
