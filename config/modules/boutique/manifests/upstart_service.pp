@@ -8,6 +8,7 @@ define upstart_service($run_command, $admin_user) {
     mode    => '0444',
     content => template('boutique/service.conf.erb'),
     require => User[$admin_user],
+    notify  => Service[$name],
   }
 
   service { $name:
@@ -17,6 +18,7 @@ define upstart_service($run_command, $admin_user) {
     provider   => upstart,
     # Upstart does not detect new .conf file on restart of service.
     hasrestart => false,
-    subscribe  => Service[$name],
+    hasstatus  => false,
+    status     => "status '${service_name}' | grep -q '${service_name} start/running'"
   }
 }
