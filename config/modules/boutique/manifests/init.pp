@@ -226,6 +226,13 @@ class boutique(
     subscribe => File['smb.conf'],
   }
 
+  file { $couchdb_log:
+    ensure => file,
+    owner  => $admin_user,
+    mode   => '0640',
+    notify => Service['couchdb'],
+  }
+
   file { '/etc/logrotate.d/boutique':
     ensure  => file,
     content => template('boutique/logrotate.erb'),
