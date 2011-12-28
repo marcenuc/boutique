@@ -102,6 +102,7 @@ class boutique(
     provider   => upstart,
     # Upstart does not detect new .conf file on restart of service.
     hasrestart => false,
+    hasstatus  => false,
   }
 
   unpacked_package { ['CouchDB', 'NodeJS']:
