@@ -168,9 +168,10 @@ class boutique(
 
   file { $couchdb_lib_folder:
     ensure  => directory,
+    recurse => true,
     owner   => $admin_user,
     group   => $admin_user,
-    mode    => '0755',
+    mode    => '0644',
     require => File['lib'],
     notify  => Service['couchdb'],
   }
@@ -207,9 +208,10 @@ class boutique(
 
   file { $photo_subfolders:
     ensure  => directory,
+    recurse => true,
     owner   => $admin_user,
     group   => $admin_user,
-    mode    => '0755',
+    mode    => '0664',
     require => File[$photo_folder],
   }
 
