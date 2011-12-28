@@ -245,6 +245,7 @@ class boutique(
     group   => $admin_user,
     mode    => '0440',
     content => template('boutique/server-configs.js.erb'),
+    notify  => [Service['webserver'], Service['follow']],
   }
 
   file { 'as400-settings':
