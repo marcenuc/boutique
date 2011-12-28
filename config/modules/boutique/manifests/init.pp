@@ -116,9 +116,15 @@ class boutique(
     require     => [Unpacked_package['CouchDB'], User[$admin_user]],
   }
 
+  local_bin { ['node', 'node-waf', 'npm']:
+    package_folder => $nodejs_folder,
+    package_name   => 'NodeJS',
+  }
+
   exec { 'build':
     command => "${webapp_folder}/run build",
     cwd     => $webapp_folder,
+    require => Local_bin['node'],
   }
 
   upstart_service { 'webserver':
