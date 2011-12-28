@@ -180,19 +180,7 @@
       info.loading += 1;
       return Document.listini(loaded,
         angular.bind(this, loadedError, 'listini'),
-        function (response) {
-          var listini = {}, rows = response.rows, r, i, ii, codes;
-          // TODO DRY copiato in listino.js
-          for (i = 0, ii = rows.length; i < ii; i += 1) {
-            r = rows[i];
-            codes = CODICI.parseIdListino(r.id);
-            if (codes) {
-              r.doc.col = CODICI.colNamesToColIndexes(r.doc.columnNames);
-              listini[codes.versione] = r.doc;
-            }
-          }
-          return listini;
-        });
+        CODICI.toSearchableListini);
     };
 
     // TODO DRY there's lot of repetition in this code

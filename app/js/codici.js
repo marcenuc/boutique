@@ -458,4 +458,16 @@ var CODICI;
     return col;
   };
 
+  codici.toSearchableListini = function (viewResponse) {
+    var rows = viewResponse.rows, doc, i, ii, codes, listini = {};
+    for (i = 0, ii = rows.length; i < ii; i += 1) {
+      doc = rows[i].doc;
+      codes = codici.parseIdListino(doc._id);
+      if (codes) {
+        doc.col = codici.colNamesToColIndexes(doc.columnNames);
+        listini[codes.versione] = doc;
+      }
+    }
+    return listini;
+  };
 }());
