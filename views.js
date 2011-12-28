@@ -22,7 +22,7 @@ define(function (require) {
       return rows;
     },
 
-    aziende: function map(doc) {
+    aziende: function mapAziende(doc) {
       var codici = require('views/lib/codici'),
         ids = codici.splitId(doc._id);
       if (codici.isAzienda(ids)) {
@@ -30,7 +30,7 @@ define(function (require) {
       }
     },
 
-    movimentoMagazzinoAccodato: function map(doc) {
+    movimentoMagazzinoAccodato: function mapMovimentoMagazzinoAccodato(doc) {
       if (doc.accodato) {
         var year, codici = require('views/lib/codici'),
           codes = codici.parseIdMovimentoMagazzino(doc._id);
@@ -44,7 +44,7 @@ define(function (require) {
       }
     },
 
-    movimentoMagazzinoPendente: function map(doc) {
+    movimentoMagazzinoPendente: function mapMovimentoMagazzinoPendente(doc) {
       if (!doc.accodato) {
         var codici = require('views/lib/codici'),
           codes = codici.parseIdMovimentoMagazzino(doc._id);
@@ -54,7 +54,7 @@ define(function (require) {
       }
     },
 
-    contatori: function map(doc) {
+    contatori: function mapContatori(doc) {
       var codici = require('views/lib/codici'),
         codes = codici.parseIdMovimentoMagazzino(doc._id);
       if (codes) {
@@ -62,7 +62,7 @@ define(function (require) {
       }
     },
 
-    riferimentiMovimentiMagazzino: function map(doc) {
+    riferimentiMovimentiMagazzino: function mapRiferimentiMovimentiMagazzino(doc) {
       var codici = require('views/lib/codici'),
         ids = codici.splitId(doc._id);
       if (codici.isMovimentoMagazzino(ids) && doc.riferimento) {
@@ -71,7 +71,7 @@ define(function (require) {
     },
 
     giacenze: {
-      map: function map(doc) {
+      map: function mapGiacenze(doc) {
         if (doc.accodato) {
           var smact, inProduzione, tipoMagazzino, tipoMagazzinoA, segnoDa, segnoA,
             col, r, i, ii, rows = doc.rows,

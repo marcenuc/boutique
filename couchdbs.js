@@ -19,18 +19,18 @@ define(['fs', 'uglify-js', 'views', 'app/js/validate_doc_update', 'dbconfig'], f
 
   Object.keys(views).forEach(function (viewName) {
     if (viewName[0] !== '_') {
-      var src = views[viewName], obj = {};
+      var src = views[viewName], view = {};
       if (typeof src === 'function') {
-        obj.map = minifyFunction(src.toString());
+        view.map = minifyFunction(src.toString());
       } else if (Object.prototype.toString.apply(src) === '[object Object]' &&
                  typeof src.map === 'function' &&
                  (typeof src.reduce === 'function' || typeof src.reduce === 'string')) {
-        obj.map = minifyFunction(src.map.toString());
-        obj.reduce = typeof src.reduce === 'string' ? src.reduce : minifyFunction(src.reduce.toString());
+        view.map = minifyFunction(src.map.toString());
+        view.reduce = typeof src.reduce === 'string' ? src.reduce : minifyFunction(src.reduce.toString());
       } else {
         throw new Error('Invalid views');
       }
-      parsedViews[viewName] = obj;
+      parsedViews[viewName] = view;
     }
   });
 
