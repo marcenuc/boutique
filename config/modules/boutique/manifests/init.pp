@@ -127,6 +127,10 @@ class boutique(
     require => Local_bin['node'],
   }
 
+  couchapp { 'boutique':
+    webapp_folder => $webapp_folder,
+  }
+
   upstart_service { 'webserver':
     run_command => "${webapp_folder}/scripts/run-production-webserver.sh",
     admin_user  => $admin_user,
@@ -136,7 +140,7 @@ class boutique(
   upstart_service { 'follow':
     run_command => "${webapp_folder}/scripts/run-service-follow.sh",
     admin_user  => $admin_user,
-    require     => [Exec['build'], User[$admin_user]],
+    require     => [Exec['build'], User[$admin_user], Couchapp['boutique']],
   }
 
   package { $packages: }
