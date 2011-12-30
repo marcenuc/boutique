@@ -30,12 +30,13 @@ class boutique(
   $couchdb_port    = '12000',
   $photo_share     = 'Boutique',
   $shares_folder   = '/srv/samba',
+  $home            = undef,
   $packages_folder = undef,
   $java_home       = '/opt/jdk'
 ) {
   case $::operatingsystem {
     ubuntu: {
-      $packages = ['zlib1g', 'libssl0.9.8', 'samba', 'libpam-smbpass', 'imagemagick']
+      $packages = ['git', 'zlib1g', 'libssl0.9.8', 'samba', 'libpam-smbpass', 'imagemagick']
     }
     default: {
       fail("Module ${::module_name} does not support ${::operatingsystem}")
@@ -75,8 +76,6 @@ class boutique(
   #TODO Hash $admin_password.
   #TODO Ensure JDK is installed in $java_home.
 
-  $home               = "/home/${admin_user}"
-
   $couchdb_folder     = "${home}/CouchDB"
   $couchdb_log        = "${home}/couch.log"
   $couchdb_lib_folder = "${home}/var/lib/couchdb"
@@ -91,8 +90,8 @@ class boutique(
   Package { ensure => latest, }
 
   File {
-    owner => 'root',
-    group => 'root',
+    owner => $admin_user,
+    group => $admin_user,
     mode  => '0644',
   }
 
@@ -167,6 +166,7 @@ class boutique(
 
   file { 'var':
     ensure  => directory,
+    recurse => true,
     path    => "${home}/var",
     require => File[$home],
   }
@@ -179,29 +179,18 @@ class boutique(
 
   file { $couchdb_lib_folder:
     ensure  => directory,
-    recurse => true,
-    owner   => $admin_user,
-    group   => $admin_user,
-    mode    => '0644',
     require => File['lib'],
     notify  => Service['couchdb'],
   }
 
   file { "${couchdb_folder}/var":
     ensure  => directory,
-    owner   => $admin_user,
-    group   => $admin_user,
-    mode    => '0644',
-    recurse => true,
     require => [Unpacked_package['CouchDB'], User[$admin_user]],
     notify  => Service['couchdb'],
   }
 
   file { "${couchdb_folder}/etc/couchdb/local.d/boutique.ini":
     ensure  => file,
-    owner   => $admin_user,
-    group   => $admin_user,
-    mode    => '0644',
     content => template('boutique/couchdb.ini.erb'),
     require => [Unpacked_package['CouchDB'], User[$admin_user]],
     notify  => Service['couchdb'],
@@ -220,9 +209,6 @@ class boutique(
   file { $photo_subfolders:
     ensure  => directory,
     recurse => true,
-    owner   => $admin_user,
-    group   => $admin_user,
-    mode    => '0664',
     require => File[$photo_folder],
   }
 
@@ -239,7 +225,6 @@ class boutique(
 
   file { $couchdb_log:
     ensure => file,
-    owner  => $admin_user,
     mode   => '0640',
     notify => Service['couchdb'],
   }
@@ -252,8 +237,6 @@ class boutique(
   file { "${webapp_folder}/config/server-configs.js":
     ensure  => file,
     # TODO should we change owner? this file has sensitive data...
-    owner   => $admin_user,
-    group   => $admin_user,
     mode    => '0440',
     content => template('boutique/server-configs.js.erb'),
     notify  => [Service['webserver'], Service['follow']],
@@ -263,8 +246,6 @@ class boutique(
     ensure  => file,
     path    => "${webapp_folder}/local.properties",
     # TODO should we change owner? this file has sensitive data...
-    owner   => $admin_user,
-    group   => $admin_user,
     mode    => '0440',
     content => template('boutique/local.properties.erb'),
   }

@@ -1,44 +1,53 @@
 #!/bin/bash -ex
-packages_folder="${1:?Folder with CouchDB.tar.xz and NodeJS.tar.xz packages?}"
+
+# check java and Maven dependencies
+javac -version
+mvn --version
+sudo apt-get install -y git puppet
+
+home_folder="${1:?Home folder?}"
+packages_folder="${2:?Packages folder?}"
 [ -f "${packages_folder}/CouchDB.tar.xz" ]
 [ -f "${packages_folder}/NodeJS.tar.xz" ]
 
-auth_realm="${2:?Authentication realm?}"
-admin_user="${3:?Admin user?}"
-admin_password="${4:?Admin password?}"
-admin_mail="${5:?Admin mail?}"
-as400_user="${6:?as400 user?}"
-as400_password="${7:?as400 password?}"
+auth_realm="${3:?Authentication realm?}"
+admin_user="${4:?Admin user?}"
+admin_password="${5:?Admin password?}"
+admin_mail="${6:?Admin mail?}"
+as400_user="${7:?as400 user?}"
+as400_password="${8:?as400 password?}"
 
-#TODO this folder name is duplicated in config/modules/boutique/manifests/init.pp
-home_folder="/home/${admin_user}"
+couchdb_secret=$(dd if=/dev/urandom count=1 2> /dev/null |sha256sum |cut -f1 -d\ )
+java_home=$(dirname $(dirname $(which java)))
+
+#TODO DRY this folder name is duplicated in config/modules/boutique/manifests/init.pp
 webapp_folder="${home_folder}/webapp"
+git clone git://github.com/marcenuc/boutique.git "$webapp_folder"
+cd "$webapp_folder"
+git submodule init
+git submodule update
 
-couchdb_secret=$(dd if=/dev/urandom count=1 2> /dev/null |sha1sum |cut -f1 -d\ )
+manifest=$(tempfile -s .pp) || exit
+trap "rm -f -- '$manifest'" EXIT
 
-sudo apt-get install -y git puppet
-sudo mkdir -p "$home_folder"
-sudo git clone "$PWD" "$webapp_folder"
-
-( cd "$webapp_folder" &&
-  sudo git submodule init &&
-  sudo git submodule update )
-
-#FIXME use temporary file
-manifest="setup.pp"
 cat > "$manifest" <<EOF
-\$boutique_admin_user     = '$admin_user'
-\$boutique_admin_password = '$admin_password'
-\$boutique_as400_user     = '$as400_user'
-\$boutique_as400_password = '$as400_password'
-
 class { 'boutique':
   admin_mail      => '$admin_mail',
   auth_realm      => '$auth_realm',
   couchdb_secret  => '$couchdb_secret',
+  home            => '$home_folder',
   packages_folder => '$packages_folder',
+  java_home       => '$java_home',
 }
 EOF
-sudo puppet apply --modulepath="$PWD"/config/modules "$manifest"
 
-echo 'Maybe you need to "cd lib/As400Querier && mvn package" to start.'
+export FACTER_boutique_admin_user="$admin_user"
+export FACTER_boutique_admin_password="$admin_password"
+export FACTER_boutique_as400_user="$as400_user"
+export FACTER_boutique_as400_password="$as400_password"
+sudo puppet apply --modulepath="$webapp_folder/config/modules" "$manifest"
+
+echo 'You need to "cd lib/As400Querier && ./install-jt400.sh && mvn package" to start.'
+rm -f -- "$manifest"
+trap - EXIT
+exit

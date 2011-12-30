@@ -1,26 +1,43 @@
 # Boutique — The boutique manager
 
-This is a couchapp built for the management of tailor's shops.
+This is a [couchapp][] built for the management of tailor's shops.
 
 It will allow to:
 
 * insert the orders of the clients;
 * insert the modifications requested by the clients;
 * assign the work to the laboratories;
-* track the warehouse.
+* track the warehouse;
+* sync with AS/400.
+
+# Bootstrap
+
+System configuration is managed through [Puppet][].
+
+You need to boostrap it with the following procedure:
+
+1. create a boutique user (*or use your own*): `adduser --disabled-login boutique && base="/home/boutique"`
+2. create packages folder: `pkgs="$base/packages" && mkdir "$pkgs"`
+3. compile and install [NodeJS][]: `./configure --prefix="$base/NodeJS" && make && make install`
+4. compile and install [CouchDB][] using [build-couchdb][]: `rake install="$base/CouchDB"`
+5. package NodeJS and CouchDB: `cd "$base" && tar -Jcf $pkgs/NodeJS.tar.xz NodeJS && tar -Jcf $pkgs/CouchDB.tar.xz CouchDB`
+6. download and run [bootstrap.sh][] (replace upcase with useful info): `bash -ex ./bootstrap.sh "$base" "$pkgs" "Boutique $(hostname)" "boutique" "BOUTIQUEPASSWORD" "ADMIN@MAIL" "AS400USER" "AS400PASSWORD"`
+
+*WARNING*: this setup is intended for dedicated machine, i.e. no other users have shell access to the server.
 
 # Development
 
-To start development:
+JDK is needed only for [As400Querier][], everything else is pure Javascript, HTML5, and CSS. On the server, Javascript runs on [CouchDB][] and [NodeJS][]; on the client you will need latest version of Firefox or Chrome.
 
-1. Compile and install NodeJS in a folder named /some/thing/NodeJS
-2. Compile and install CouchDB in a folder named /some/thing/CouchDB using [build-couchdb][buildcouch]
-3. Archive NodeJS with `tar -Jcf NodeJS.tar.xz /some/thing/NodeJS`
-4. Archive CouchDB with `tar -Jcf CouchDB.tar.xz /some/thing/CouchDB`
-5. Run `./bootstrap.sh` from the root of the project.
+Use `./run CMDNAME ARGS` to run scripts in `commands/` directory.
 
-Use `./run CMD_NAME ARGS` to run scripts in `commands/` directory.
+Everything is tested only on Ubuntu.
 
-Everything is only tested on Ubuntu.
-
-[buildcouch]: https://github.com/iriscouch/build-couchdb
+[couchapp]: http://couchapp.org/
+[maven]: http://maven.apache.org/
+[nodejs]: http://nodejs.org/
+[couchdb]: http://couchdb.apache.org/
+[puppet]: http://puppetlabs.com/
+[build-couchdb]: https://github.com/iriscouch/build-couchdb
+[bootstrap.sh]: https://github.com/marcenuc/boutique/raw/master/bootstrap.sh
+[as400querier]: https://github.com/marcenuc/As400Querier
