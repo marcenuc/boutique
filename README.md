@@ -16,7 +16,7 @@ System configuration is managed through [Puppet][].
 
 You need to boostrap it with the following procedure:
 
-1. create a boutique user (or use your own): `adduser --disabled-login boutique && base="/home/boutique"`
+1. create a boutique user (or use your own): `sudo adduser --disabled-login boutique && base="/home/boutique"`
 2. compile and install [NodeJS][]: `./configure --prefix="$base/NodeJS" && make && make install`
 3. compile and install [CouchDB][] using [build-couchdb][]: `rake install="$base/CouchDB"`
 4. create packages folder: `pkgs="$base/packages" && mkdir "$pkgs"`
