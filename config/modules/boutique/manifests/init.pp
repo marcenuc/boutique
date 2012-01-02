@@ -32,6 +32,7 @@ class boutique(
   $shares_folder   = '/srv/samba',
   $home            = undef,
   $packages_folder = undef,
+  $as400_host      = undef,
   $java_home       = '/opt/jdk'
 ) {
   case $::operatingsystem {
@@ -52,6 +53,10 @@ class boutique(
     fail("Set boutique_admin_password.")
   }
   $admin_password = $::boutique_admin_password
+
+  if $::as400_host == undef {
+    fail("Set as400_host.")
+  }
 
   if $::boutique_as400_user == undef {
     fail("Set boutique_as400_user.")

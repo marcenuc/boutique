@@ -20,6 +20,7 @@ admin_password="${5:?Admin password?}"
 admin_mail="${6:?Admin mail?}"
 as400_user="${7:?as400 user?}"
 as400_password="${8:?as400 password?}"
+as400_host="${9:?as400 host?}"
 
 couchdb_secret=$(dd if=/dev/urandom count=1 2> /dev/null |sha256sum |cut -f1 -d\ )
 java_home=$(dirname $(dirname $(which java)))
@@ -39,17 +40,19 @@ class { 'boutique':
   admin_mail      => '$admin_mail',
   auth_realm      => '$auth_realm',
   couchdb_secret  => '$couchdb_secret',
+  as400_host      => '$as400_host',
   home            => '$home_folder',
   packages_folder => '$packages_folder',
   java_home       => '$java_home',
 }
 EOF
 
-export FACTER_boutique_admin_user="$admin_user"
-export FACTER_boutique_admin_password="$admin_password"
-export FACTER_boutique_as400_user="$as400_user"
-export FACTER_boutique_as400_password="$as400_password"
-sudo puppet apply --modulepath="$webapp_folder/config/modules" "$manifest"
+sudo /usr/bin/env \
+  FACTER_boutique_admin_user="$admin_user" \
+  FACTER_boutique_admin_password="$admin_password" \
+  FACTER_boutique_as400_user="$as400_user" \
+  FACTER_boutique_as400_password="$as400_password" \
+  puppet apply --modulepath="$webapp_folder/config/modules" "$manifest"
 
 echo 'You need to "cd lib/As400Querier && ./install-jt400.sh && mvn package" to start.'
 rm -f -- "$manifest"
