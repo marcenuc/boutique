@@ -5,6 +5,7 @@ define({
     protocol: 'http',
     host: 'localhost',
     port: <%= couchdb_port %>,
+    realm: <%= auth_realm %>,
     admin: {
       username: '<%= admin_user %>',
       password: '<%= admin_password %>'

@@ -13,7 +13,7 @@ requirejs(['path', 'connect', 'connect-exec', 'lib/sendFoto', 'lib/servers'], fu
       .use(connect.basicAuth(function (user, pass) {
         // TODO do authentication against couchdb or use a shared users db
         return user && pass;
-      }, 'administrator'));
+      }, servers.couchdb.realm));
 
   if (process.env.BOUTIQUE_ENV === 'production') {
     server.use('/app', connect['static'](path.join(process.cwd(), 'build')));
