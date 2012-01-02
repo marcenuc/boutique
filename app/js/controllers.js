@@ -35,7 +35,7 @@ var Ctrl = {};
           self.$location.path(res.id);
         });
       });
-    },
+    }
   };
 
   Ctrl.EditMovimentoMagazzino = function (SessionInfo, $routeParams, Downloads) {
@@ -46,7 +46,7 @@ var Ctrl = {};
     this.rexpBarcode = /^\d{3} ?\d{5} ?\d{4} ?\d{4} ?\d{2}$/;
 
     // TODO put _id in $routeParams.codice
-    var self = this, id = 'MovimentoMagazzino_' + $routeParams.codice;
+    var id = 'MovimentoMagazzino_' + $routeParams.codice;
 
     this.codes = CODICI.parseIdMovimentoMagazzino(id);
     if (!this.codes) {
@@ -110,7 +110,7 @@ var Ctrl = {};
     },
 
     save: function () {
-      var newRow, qta, codes, descs, self = this, col = this.col;
+      var newRow, codes, descs, self = this, col = this.col;
       if (this.newBarcode) {
         codes = CODICI.parseBarcodeAs400(this.newBarcode);
         if (!codes) {
@@ -565,12 +565,25 @@ var Ctrl = {};
           self.azienda._rev = res.rev;
           self.SessionInfo.notice('Salvato');
           if (isNew) {
-            self.SessionInfo.goTo('/' + self.azienda._id);
+            self.createListinoAzienda();
           } else {
             self.aggiornaAzienda();
           }
         });
       }
+    },
+
+    createListinoAzienda: function () {
+      var self = this,
+        codes = CODICI.parseIdAzienda(this.azienda._id),
+        listino = {
+          _id: CODICI.idListino(codes.codice),
+          prezzi: {},
+          versioneBase: '1'
+        };
+      this.SessionInfo.save(listino, function () {
+        self.SessionInfo.goTo('/' + self.azienda._id);
+      });
     }
   };
 
