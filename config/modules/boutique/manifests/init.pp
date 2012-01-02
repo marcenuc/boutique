@@ -54,7 +54,7 @@ class boutique(
   }
   $admin_password = $::boutique_admin_password
 
-  if $::as400_host == undef {
+  if $as400_host == undef {
     fail("Set as400_host.")
   }
 
