@@ -92,7 +92,7 @@ class boutique(
   File {
     owner => $admin_user,
     group => $admin_user,
-    mode  => '0640',
+    mode  => '0644',
   }
 
   Service {
@@ -201,12 +201,14 @@ class boutique(
     ensure => directory,
     owner  => 'root',
     group  => 'root',
+    mode   => '0644',
   }
 
   file { $photo_folder:
     ensure  => directory,
     owner  => 'root',
     group  => 'root',
+    mode   => '0644',
     require => File[$shares_folder],
   }
 
@@ -230,12 +232,14 @@ class boutique(
 
   file { $couchdb_log:
     ensure => file,
-    mode   => '0640',
     notify => Service['couchdb'],
   }
 
   file { '/etc/logrotate.d/boutique':
     ensure  => file,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0644',
     content => template('boutique/logrotate.erb'),
   }
 
