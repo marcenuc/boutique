@@ -578,6 +578,7 @@ var Ctrl = {};
         codes = CODICI.parseIdAzienda(this.azienda._id),
         listino = {
           _id: CODICI.idListino(codes.codice),
+          columnNames: CODICI.COLUMN_NAMES.Listino,
           prezzi: {},
           versioneBase: '1'
         };
