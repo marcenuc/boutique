@@ -588,36 +588,21 @@ var Ctrl = {};
     }
   };
 
-  Ctrl.Listino = function ($routeParams, SessionInfo, Validator, $location) {
+  Ctrl.Listino = function ($routeParams, SessionInfo, $location) {
     SessionInfo.resetFlash();
-    this.$routeParams = $routeParams;
     this.SessionInfo = SessionInfo;
-    this.Validator = Validator;
     this.$location = $location;
 
-    this.prezzi = [];
     if ($routeParams.codice) {
-      this.fetch($routeParams.codice);
+      this.prezzi = [];
+      this.listino = this.SessionInfo.getDocument(CODICI.idListino($routeParams.codice));
     }
   };
-  Ctrl.Listino.$inject = ['$routeParams', 'SessionInfo', 'Validator', '$location'];
+  Ctrl.Listino.$inject = ['$routeParams', 'SessionInfo', '$location'];
 
   Ctrl.Listino.prototype = {
-    fetch: function (codice) {
-      var self = this,
-        id = CODICI.idListino(codice || this.versione);
-      this.SessionInfo.getDocument(id, function (listino) {
-        if (codice) {
-          self.listino = listino;
-        } else {
-          self.$location.path(listino._id).replace();
-        }
-      }, function (status, resp) {
-        if (status === 404) {
-          return self.SessionInfo.error('Non trovato');
-        }
-        self.SessionInfo.error(status + JSON.stringify(resp));
-      });
+    fetch: function () {
+      this.$location.path(CODICI.idListino(this.versione));
     },
 
     getFiltro: function (val, len) {
@@ -657,7 +642,7 @@ var Ctrl = {};
         }
         this.SessionInfo.save(this.listino, function (res) {
           if (!self.rev) {
-            self.$location.path(res.id).replace();
+            self.$location.path(res.id);
           }
           self.listino._rev = res.rev;
           self.SessionInfo.notice('Salvato ' + res.id);
