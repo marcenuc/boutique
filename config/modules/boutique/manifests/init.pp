@@ -92,7 +92,7 @@ class boutique(
   File {
     owner => $admin_user,
     group => $admin_user,
-    mode  => '0644',
+    mode  => '0640',
   }
 
   Service {
@@ -199,16 +199,21 @@ class boutique(
 
   file { $shares_folder:
     ensure => directory,
+    owner  => 'root',
+    group  => 'root',
   }
 
   file { $photo_folder:
     ensure  => directory,
+    owner  => 'root',
+    group  => 'root',
     require => File[$shares_folder],
   }
 
   file { $photo_subfolders:
     ensure  => directory,
     recurse => true,
+    mode    => '2664',
     require => File[$photo_folder],
   }
 

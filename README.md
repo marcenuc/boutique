@@ -16,14 +16,14 @@ System configuration is managed through [Puppet][].
 
 You need to boostrap it with the following procedure:
 
-1. create a boutique user (*or use your own*): `adduser --disabled-login boutique && base="/home/boutique"`
-2. create packages folder: `pkgs="$base/packages" && mkdir "$pkgs"`
-3. compile and install [NodeJS][]: `./configure --prefix="$base/NodeJS" && make && make install`
-4. compile and install [CouchDB][] using [build-couchdb][]: `rake install="$base/CouchDB"`
+1. create a boutique user (or use your own): `adduser --disabled-login boutique && base="/home/boutique"`
+2. compile and install [NodeJS][]: `./configure --prefix="$base/NodeJS" && make && make install`
+3. compile and install [CouchDB][] using [build-couchdb][]: `rake install="$base/CouchDB"`
+4. create packages folder: `pkgs="$base/packages" && mkdir "$pkgs"`
 5. package NodeJS and CouchDB: `cd "$base" && tar -Jcf $pkgs/NodeJS.tar.xz NodeJS && tar -Jcf $pkgs/CouchDB.tar.xz CouchDB`
 6. download and run [bootstrap.sh][] (replace upcase with useful info): `bash -ex ./bootstrap.sh "$base" "$pkgs" "Boutique $(hostname)" "boutique" "BOUTIQUEPASSWORD" "ADMIN@MAIL" "AS400USER" "AS400PASSWORD"`
 
-*WARNING*: this setup is intended for dedicated machine, i.e. no other users have shell access to the server.
+*WARNING*: please read the `bootstrap.sh` script to understand what it does. In short it checks and sets-up a basic environment, then applies a Puppet manifest to configure everything (install dependencies, setup services, create folders, ...).
 
 # Development
 

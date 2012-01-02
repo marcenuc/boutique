@@ -1,9 +1,13 @@
 #!/bin/bash -ex
 
-# check java and Maven dependencies
+echo Checking java and Maven dependencies...
 javac -version
 mvn --version
+echo OK.
+
+echo Installing git and Puppet...
 sudo apt-get install -y git puppet
+echo OK.
 
 home_folder="${1:?Home folder?}"
 packages_folder="${2:?Packages folder?}"
