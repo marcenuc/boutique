@@ -251,6 +251,7 @@ describe('Controller', function () {
           var data = angular.copy(ctrl.azienda);
           delete data._rev;
           expectPUT(data);
+          expectPUT({ _id: 'Listino_019998', columnNames: ['costo', 'prezzo1', 'prezzo2', 'offerta'], prezzi: {}, versioneBase: '1' });
           expectGET(ctrl.azienda._id); //TODO mock $location instead
           ctrl.save();
           $browser.xhr.flush();
@@ -261,6 +262,7 @@ describe('Controller', function () {
           beforeEach(function () {
             ctrl.azienda = { _id: 'Azienda_010101', nome: 'Nuova azienda', tipo: 'NEGOZIO' };
             ctrl.id = ctrl.azienda._id;
+            expectPUT({ _id: 'Listino_010101', columnNames: ['costo', 'prezzo1', 'prezzo2', 'offerta'], prezzi: {}, versioneBase: '1' });
             expectGET(ctrl.azienda._id); //TODO mock $location instead
             doSave();
           });
