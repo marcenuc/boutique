@@ -2,10 +2,10 @@
 <fieldset><legend>Nuovo movimento magazzino</legend>
  <label>Causale: <select ng:model="form.causale" ng:options="causale.descrizione for causale in causali" required></select></label><br>
    <span ng:show="form.causale">Segno: <b>{{form.causale.segno}}</b>,
-   Gruppo: <b>{{form.causale.gruppo}}</b></span><span ng:show="form.causale.causaleA">,
+   Gruppo: <b>{{form.causale.gruppo}}</b></span><span ng:show="form.causale.causaleA >= 0">,
    Causale associata: <b>{{causali[form.causale.causaleA].descrizione}}</b></span><p>
  <label>Da: <select ng:model="form.da" ng:options="c as r.value for (c, r) in aziende" required><option></select></label>
- <label>A: <select ng:model="form.a" ng:options="c as r.value for (c, r) in aziende" ng:required="{{form.causale.causaleA}}"><option></select></label><p>
+ <label>A: <select ng:model="form.a" ng:options="c as r.value for (c, r) in aziende" ng:required="{{form.causale.causaleA >= 0}}"><option></select></label><p>
  <label>Data (AAAAMMGG): <input ng:model="form.data" size=8 maxlength=8 type=data required></label><p>
  <input type=submit value=Crea ng:disabled="{{movimentoMagazzino.$invalid}}">
 </fieldset>
