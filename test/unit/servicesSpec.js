@@ -143,26 +143,26 @@ describe('Service', function () {
       },
 
       toBeAuthorized: function () {
-        return this.actual.errors.some(function (e) {
-          return e.message === 'Not authorized';
+        return this.actual.errors.every(function (e) {
+          return e.message !== 'Not authorized';
         });
       }
     });
   });
 
   describe('Validator', function () {
-    var check = null, check099999 = null, ctx123456 = { name: '123456', roles: ['azienda'] };
+    var check = null, checkOwner = null, ctxOther = { name: '123456', roles: ['azienda'] };
     beforeEach(function () {
       check = scope.$service('Validator').check;
-      check099999 = angular.service('Validator')({
+      checkOwner = angular.service('Validator')({
         name: '099999',
         roles: ['azienda']
       }).check;
     });
 
     it('should require an authenticated user', function () {
-      expect(angular.service('Validator')({}).check({})).toBeAuthorized();
-      expect(angular.service('Validator')({}).check({ _deleted: true })).toBeAuthorized();
+      expect(angular.service('Validator')({}).check({})).not.toBeAuthorized();
+      expect(angular.service('Validator')({}).check({ _deleted: true })).not.toBeAuthorized();
     });
 
     it('should forbid change of _id', function () {
@@ -213,49 +213,44 @@ describe('Service', function () {
 
     describe('MovimentoMagazzino', function () {
       var validId = 'MovimentoMagazzino_099999_2011_A_1234',
-        check123456 = angular.service('Validator')(ctx123456).check;
+        checkOther = angular.service('Validator')(ctxOther).check;
 
-      it('should require owner user for writes', function () {
-        expect(check({ _id: validId })).not.toBeAuthorized();
-        expect(check099999({ _id: validId })).not.toBeAuthorized();
-        expect(check123456({ _id: validId })).toBeAuthorized();
+      it('should require owner or admin user for writes', function () {
+        expect(check({ _id: validId })).toBeAuthorized();
+        expect(checkOwner({ _id: validId })).toBeAuthorized();
+        expect(checkOther({ _id: validId })).not.toBeAuthorized();
       });
 
       describe('accodato', function () {
-        it('should allow setting by non owner only if is admin', function () {
-          //TODO
-        });
-
         describe('causale "VENDITA A CLIENTI"', function () {
           var vendita = ['VENDITA A CLIENTI', -1],
-            accodatoTrue = { _id: validId, accodato: true, causale: vendita },
-            accodatoFalse = { _id: validId, accodato: false, causale: vendita },
+            accodatoTrue = { _id: validId, accodato: 1, causale: vendita },
+            accodatoFalse = { _id: validId, accodato: 0, causale: vendita },
             accodatoUndefined = { _id: validId, causale: vendita };
 
           it('should allow setting it by owner if new document', function () {
-            expect(check099999(accodatoTrue)).not.toBeAuthorized();
+            expect(checkOwner(accodatoTrue)).toBeAuthorized();
           });
           it('should allow setting it by owner if not already accodato', function () {
-            expect(check099999(accodatoTrue, accodatoFalse)).not.toBeAuthorized();
-            expect(check099999(accodatoTrue, accodatoUndefined)).not.toBeAuthorized();
+            expect(checkOwner(accodatoTrue, accodatoFalse)).toBeAuthorized();
+            expect(checkOwner(accodatoTrue, accodatoUndefined)).toBeAuthorized();
           });
-          it('should not allow any change by owner if aready accodato', function () {
-            expect(check099999(accodatoFalse, accodatoTrue)).toBeAuthorized();
-            expect(check099999(accodatoUndefined, accodatoTrue)).toBeAuthorized();
-            expect(check099999(accodatoTrue, accodatoTrue)).toBeAuthorized();
+          it('should NOT allow unset by owner if aready accodato', function () {
+            expect(checkOwner(accodatoFalse, accodatoTrue)).not.toBeAuthorized();
+            expect(checkOwner(accodatoUndefined, accodatoTrue)).not.toBeAuthorized();
           });
         });
         describe('causale NOT "VENDITA A CLIENTI"', function () {
           it('should require admin user', function () {
-            var accodatoTrue = { _id: validId, accodato: true },
+            var accodatoTrue = { _id: validId, accodato: 1 },
               accodatoUndefined = { _id: validId };
-            expect(check(accodatoTrue)).not.toBeAuthorized();
-            expect(check(accodatoTrue, accodatoUndefined)).not.toBeAuthorized();
-            expect(check099999(accodatoTrue)).toBeAuthorized();
-            expect(check099999(accodatoUndefined, accodatoTrue)).toBeAuthorized();
-            expect(check099999(accodatoTrue, accodatoUndefined)).toBeAuthorized();
-            expect(check099999(accodatoTrue, accodatoTrue)).toBeAuthorized();
-            expect(check123456(accodatoTrue)).toBeAuthorized();
+            expect(check(accodatoTrue)).toBeAuthorized();
+            expect(check(accodatoTrue, accodatoUndefined)).toBeAuthorized();
+            expect(checkOwner(accodatoTrue)).not.toBeAuthorized();
+            expect(checkOwner(accodatoUndefined, accodatoTrue)).not.toBeAuthorized();
+            expect(checkOwner(accodatoTrue, accodatoUndefined)).not.toBeAuthorized();
+            expect(checkOwner(accodatoTrue, accodatoTrue)).not.toBeAuthorized();
+            expect(checkOther(accodatoTrue)).not.toBeAuthorized();
           });
         });
       });
@@ -437,8 +432,8 @@ describe('Service', function () {
         columnNames = ['costo', 'prezzo1', 'prezzo2', 'offerta'];
 
       it('should require admin user for writes', function () {
-        expect(check({ _id: validId })).not.toBeAuthorized();
-        expect(check099999({ _id: validId })).toBeAuthorized();
+        expect(check({ _id: validId })).toBeAuthorized();
+        expect(checkOwner({ _id: validId })).not.toBeAuthorized();
       });
 
       it('should require valid _id with (versione)', function () {
@@ -510,8 +505,8 @@ describe('Service', function () {
       var validId = 'Giacenze';
 
       it('should require admin user for writes', function () {
-        expect(check({ _id: validId })).not.toBeAuthorized();
-        expect(check099999({ _id: validId })).toBeAuthorized();
+        expect(check({ _id: validId })).toBeAuthorized();
+        expect(checkOwner({ _id: validId })).not.toBeAuthorized();
       });
 
       it('should require columnNames to be stagione, modello, articolo, colore, codiceAzienda, inProduzione, tipoMagazzino, giacenze', function () {
@@ -548,8 +543,8 @@ describe('Service', function () {
                        'scalarino', 'taglia', 'descrizioneTaglia', 'descrizione', 'qta'];
 
       it('should require admin user for writes', function () {
-        expect(check({ _id: validId })).not.toBeAuthorized();
-        expect(check099999({ _id: validId })).toBeAuthorized();
+        expect(check({ _id: validId })).toBeAuthorized();
+        expect(checkOwner({ _id: validId })).not.toBeAuthorized();
       });
 
       it('should require columnNames to be ' + columnNames.join(', '), function () {
