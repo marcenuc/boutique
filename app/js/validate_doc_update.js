@@ -446,11 +446,20 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         hasInventario(doc.rows);
         break;
       case 'MovimentoMagazzino':
-        if ((oldDoc && oldDoc.accodato) ||
-            (doc.accodato && (typeOf(doc.causale) !== 'array' || doc.causale[0] !== 'VENDITA A CLIENTI'))) {
+        if ((oldDoc && oldDoc.hasOwnProperty('accodato')) ||
+            doc.hasOwnProperty('verificato') ||
+            (doc.hasOwnProperty('accodato') && (typeOf(doc.causale) !== 'array' || doc.causale[0] !== 'VENDITA A CLIENTI'))) {
           mustBeAdmin();
         } else {
           mustBeOwner();
+        }
+        if ((doc.hasOwnProperty('accodato') && doc.accodato !== 1) ||
+            (oldDoc && doc.accodato !== oldDoc.accodato && doc.verificato !== 1)) {
+          error('Invalid accodato');
+        }
+        if ((oldDoc && oldDoc.verificato && doc.verificato !== oldDoc.verificato) ||
+            (doc.verificato && (doc.accodato || !oldDoc || !oldDoc.accodato))) {
+          error('Invalid verificato');
         }
         hasValidAziendaCode();
         // TODO l'utente negozio può scaricare solo dal suo magazzino di tipo 3.
@@ -462,6 +471,11 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
           error('Invalid gruppo');
         } else if (!codici.isNumero(codes[3])) {
           error('Invalid numero');
+        }
+        if ((doc.hasOwnProperty('daEsterno') && doc.daEsterno !== 1) ||
+            (doc.hasOwnProperty('aEsterno') && doc.aEsterno !== 1) ||
+            ((doc.daEsterno || doc.aEsterno) && doc.verificato !== 1)) {
+          error('Invalid da/aEsterno');
         }
         if (!codici.isYyyyMmDdDate(doc.data, codes[1])) {
           error('Invalid data');

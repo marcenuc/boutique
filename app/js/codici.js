@@ -470,4 +470,8 @@ var CODICI;
     }
     return listini;
   };
+
+  codici.hasExternalWarehouse = function (azienda) {
+    return azienda.tipo !== 'NEGOZIO';
+  };
 }());

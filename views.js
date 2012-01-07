@@ -72,7 +72,7 @@ define(function (require) {
 
     giacenze: {
       map: function mapGiacenze(doc) {
-        if (doc.accodato) {
+        if (doc.verificato) {
           var smact, inProduzione, tipoMagazzino, tipoMagazzinoA, segnoDa, segnoA,
             col, r, i, ii, rows = doc.rows,
             codici = require('views/lib/codici'),
@@ -82,16 +82,18 @@ define(function (require) {
             inProduzione = doc.inProduzione || 0;
             tipoMagazzino = doc.tipoMagazzino || codici.TIPO_MAGAZZINO_NEGOZIO;
             segnoDa = doc.causale[1];
-            if (doc.a) {
+            if (doc.a && !doc.aEsterno) {
               segnoA = doc.causaleA[1];
               tipoMagazzinoA = doc.tipoMagazzinoA || codici.TIPO_MAGAZZINO_NEGOZIO;
             }
             for (i = 0, ii = rows.length; i < ii; i += 1) {
               r = rows[i];
               smact = codici.parseBarcodeAs400(r[col.barcode]);
-              emit([smact.modello, smact.articolo, smact.colore, smact.stagione, codes.da, inProduzione, tipoMagazzino,
-                    r[col.scalarino], smact.taglia, r[col.descrizioneTaglia], r[col.descrizione]], segnoDa * r[col.qta]);
-              if (doc.a) {
+              if (!doc.daEsterno) {
+                emit([smact.modello, smact.articolo, smact.colore, smact.stagione, codes.da, inProduzione, tipoMagazzino,
+                      r[col.scalarino], smact.taglia, r[col.descrizioneTaglia], r[col.descrizione]], segnoDa * r[col.qta]);
+              }
+              if (doc.a && !doc.aEsterno) {
                 emit([smact.modello, smact.articolo, smact.colore, smact.stagione, doc.a, inProduzione, tipoMagazzinoA,
                       r[col.scalarino], smact.taglia, r[col.descrizioneTaglia], r[col.descrizione]], segnoA * r[col.qta]);
               }

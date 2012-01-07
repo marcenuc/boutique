@@ -359,4 +359,14 @@ requirejs(['app/js/codici'], function (codici) {
       expect(u('102', '12345', listaModelli)).toBe('DESCRIZIONE');
     });
   });
+
+  describe('hasExternalWarehouse', function () {
+    var u = codici.hasExternalWarehouse;
+    it('should return true when tipo azienda is MAGAZZINO', function () {
+      expect(u({ _id: 'Azienda_101010', tipo: 'MAGAZZINO' })).toBe(true);
+    });
+    it('should return false when tipo azienda is NEGOZIO', function () {
+      expect(u({ _id: 'Azienda_101010', tipo: 'NEGOZIO' })).toBe(false);
+    });
+  });
 });
