@@ -125,10 +125,19 @@ class boutique(
     package_name   => 'NodeJS',
   }
 
-  exec { 'build':
-    command => "${webapp_folder}/run build",
+  exec { 'pull':
+    command => "/usr/bin/git pull",
     cwd     => $webapp_folder,
-    require => Local_bin['node'],
+    user    => $admin_user,
+    group   => $admin_user,
+    require => Package['git'],
+  }
+
+  exec { 'build':
+    command   => "${webapp_folder}/run build",
+    cwd       => $webapp_folder,
+    require   => Local_bin['node'],
+    subscribe => Exec['pull'],
   }
 
   couchapp { 'boutique':
@@ -138,13 +147,13 @@ class boutique(
   upstart_service { 'webserver':
     run_command => "${webapp_folder}/scripts/run-production-webserver.sh",
     admin_user  => $admin_user,
-    require     => [Exec['build'], User[$admin_user]],
+    subscribe   => [Exec['build'], User[$admin_user]],
   }
 
   upstart_service { 'follow':
     run_command => "${webapp_folder}/scripts/run-service-follow.sh",
     admin_user  => $admin_user,
-    require     => [Exec['build'], User[$admin_user], Couchapp['boutique']],
+    subscribe   => [Exec['build'], User[$admin_user], Service['couchdb'], Couchapp['boutique']],
   }
 
   package { $packages: }
