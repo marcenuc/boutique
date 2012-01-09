@@ -1,5 +1,4 @@
-/*global describe: false, beforeEach: false, afterEach: false, it: false, xit: false, jasmine: false,
-         expect: false, angular: false, CODICI: false */
+/*global describe: false, beforeEach: false, afterEach: false, it: false, expect: false, angular: false, CODICI: false */
 
 describe('Service', function () {
   'use strict';
@@ -259,13 +258,13 @@ describe('Service', function () {
 
       describe('verificato', function () {
         var accodatoTrue = { _id: validId, accodato: 1 }, accodatoFalse = { _id: validId },
-          verificatoTrue = { _id: validId, verificato: 1 };
+          verificatoTrue = { _id: validId, verificato: 1 },
+          msg = 'Invalid verificato';
         it('should not be removed', function () {
           var verificatoTrue = { _id: validId, verificato: 1 }, verificatoFalse = { _id: validId };
           expect(check(verificatoFalse, verificatoTrue)).toHaveError('Invalid verificato');
         });
         it('should be set only when oldDoc is accodato and doc is not', function () {
-          var msg = 'Invalid verificato';
           expect(check(verificatoTrue, accodatoTrue)).not.toHaveError(msg);
           expect(check(verificatoTrue, accodatoFalse)).toHaveError(msg);
           expect(check(verificatoTrue)).toHaveError(msg);
@@ -278,6 +277,10 @@ describe('Service', function () {
           expect(checkOther(verificatoTrue, accodatoTrue)).not.toBeAuthorized();
           expect(checkOther(verificatoTrue, accodatoFalse)).not.toBeAuthorized();
           expect(checkOther(verificatoTrue)).not.toBeAuthorized();
+        });
+        it('should not require accodato when "RETTIFICA INVENTARIO +" and daEsterno', function () {
+          var rettifica = { _id: validId, verificato: 1, daEsterno: 1, causale: ['RETTIFICA INVENTARIO +', 1] };
+          expect(check(rettifica)).not.toHaveError(msg);
         });
       });
 

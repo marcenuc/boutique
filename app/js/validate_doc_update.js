@@ -348,6 +348,10 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
     }
   }
 
+  function hasCausale(desc) {
+    return typeOf(doc.causale) === 'array' && doc.causale[0] === desc;
+  }
+
   authorizedIf(typeof userCtx.name === 'string');
   if (oldDoc && oldDoc._id !== doc._id) {
     error('Invalid _id');
@@ -448,7 +452,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
       case 'MovimentoMagazzino':
         if ((oldDoc && oldDoc.hasOwnProperty('accodato')) ||
             doc.hasOwnProperty('verificato') ||
-            (doc.hasOwnProperty('accodato') && (typeOf(doc.causale) !== 'array' || doc.causale[0] !== 'VENDITA A CLIENTI'))) {
+            (doc.hasOwnProperty('accodato') && !hasCausale('VENDITA A CLIENTI'))) {
           mustBeAdmin();
         } else {
           mustBeOwner();
@@ -458,7 +462,8 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
           error('Invalid accodato');
         }
         if ((oldDoc && oldDoc.verificato && doc.verificato !== oldDoc.verificato) ||
-            (doc.verificato && (doc.accodato || !oldDoc || !oldDoc.accodato))) {
+            (!(doc.verificato && hasCausale('RETTIFICA INVENTARIO +') && doc.daEsterno === 1 && !oldDoc) &&
+             (doc.verificato && (doc.accodato || !oldDoc || !oldDoc.accodato)))) {
           error('Invalid verificato');
         }
         hasValidAziendaCode();

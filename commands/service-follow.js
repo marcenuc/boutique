@@ -8,40 +8,29 @@ requirejs.config({ baseUrl: process.cwd(), nodeRequire: require, paths: { 'dbcon
  */
 requirejs(['follow', 'lib/inventario', 'lib/servers', 'dbconfig'], function (follow, inventario, servers, dbconfig) {
   'use strict';
-  var dbUrl = servers.couchdb.authUrl(),
-    feed = new follow.Feed({
-      db: dbUrl + '/' + dbconfig.db,
-      include_docs: true,
-      since: 'now',
-      inactivity_ms: 86400 * 1000,
-      filter: function (doc) {
-        if (!doc.WORK_IN_PROGRESS && (doc.accodato || doc.verificato)) {
-          var ids = doc._id.split('_', 1);
-          return ids[0] === 'MovimentoMagazzino';
-        }
+  var feed = new follow.Feed({
+    db: servers.couchdb.authUrl() + '/' + dbconfig.db,
+    include_docs: true,
+    // TODO start from last processed change
+    since: 'now',
+    inactivity_ms: 86400 * 1000,
+    filter: function (doc) {
+      if (doc.accodato) {
+        var ids = doc._id.split('_', 1);
+        return ids[0] === 'MovimentoMagazzino';
       }
-    }),
-    workInProgress = false;
-
-  function done(err) {
-    if (err) {
-      console.dir(err);
     }
-  }
-
-  function doneWork(err) {
-    workInProgress = false;
-    done(err);
-  }
+  });
 
   feed.on('change', function (change) {
-    console.dir(change);
-    if (change.doc.accodato) {
-      inventario.verifica(change.doc, done);
-    } else if (!workInProgress) {
-      workInProgress = true;
-      inventario.update(doneWork);
-    }
+    var doc = change.doc;
+    console.log('Verifica ' + doc._id + ' ' + doc._rev);
+    inventario.verifica(doc, function (err) {
+      if (err) {
+        return console.dir(err);
+      }
+      console.log('Verificato ' + doc._id);
+    });
   });
 
   feed.on('error', function (err) {
