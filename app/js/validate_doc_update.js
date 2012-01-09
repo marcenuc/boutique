@@ -462,7 +462,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
           error('Invalid accodato');
         }
         if ((oldDoc && oldDoc.verificato && doc.verificato !== oldDoc.verificato) ||
-            (!(doc.verificato && hasCausale('RETTIFICA INVENTARIO +') && doc.daEsterno === 1 && !oldDoc) &&
+            (!(doc.verificato && hasCausale('RETTIFICA INVENTARIO +') && !doc.hasOwnProperty('daEsterno')) &&
              (doc.verificato && (doc.accodato || !oldDoc || !oldDoc.accodato)))) {
           error('Invalid verificato');
         }

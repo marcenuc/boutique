@@ -278,9 +278,10 @@ describe('Service', function () {
           expect(checkOther(verificatoTrue, accodatoFalse)).not.toBeAuthorized();
           expect(checkOther(verificatoTrue)).not.toBeAuthorized();
         });
-        it('should not require accodato when "RETTIFICA INVENTARIO +" and daEsterno', function () {
-          var rettifica = { _id: validId, verificato: 1, daEsterno: 1, causale: ['RETTIFICA INVENTARIO +', 1] };
+        it('should not require accodato when "RETTIFICA INVENTARIO +"', function () {
+          var rettifica = { _id: validId, verificato: 1, causale: ['RETTIFICA INVENTARIO +', 1] };
           expect(check(rettifica)).not.toHaveError(msg);
+          expect(check(rettifica, rettifica)).not.toHaveError(msg);
         });
       });
 
