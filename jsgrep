@@ -1,0 +1,2 @@
+#!/bin/dash
+exec grep --color=auto -r "$1" *.js */*.js */*/*.js
