@@ -48,6 +48,7 @@ var CODICI;
     MovimentoMagazzino: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
     Listino: ['costo', 'prezzo1', 'prezzo2', 'offerta'],
     Giacenze: ['stagione', 'modello', 'articolo', 'colore', 'codiceAzienda', 'inProduzione', 'tipoMagazzino', 'giacenze'],
+    // TODO remove after upgrade
     Inventario: ['modello', 'articolo', 'colore', 'stagione', 'da', 'inProduzione', 'tipoMagazzino',
                  'scalarino', 'taglia', 'descrizioneTaglia', 'descrizione', 'qta']
   };
@@ -277,6 +278,7 @@ var CODICI;
     }
   };
 
+  // TODO remove after upgrade
   codici.parseIdInventario = function (id) {
     // TODO DRY '\d{6}' è il codice azienda, '[123]' il tipoMagazzino
     var m = /^Inventario_(\d{6})_([123])$/.exec(id);
@@ -399,11 +401,11 @@ var CODICI;
             descrizioneTaglia: descrizioneTaglia
           }];
         }
-        return ['Codice taglia "' + taglia + '" non valido per scalarino ' + desscal[1] + ': "' + [stagione, modello].join('", "') + '"'];
+        return ['Codice taglia "' + taglia + '" non valido per scalarino "' + desscal[1] + '": ' + [stagione, modello].join(' ')];
       }
-      return ['Scalarino "' + desscal[1] + '" non valido per: "' + [stagione, modello].join('", "') + '"'];
+      return ['Scalarino "' + desscal[1] + '" non valido per: ' + [stagione, modello].join(' ')];
     }
-    return ['Modello non in anagrafe: "' + [stagione, modello].join('", "') + '"'];
+    return ['Modello non in anagrafe: ' + [stagione, modello].join(' ')];
   };
 
   codici.codiceTaglia = function (stagione, modello, codiciTaglie, listaModelli, descrizioneTaglia) {
@@ -417,11 +419,11 @@ var CODICI;
         if (taglia) {
           return [null, taglia];
         }
-        return ['Descrizione taglia "' + descrizioneTaglia + '" non trovata per scalarino ' + scalarino + ': "' + [stagione, modello].join('", "') + '"'];
+        return ['Descrizione taglia "' + descrizioneTaglia + '" non trovata per scalarino ' + scalarino + ': ' + [stagione, modello].join(' ')];
       }
-      return ['Descrizioni taglia non trovate per scalarino ' + scalarino + ': "' + [stagione, modello].join('", "') + '"'];
+      return ['Descrizioni taglia non trovate per scalarino "' + scalarino + '": ' + [stagione, modello].join(' ')];
     }
-    return ['Modello non in anagrafe: "' + [stagione, modello].join('", "') + '"'];
+    return ['Modello non in anagrafe: ' + [stagione, modello].join(' ')];
   };
 
 
