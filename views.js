@@ -45,7 +45,7 @@ define(function (require) {
     },
 
     movimentoMagazzinoPendente: function mapMovimentoMagazzinoPendente(doc) {
-      if (!doc.accodato) {
+      if (!doc.accodato && !doc.verificato) {
         var codici = require('views/lib/codici'),
           codes = codici.parseIdMovimentoMagazzino(doc._id);
         if (codes) {
