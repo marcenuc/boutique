@@ -515,11 +515,6 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
           error('Invalid inProduzione');
         }
         hasMovimenti(doc.rows);
-        if (doc.riferimento) {
-          if (!codici.parseIdBollaAs400(doc.riferimento)) {
-            error('Invalid riferimento');
-          }
-        }
         break;
       case 'CausaliAs400':
         mustBeAdmin();
