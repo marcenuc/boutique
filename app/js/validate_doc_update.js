@@ -458,7 +458,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
           mustBeOwner();
         }
         if ((doc.hasOwnProperty('accodato') && doc.accodato !== 1) ||
-            (oldDoc && doc.accodato !== oldDoc.accodato && doc.verificato !== 1)) {
+            (oldDoc && !doc.accodato && oldDoc.accodato && doc.verificato !== 1)) {
           error('Invalid accodato');
         }
         if ((oldDoc && oldDoc.verificato && doc.verificato !== oldDoc.verificato) ||

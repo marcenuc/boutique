@@ -221,10 +221,10 @@ describe('Service', function () {
       });
 
       describe('accodato', function () {
+        var msg = 'Invalid accodato';
         it('should be removed setting verificato', function () {
           var accodatoTrue = { _id: validId, accodato: 1 }, accodatoFalse = { _id: validId },
-            verificatoTrue = { _id: validId, verificato: 1 },
-            msg = 'Invalid accodato';
+            verificatoTrue = { _id: validId, verificato: 1 };
           expect(check(accodatoFalse, accodatoTrue)).toHaveError(msg);
           expect(check(verificatoTrue, accodatoTrue)).not.toHaveError(msg);
         });
@@ -244,14 +244,18 @@ describe('Service', function () {
           });
         });
         describe('causale NOT "VENDITA A CLIENTI"', function () {
+          var accodatoTrue = { _id: validId, accodato: 1 }, accodatoFalse = { _id: validId };
           it('should require admin user', function () {
-            var accodatoTrue = { _id: validId, accodato: 1 }, accodatoFalse = { _id: validId };
             expect(check(accodatoTrue)).toBeAuthorized();
             expect(check(accodatoTrue, accodatoFalse)).toBeAuthorized();
             expect(checkOwner(accodatoTrue)).not.toBeAuthorized();
             expect(checkOwner(accodatoTrue, accodatoFalse)).not.toBeAuthorized();
             expect(checkOwner(accodatoTrue, accodatoTrue)).not.toBeAuthorized();
             expect(checkOther(accodatoTrue)).not.toBeAuthorized();
+          });
+          it('should be sattable', function () {
+            expect(check(accodatoTrue)).not.toHaveError(msg);
+            expect(check(accodatoTrue, accodatoFalse)).not.toHaveError(msg);
           });
         });
       });
