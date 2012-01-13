@@ -16,6 +16,7 @@ secret = <%= couchdb_secret %>
 
 [httpd_global_handlers]
 <%= proxyed_path %> = {couch_httpd_proxy, handle_proxy_req, <<"http://localhost:<%= proxyed_port %>">>}
+boutique_app = {couch_httpd_proxy, handle_proxy_req, <<"http://localhost:<%= proxyed_port %>/OLD_APP">>}
 
 [admins]
 <%= admin_user %> = <%= admin_password %>

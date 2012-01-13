@@ -17,6 +17,7 @@ requirejs(['path', 'connect', 'connect-exec', 'lib/sendFoto', 'lib/servers'], fu
 
   if (process.env.BOUTIQUE_ENV === 'production') {
     server.use('/app', connect['static'](path.join(process.cwd(), 'build')));
+    server.use('/OLD_APP/app', connect['static'](path.join(process.cwd(), 'OLD_APP/app')));
   } else {
     console.log('Serving tests.');
     server
