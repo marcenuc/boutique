@@ -124,7 +124,7 @@ class boutique(
     ensure  => file,
     path    => "${webapp_folder}/environment",
     content => template('boutique/environment.erb'),
-    notify  => [Service['couchdb'], [Service['webserver'], Service['follow']],
+    notify  => [Service['couchdb'], Service['webserver'], Service['follow']],
   }
 
   exec { 'pull':
