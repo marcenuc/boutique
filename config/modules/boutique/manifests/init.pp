@@ -120,9 +120,11 @@ class boutique(
     require     => [Unpacked_package['CouchDB'], User[$admin_user]],
   }
 
-  local_bin { ['node', 'node-waf', 'npm']:
-    package_folder => $nodejs_folder,
-    package_name   => 'NodeJS',
+  file { 'environment':
+    ensure  => file,
+    path    => "${webapp_folder}/environment",
+    content => template('boutique/environment.erb'),
+    notify  => [Service['couchdb'], [Service['webserver'], Service['follow']],
   }
 
   exec { 'pull':
@@ -136,8 +138,7 @@ class boutique(
   exec { 'build':
     command   => "${webapp_folder}/run build",
     cwd       => $webapp_folder,
-    require   => Local_bin['node'],
-    subscribe => Exec['pull'],
+    subscribe => [File['environment'], Exec['pull']],
   }
 
   couchapp { 'boutique':
