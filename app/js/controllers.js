@@ -384,7 +384,6 @@ var Ctrl = {};
         rows = this.giacenze.rows, r, i, ii,
         count = 0, filtrate = [], maxCount = this.limiteRisultati,
         desscal, ms = this.modelliEScalarini.lista,
-        nodesscal = ['-- senza descrizione --', 0],
         colonnaTaglia, colonneTaglie = this.taglieScalarini.colonneTaglie,
         descrizioniTaglia, descrizioniTaglie = this.taglieScalarini.descrizioniTaglie,
         accoda, filtroSmacAz = this.getFiltroSmacAz(), filtroTaglia = this.getFiltroTaglia(),
@@ -395,21 +394,27 @@ var Ctrl = {};
         if (filtroSmacAz.test(r.slice(0, 5).join(''))) {
           accoda = false;
           totaleRiga = 0;
-          desscal = ms[r[0] + r[1]] || nodesscal;
-          scalarino = desscal[1];
-          descrizioniTaglia = descrizioniTaglie[scalarino];
-          giacenze = r[7];
-          riga = [nomeAzienda(this.aziende, r[4]), desscal[0], r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PRODUZIONE' : 'PRONTO'), scalarino, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-          for (taglia in giacenze) {
-            if (giacenze.hasOwnProperty(taglia)) {
-              if (filtroTaglia.test(descrizioniTaglia[taglia])) {
-                accoda = true;
-                qta = giacenze[taglia];
-                totaleRiga += qta;
-                colonnaTaglia = colonneTaglie[scalarino][taglia];
-                //TODO '9' è un numero magico
-                riga[9 + colonnaTaglia] = qta;
-                totaliColonna[colonnaTaglia] += qta;
+          desscal = ms[r[0] + r[1]];
+          if (!desscal) {
+            accoda = true;
+            riga = [nomeAzienda(this.aziende, r[4]), '## NON IN ANAGRAFE ##', r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PRODUZIONE' : 'PRONTO'), '##', -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
+            totaleRiga = 0;
+          } else {
+            scalarino = desscal[1];
+            descrizioniTaglia = descrizioniTaglie[scalarino];
+            riga = [nomeAzienda(this.aziende, r[4]), desscal[0], r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PRODUZIONE' : 'PRONTO'), scalarino, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            giacenze = r[7];
+            for (taglia in giacenze) {
+              if (giacenze.hasOwnProperty(taglia)) {
+                if (filtroTaglia.test(descrizioniTaglia[taglia])) {
+                  accoda = true;
+                  qta = giacenze[taglia];
+                  totaleRiga += qta;
+                  colonnaTaglia = colonneTaglie[scalarino][taglia];
+                  //TODO DRY '9' is a magic number
+                  riga[9 + colonnaTaglia] = qta;
+                  totaliColonna[colonnaTaglia] += qta;
+                }
               }
             }
           }
@@ -422,7 +427,7 @@ var Ctrl = {};
               riga.push(versioneListino, CODICI.formatMoney(prezzi[1][colPrezzi.prezzo2]) + (prezzi[1][colPrezzi.offerta] || ''));
             } else {
               versioneListino = this.listini[r[4]].versioneBase || r[4];
-              riga.push(versioneListino, 'n.d.');
+              riga.push(versioneListino, '## N.D. ##');
             }
             totaleRighe += totaleRiga;
             count = filtrate.push(riga);
