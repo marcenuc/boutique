@@ -450,15 +450,14 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         hasInventario(doc.rows);
         break;
       case 'MovimentoMagazzino':
-        if ((oldDoc && oldDoc.hasOwnProperty('accodato')) ||
-            doc.hasOwnProperty('verificato') ||
-            (doc.hasOwnProperty('accodato') && !hasCausale('VENDITA A CLIENTI'))) {
+        if ((oldDoc && oldDoc.accodato) ||
+            doc.verificato ||
+            (doc.accodato && !hasCausale('VENDITA A CLIENTI'))) {
           mustBeAdmin();
         } else {
           mustBeOwner();
         }
-        if ((doc.hasOwnProperty('accodato') && doc.accodato !== 1) ||
-            (oldDoc && !doc.accodato && oldDoc.accodato && doc.verificato !== 1)) {
+        if (oldDoc && oldDoc.accodato && !doc.accodato && !doc.verificato) {
           error('Invalid accodato');
         }
         if ((oldDoc && oldDoc.verificato && doc.verificato !== oldDoc.verificato) ||

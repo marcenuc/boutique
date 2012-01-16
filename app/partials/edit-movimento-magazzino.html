@@ -22,7 +22,7 @@
   <tfoot>
    <tr><th colspan=6 style="text-align:right">Quantità totale:<th>{{qtaTotale()}}<th>&nbsp;
  </table>
- <label><input type=checkbox ng:model="model.accodato" value=1>&nbsp;Accodato</label>
+ <label><input type=checkbox ng:model="model.accodato" ng:true-value=1 ng:false-value=0>&nbsp;Accodato</label>
 <div class=control>
  <button ng:click="save()" ng:disabled="{{form.$invalid}}">Salva</button>
  [&nbsp;<a href="#/MovimentoMagazzino_">Nuovo</a>&nbsp;]
