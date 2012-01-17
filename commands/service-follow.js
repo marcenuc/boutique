@@ -10,7 +10,6 @@ requirejs(['follow', 'lib/inventario', 'lib/servers', 'dbconfig'], function (fol
   'use strict';
   var feed = new follow.Feed({
     db: servers.couchdb.authUrl() + '/' + dbconfig.db,
-    include_docs: true,
     // TODO start from last processed change
     since: 'now',
     inactivity_ms: 86400 * 1000,
@@ -23,13 +22,12 @@ requirejs(['follow', 'lib/inventario', 'lib/servers', 'dbconfig'], function (fol
   });
 
   feed.on('change', function (change) {
-    var doc = change.doc;
-    console.log('Verifica ' + doc._id + ' ' + doc._rev);
-    inventario.verifica(doc, function (err) {
+    console.dir(change);
+    inventario.update(function (err) {
       if (err) {
         return console.dir(err);
       }
-      console.log('Verificato ' + doc._id);
+      console.log('Aggiornato inventario.');
     });
   });
 
