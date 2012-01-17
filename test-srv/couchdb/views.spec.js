@@ -90,6 +90,27 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
     });
   });
 
+  describe('giacenzeNegative map Giacenze', function () {
+    var map = views.giacenzeNegative,
+      columnNames = codici.COLUMN_NAMES.Giacenze,
+      col = codici.colNamesToColIndexes(columnNames);
+
+    it('should emit rows with negative values', function () {
+      var or = [],
+        giacenze = { _id: 'Giacenze', columnNames: columnNames, rows: [or] };
+      or[col.stagione] = '123';
+      or[col.modello] = '20674';
+      or[col.articolo] = '4982';
+      or[col.colore] = '5000';
+      or[col.codiceAzienda] = '010101';
+      or[col.inProduzione] = 0;
+      or[col.tipoMagazzino] = 3;
+      or[col.giacenze] = { '01': 2, '02': -2 };
+      map(giacenze);
+      expect(views._rows()).toEqual([[['010101', '123', '20674', '4982', '5000', '02', 3], -2]]);
+    });
+  });
+
   describe('giacenze', function () {
     describe('map', function () {
       var map = views.giacenze.map;

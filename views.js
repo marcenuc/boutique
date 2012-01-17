@@ -71,6 +71,23 @@ define(function (require) {
       }
     },
 
+    giacenzeNegative: function mapGiacenzeNegative(doc) {
+      var codici, col;
+      if (doc._id === 'Giacenze' && doc.rows) {
+        codici = require('views/lib/codici');
+        col = codici.colNamesToColIndexes(codici.COLUMN_NAMES.Giacenze);
+        doc.rows.forEach(function (r) {
+          var giacenze = r[col.giacenze];
+          Object.keys(giacenze).forEach(function (taglia) {
+            var g = giacenze[taglia];
+            if (g < 0) {
+              emit([r[col.codiceAzienda], r[col.stagione], r[col.modello], r[col.articolo], r[col.colore], taglia, r[col.tipoMagazzino]], g);
+            }
+          });
+        });
+      }
+    },
+
     giacenze: {
       map: function mapGiacenze(doc) {
         if (doc.accodato) {
