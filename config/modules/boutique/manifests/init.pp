@@ -127,18 +127,10 @@ class boutique(
     notify  => [Service['couchdb'], Service['webserver'], Service['follow']],
   }
 
-  exec { 'pull':
-    command => "/usr/bin/git pull",
-    cwd     => $webapp_folder,
-    user    => $admin_user,
-    group   => $admin_user,
-    require => Package['git'],
-  }
-
   exec { 'build':
     command   => "${webapp_folder}/run build",
     cwd       => $webapp_folder,
-    subscribe => [File['environment'], Exec['pull']],
+    subscribe => File['environment'],
   }
 
   couchapp { 'boutique':
