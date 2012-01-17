@@ -387,8 +387,8 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         }
         break;
       case 'Azienda':
-        mustBeAdmin();
         hasValidAziendaCode();
+        mustBeAdmin();
         mustHave('nome');
         mustHave('tipo');
         if (doc.tipo && (doc.tipo !== 'NEGOZIO' && doc.tipo !== 'MAGAZZINO')) {
@@ -450,22 +450,15 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
         hasInventario(doc.rows);
         break;
       case 'MovimentoMagazzino':
-        if ((oldDoc && oldDoc.accodato) ||
-            doc.verificato ||
-            (doc.accodato && !hasCausale('VENDITA A CLIENTI'))) {
+        hasValidAziendaCode();
+        if ((oldDoc && oldDoc.accodato) || (doc.accodato && !hasCausale('VENDITA A CLIENTI'))) {
           mustBeAdmin();
         } else {
           mustBeOwner();
         }
-        if (oldDoc && oldDoc.accodato && !doc.accodato && !doc.verificato) {
+        if (oldDoc && oldDoc.accodato && !doc.accodato) {
           error('Invalid accodato');
         }
-        if ((oldDoc && oldDoc.verificato && doc.verificato !== oldDoc.verificato) ||
-            (!(doc.verificato && hasCausale('RETTIFICA INVENTARIO +') && !doc.hasOwnProperty('daEsterno')) &&
-             (doc.verificato && (doc.accodato || !oldDoc || !oldDoc.accodato)))) {
-          error('Invalid verificato');
-        }
-        hasValidAziendaCode();
         // TODO l'utente negozio può scaricare solo dal suo magazzino di tipo 3.
         if (codes.length !== 4) {
           error('Invalid code');
@@ -477,8 +470,7 @@ function validate_doc_update(doc, oldDoc, userCtx, secObj) {
           error('Invalid numero');
         }
         if ((doc.hasOwnProperty('daEsterno') && doc.daEsterno !== 1) ||
-            (doc.hasOwnProperty('aEsterno') && doc.aEsterno !== 1) ||
-            ((doc.daEsterno || doc.aEsterno) && doc.verificato !== 1)) {
+            (doc.hasOwnProperty('aEsterno') && doc.aEsterno !== 1)) {
           error('Invalid da/aEsterno');
         }
         if (!codici.isYyyyMmDdDate(doc.data, codes[1])) {

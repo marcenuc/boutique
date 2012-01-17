@@ -52,19 +52,19 @@ describe('Controller', function () {
     aziende = {
       rows: [{
         id: 'Azienda_019998',
-        key: 'Azienda_019998',
-        value: '019998 Mag. Disponibile'
+        key: '019998',
+        value: '019998_Mag. Disponibile'
       }, {
         id: 'Azienda_099997',
-        key: 'Azienda_099997',
+        key: '099997',
         value: '099997 Negozio LE'
       }]
     },
     aziendeDocs = {
       rows: [{
         id: 'Azienda_019998',
-        key: 'Azienda_019998',
-        value: '019998 Mag. Disponibile',
+        key: '019998',
+        value: '019998_Mag. Disponibile',
         doc: {
           _id: "Azienda_019998",
           _rev: "1-d6363be2d62ec0f2eb5b961527bdddbf",
@@ -78,7 +78,7 @@ describe('Controller', function () {
         }
       }, {
         id: 'Azienda_099997',
-        key: 'Azienda_099997',
+        key: '099997',
         value: '099997 Negozio LE',
         doc: {
           _id: "Azienda_099997",
@@ -114,7 +114,7 @@ describe('Controller', function () {
       u = '_design/boutique_db/_view/riferimentiMovimentiMagazzino?key=%22BollaAs400_20110704_1234_Y_10%22';
       break;
     case 'VIEW_NUMERI':
-      u = '_design/boutique_db/_view/contatori?descending=true&endkey=%5B%22010101%22,2011,%22A%22%5D&limit=1&startkey=%5B%22010101%22,2011,%22A%22,%7B%7D%5D';
+      u = '_design/boutique_db/_view/contatori?descending=true&endkey=%5B%22019998%22,2011,%22A%22%5D&limit=1&startkey=%5B%22019998%22,2011,%22A%22,%7B%7D%5D';
       break;
     case 'VIEW_PENDENTI':
       u = '_design/boutique_db/_view/movimentoMagazzinoPendente';
@@ -309,7 +309,7 @@ describe('Controller', function () {
 
   describe('NewMovimentoMagazzino', function () {
     var causale = { descrizione: 'VENDITA', segno: -1, gruppo: 'A', causaleA: 1 },
-      emptyMM = CODICI.newMovimentoMagazzino('010101', '20111231', 12, causale, '020202');
+      emptyMM = CODICI.newMovimentoMagazzino(aziende.rows[0].value, '20111231', 12, causale, '099997');
 
     function newController() {
       expectGET('AZIENDE', aziende);
@@ -325,12 +325,12 @@ describe('Controller', function () {
       it('should create a new document with model data', function () {
         ctrl.form = {
           data: '20111231',
-          da: '010101',
-          a: '020202',
+          da: '019998',
+          a: '099997',
           causale: causale
         };
         expectGET('VIEW_NUMERI', { rows: [
-          { key: ['010101', 2011, 'A', 11], value: 1 }
+          { key: ['019998', 2011, 'A', 11], value: 1 }
         ]});
         expectPUT(emptyMM);
         expectGET(emptyMM._id); //TODO mock $location instead
@@ -499,7 +499,7 @@ describe('Controller', function () {
           ctrl.bollaAs400 = bollaAs400;
           ctrl.movimentoMagazzino = {
             data: '20110704',
-            da: '010101',
+            da: '019998',
             a: '020202',
             causale: CODICI.CAUSALI_MOVIMENTO_MAGAZZINO[0],
             causaleA: CODICI.CAUSALI_MOVIMENTO_MAGAZZINO[1]
@@ -532,8 +532,8 @@ describe('Controller', function () {
         ['923', '70233', '5215', '2100', '019998', 1, 1, { '50': 1, '52': 1 }]
       ],
       rowsExpected = [
-        ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '102', '70233', '5215', '2100', 1, 'PRONTO', 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 3, '1', '## N.D. ##'],
-        ['019998 Mag. Disponibile', 'ABITO BOT.FANT.', '923', '70233', '5215', '2100', 1, 'IN PRODUZIONE', 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2, '1', '## N.D. ##']
+        ['019998_Mag. Disponibile', 'ABITO BOT.FANT.', '102', '70233', '5215', '2100', 1, 'PRONTO', 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 3, '1', '## N.D. ##'],
+        ['019998_Mag. Disponibile', 'ABITO BOT.FANT.', '923', '70233', '5215', '2100', 1, 'IN PRODUZIONE', 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2, '1', '## N.D. ##']
       ],
       giacenze = { rows: rows };
 

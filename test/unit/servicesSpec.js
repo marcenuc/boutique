@@ -221,14 +221,32 @@ describe('Service', function () {
       });
 
       describe('accodato', function () {
-        var msg = 'Invalid accodato';
-        it('should be removed setting verificato', function () {
-          var accodatoTrue = { _id: validId, accodato: 1 }, accodatoFalse = { _id: validId },
-            verificatoTrue = { _id: validId, verificato: 1 };
-          expect(check(accodatoFalse, accodatoTrue)).toHaveError(msg);
-          expect(check(verificatoTrue, accodatoTrue)).not.toHaveError(msg);
+        describe('value', function () {
+          var msg = 'Invalid accodato',
+            accodatoTrue = { _id: validId, accodato: 1 },
+            accodatoFalse = { _id: validId };
+          it('should not be deleted', function () {
+            expect(check(accodatoFalse, accodatoTrue)).toHaveError(msg);
+          });
+          it('should be settable', function () {
+            expect(check(accodatoTrue)).not.toHaveError(msg);
+            expect(check(accodatoTrue, accodatoFalse)).not.toHaveError(msg);
+          });
         });
-        describe('causale "VENDITA A CLIENTI"', function () {
+        describe('causale is NOT "VENDITA A CLIENTI"', function () {
+          var causale = ['RETTIFICA INVENTARIO +', 1],
+            accodatoTrue = { _id: validId, accodato: 1, causale: causale },
+            accodatoFalse = { _id: validId, causale: causale };
+          it('should require admin user for setting', function () {
+            expect(check(accodatoTrue)).toBeAuthorized();
+            expect(check(accodatoTrue, accodatoFalse)).toBeAuthorized();
+            expect(checkOwner(accodatoTrue)).not.toBeAuthorized();
+            expect(checkOwner(accodatoTrue, accodatoFalse)).not.toBeAuthorized();
+            expect(checkOwner(accodatoTrue, accodatoTrue)).not.toBeAuthorized();
+            expect(checkOther(accodatoTrue)).not.toBeAuthorized();
+          });
+        });
+        describe('causale is "VENDITA A CLIENTI"', function () {
           var vendita = ['VENDITA A CLIENTI', -1],
             accodatoTrue = { _id: validId, accodato: 1, causale: vendita },
             accodatoFalse = { _id: validId, causale: vendita };
@@ -243,64 +261,13 @@ describe('Service', function () {
             expect(checkOwner(accodatoFalse, accodatoTrue)).not.toBeAuthorized();
           });
         });
-        describe('causale NOT "VENDITA A CLIENTI"', function () {
-          var accodatoTrue = { _id: validId, accodato: 1 }, accodatoFalse = { _id: validId };
-          it('should require admin user', function () {
-            expect(check(accodatoTrue)).toBeAuthorized();
-            expect(check(accodatoTrue, accodatoFalse)).toBeAuthorized();
-            expect(checkOwner(accodatoTrue)).not.toBeAuthorized();
-            expect(checkOwner(accodatoTrue, accodatoFalse)).not.toBeAuthorized();
-            expect(checkOwner(accodatoTrue, accodatoTrue)).not.toBeAuthorized();
-            expect(checkOther(accodatoTrue)).not.toBeAuthorized();
-          });
-          it('should be sattable', function () {
-            expect(check(accodatoTrue)).not.toHaveError(msg);
-            expect(check(accodatoTrue, accodatoFalse)).not.toHaveError(msg);
-          });
-        });
-      });
-
-      describe('verificato', function () {
-        var accodatoTrue = { _id: validId, accodato: 1 }, accodatoFalse = { _id: validId },
-          verificatoTrue = { _id: validId, verificato: 1 },
-          msg = 'Invalid verificato';
-        it('should not be removed', function () {
-          var verificatoTrue = { _id: validId, verificato: 1 }, verificatoFalse = { _id: validId };
-          expect(check(verificatoFalse, verificatoTrue)).toHaveError('Invalid verificato');
-        });
-        it('should be set only when oldDoc is accodato and doc is not', function () {
-          expect(check(verificatoTrue, accodatoTrue)).not.toHaveError(msg);
-          expect(check(verificatoTrue, accodatoFalse)).toHaveError(msg);
-          expect(check(verificatoTrue)).toHaveError(msg);
-          expect(check({ _id: validId, verificato: 1, accodato: 1 }, accodatoTrue)).toHaveError(msg);
-        });
-        it('should be forbidden to non admins', function () {
-          expect(checkOwner(verificatoTrue, accodatoTrue)).not.toBeAuthorized();
-          expect(checkOwner(verificatoTrue, accodatoFalse)).not.toBeAuthorized();
-          expect(checkOwner(verificatoTrue)).not.toBeAuthorized();
-          expect(checkOther(verificatoTrue, accodatoTrue)).not.toBeAuthorized();
-          expect(checkOther(verificatoTrue, accodatoFalse)).not.toBeAuthorized();
-          expect(checkOther(verificatoTrue)).not.toBeAuthorized();
-        });
-        it('should not require accodato when "RETTIFICA INVENTARIO +"', function () {
-          var rettifica = { _id: validId, verificato: 1, causale: ['RETTIFICA INVENTARIO +', 1] };
-          expect(check(rettifica)).not.toHaveError(msg);
-          expect(check(rettifica, rettifica)).not.toHaveError(msg);
-        });
       });
 
       describe('daEsterno e aEsterno', function () {
-        var accodatoTrue = { _id: validId, accodato: 1 },
-          msg = 'Invalid da/aEsterno';
-        it('should be set only whith verificato', function () {
-          expect(check({ _id: validId, daEsterno: 1 }, accodatoTrue)).toHaveError(msg);
-          expect(check({ _id: validId, verificato: 1, daEsterno: 1 }, accodatoTrue)).not.toHaveError(msg);
-          expect(check({ _id: validId, aEsterno: 1 }, accodatoTrue)).toHaveError(msg);
-          expect(check({ _id: validId, verificato: 1, aEsterno: 1 }, accodatoTrue)).not.toHaveError(msg);
-        });
+        var msg = 'Invalid da/aEsterno';
         it('should be 1 or not defined', function () {
-          expect(check({ _id: validId, verificato: 1, daEsterno: 0 }, accodatoTrue)).toHaveError(msg);
-          expect(check({ _id: validId, verificato: 1, aEsterno: 0 }, accodatoTrue)).toHaveError(msg);
+          expect(check({ _id: validId, daEsterno: 0 })).toHaveError(msg);
+          expect(check({ _id: validId, aEsterno: 0 })).toHaveError(msg);
         });
       });
 

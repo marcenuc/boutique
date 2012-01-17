@@ -369,4 +369,43 @@ requirejs(['app/js/codici'], function (codici) {
       expect(u({ _id: 'Azienda_101010', tipo: 'NEGOZIO' })).toBe(false);
     });
   });
+
+  describe('newMovimentoMagazzino', function () {
+    var u = codici.newMovimentoMagazzino;
+    it('should return MovimentoMagazzino object', function () {
+      expect(u('123456', '20111224', 1, codici.CAUSALI_MOVIMENTO_MAGAZZINO[0], '010203')).toEqual({
+        _id: codici.idMovimentoMagazzino('123456', '2011', 'A', 1),
+        data: '20111224',
+        causale: ['VENDITA', -1],
+        a: '010203',
+        causaleA: ['ACQUISTO', 1],
+        columnNames: codici.COLUMN_NAMES.MovimentoMagazzino,
+        rows: []
+      });
+    });
+    it('should set daEsterno', function () {
+      expect(u('123456_Azienda esempio', '20111224', 1, codici.CAUSALI_MOVIMENTO_MAGAZZINO[0], '010203')).toEqual({
+        _id: codici.idMovimentoMagazzino('123456', '2011', 'A', 1),
+        daEsterno: 1,
+        data: '20111224',
+        causale: ['VENDITA', -1],
+        a: '010203',
+        causaleA: ['ACQUISTO', 1],
+        columnNames: codici.COLUMN_NAMES.MovimentoMagazzino,
+        rows: []
+      });
+    });
+    it('should set aEsterno', function () {
+      expect(u('123456', '20111224', 1, codici.CAUSALI_MOVIMENTO_MAGAZZINO[0], '010203_Azienda esempio')).toEqual({
+        _id: codici.idMovimentoMagazzino('123456', '2011', 'A', 1),
+        aEsterno: 1,
+        data: '20111224',
+        causale: ['VENDITA', -1],
+        a: '010203',
+        causaleA: ['ACQUISTO', 1],
+        columnNames: codici.COLUMN_NAMES.MovimentoMagazzino,
+        rows: []
+      });
+    });
+  });
 });

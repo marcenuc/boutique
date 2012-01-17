@@ -331,8 +331,9 @@ var CODICI;
   };
 
   codici.newMovimentoMagazzino = function (da, data, numero, causale, a) {
+    //TODO DRY 6 is magic number
     var c = codici.espandiCausale(causale),
-      id = codici.idMovimentoMagazzino(da, data.substring(0, 4), c.gruppo, numero),
+      id = codici.idMovimentoMagazzino(da.substring(0, 6), data.substring(0, 4), c.gruppo, numero),
       doc = {
         _id: id,
         data: data,
@@ -340,9 +341,17 @@ var CODICI;
         columnNames: codici.COLUMN_NAMES.MovimentoMagazzino,
         rows: []
       };
+    if (da[6] === '_') {
+      doc.daEsterno = 1;
+    }
     if (c.causaleA) {
       doc.causaleA = c.causaleA;
-      doc.a = a;
+      if (a) {
+        if (a[6] === '_') {
+          doc.aEsterno = 1;
+        }
+        doc.a = a.substring(0, 6);
+      }
     }
     return doc;
   };

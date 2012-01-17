@@ -30,7 +30,7 @@ var Ctrl = {};
       var self = this,
         mm = this.form;
       this.SessionInfo.prossimoNumero(mm.da, mm.data.substring(0, 4), mm.causale.gruppo, function (numero) {
-        var doc = CODICI.newMovimentoMagazzino(mm.da, mm.data, numero, mm.causale, mm.a);
+        var doc = CODICI.newMovimentoMagazzino(self.aziende[mm.da].value, mm.data, numero, mm.causale, self.aziende[mm.a].value);
         self.SessionInfo.save(doc, function (res) {
           self.$location.path(res.id);
         });

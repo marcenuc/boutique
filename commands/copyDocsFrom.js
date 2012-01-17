@@ -238,7 +238,7 @@ requirejs(['underscore', 'util', 'nano', 'lib/couchutil', 'lib/servers', 'dbconf
             function saveMovimentoIniziale(codiceAzienda, rows) {
               var doc = codici.newMovimentoMagazzino(codiceAzienda, currentYear + '0101', 1, findCausale('RETTIFICA INVENTARIO +'));
               doc.rows = rows;
-              doc.verificato = 1;
+              doc.accodato = 1;
               couchutil.saveIfChanged2(target, doc, function (err, resp) {
                 if (err) {
                   throw new Error(util.inspect(err));

@@ -23,10 +23,11 @@ define(function (require) {
     },
 
     aziende: function mapAziende(doc) {
-      var codici = require('views/lib/codici'),
+      var sep, codici = require('views/lib/codici'),
         ids = codici.splitId(doc._id);
       if (codici.isAzienda(ids)) {
-        emit(ids[1], ids[1] + ' ' + doc.nome);
+        sep = codici.hasExternalWarehouse(doc) ? '_' : ' ';
+        emit(ids[1], ids[1] + sep + doc.nome);
       }
     },
 
@@ -45,7 +46,7 @@ define(function (require) {
     },
 
     movimentoMagazzinoPendente: function mapMovimentoMagazzinoPendente(doc) {
-      if (!doc.accodato && !doc.verificato) {
+      if (!doc.accodato) {
         var codici = require('views/lib/codici'),
           codes = codici.parseIdMovimentoMagazzino(doc._id);
         if (codes) {
@@ -72,7 +73,7 @@ define(function (require) {
 
     giacenze: {
       map: function mapGiacenze(doc) {
-        if (doc.verificato) {
+        if (doc.accodato) {
           var smact, inProduzione, tipoMagazzino, tipoMagazzinoA, segnoDa, segnoA,
             col, r, i, ii, rows = doc.rows,
             codici = require('views/lib/codici'),
