@@ -124,7 +124,7 @@ class boutique(
     ensure  => file,
     path    => "${webapp_folder}/environment",
     content => template('boutique/environment.erb'),
-    notify  => [Service['couchdb'], Service['webserver'], Service['follow']],
+    notify  => [Service['couchdb'], Service['webserver']],
   }
 
   exec { 'pull':
@@ -149,12 +149,6 @@ class boutique(
     run_command => "${webapp_folder}/scripts/run-production-webserver.sh",
     admin_user  => $admin_user,
     subscribe   => [Exec['build'], User[$admin_user]],
-  }
-
-  upstart_service { 'follow':
-    run_command => "${webapp_folder}/scripts/run-service-follow.sh",
-    admin_user  => $admin_user,
-    subscribe   => [Exec['build'], User[$admin_user], Service['couchdb'], Couchapp['boutique']],
   }
 
   package { $packages: }
@@ -263,7 +257,7 @@ class boutique(
     # TODO should we change owner? this file has sensitive data...
     mode    => '0440',
     content => template('boutique/server-configs.js.erb'),
-    notify  => [Service['webserver'], Service['follow']],
+    notify  => Service['webserver'],
   }
 
   file { 'as400-settings':
