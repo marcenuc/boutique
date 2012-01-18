@@ -18,6 +18,7 @@ var Ctrl = {};
 
     this.aziende = SessionInfo.aziende();
     this.causali = CODICI.CAUSALI_MOVIMENTO_MAGAZZINO;
+    this.form = { data: CODICI.newYyyyMmDdDate() };
   };
   Ctrl.NewMovimentoMagazzino.$inject = ['SessionInfo', '$location'];
 
@@ -28,9 +29,10 @@ var Ctrl = {};
 
     create: function () {
       var self = this,
-        mm = this.form;
+        mm = this.form,
+        a = mm.a && this.aziende[mm.a] ? this.aziende[mm.a].value : null;
       this.SessionInfo.prossimoNumero(mm.da, mm.data.substring(0, 4), mm.causale.gruppo, function (numero) {
-        var doc = CODICI.newMovimentoMagazzino(self.aziende[mm.da].value, mm.data, numero, mm.causale, self.aziende[mm.a].value);
+        var doc = CODICI.newMovimentoMagazzino(self.aziende[mm.da].value, mm.data, numero, mm.causale, a);
         self.SessionInfo.save(doc, function (res) {
           self.$location.path(res.id);
         });
