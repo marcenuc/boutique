@@ -140,6 +140,9 @@ var Ctrl = {};
     },
 
     qtaTotale: function () {
+      if (!this.model.rows) {
+        return 0;
+      }
       var colQta = this.col.qta;
       return this.model.rows.reduce(function (a, b) {
         return a + b[colQta];
