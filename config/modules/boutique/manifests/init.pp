@@ -219,10 +219,8 @@ class boutique(
     require => File[$shares_folder],
   }
 
-  file { $photo_subfolders:
-    ensure  => directory,
-    recurse => true,
-    mode    => '2664',
+  owned_folder { $photo_subfolders:
+    $owner  => $admin_user,
     require => File[$photo_folder],
   }
 
