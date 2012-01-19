@@ -220,7 +220,7 @@ class boutique(
   }
 
   owned_folder { $photo_subfolders:
-    $owner  => $admin_user,
+    owner  => $admin_user,
     require => File[$photo_folder],
   }
 
