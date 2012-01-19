@@ -486,8 +486,11 @@ td, th {
   text-align: left;
   padding: 3px;
 }
-td.n, th.n, tbody.giacenze td:nth-child(n+10) {
+td.n, th.n, tbody.giacenze td:nth-child(n+11) {
   text-align: right;
+}
+tbody.giacenze td:first-child {
+  font-size: xx-small;
 }
   
 /* for hidden header hack to calculate widths of dynamic content */
