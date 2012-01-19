@@ -486,6 +486,9 @@ td, th {
   text-align: left;
   padding: 3px;
 }
+table.fixed thead th {
+  padding: 0 3px;
+}
 td.n, th.n, tbody.giacenze td:nth-child(n+11) {
   text-align: right;
 }
