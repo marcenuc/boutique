@@ -22,7 +22,7 @@
 <thead><tr><th class=first><div class=th>#</div><th><div class=th>Azienda</div><th><div class=th>Descrizione</div><th><div class=th>Stag.</div><th><div class=th>Modello</div><th><div class=th>Articolo</div><th><div class=th>Colore</div><th><div class=th>T.Mag.</div><th><div class=th>Stato</div><th><div class=th>Sc. {{scalarino}}<th ng:repeat="t in taglie"><div class=th>{{t}}</div><th><div class=th>Qta</div><th><div class=th>List.</div><th><div class=th>Prezzo</div><th><div class=th>ALTRO</div>
 <tr class="hidden-header"><th class=first><div class=th>#</div><th><div class=th>Azienda</div><th><div class=th>Descrizione</div><th><div class=th>Stag.</div><th><div class=th>Modello</div><th><div class=th>Articolo</div><th><div class=th>Colore</div><th><div class=th>T.Mag.</div><th><div class=th>Stato</div><th><div class=th>Sc. {{scalarino}}<th ng:repeat="t in taglie"><div class=th>{{t}}</div><th><div class=th>Qta</div><th><div class=th>List.</div><th><div class=th>Prezzo</div><th><div class=th>ALTRO</div>
 <tfoot><tr><th colspan=10 style="text-align:right">Quantità totali:<th ng:repeat="totale in totaliColonna" class=n>{{totale || ''}}
-<tbody class=giacenze><tr ng:repeat="row in filtrate" ng:class="isSelectedRow($index)"><td>{{$index}}<td ng:repeat="v in row">{{v || ''}}<td><a ng:click="showPhoto($index)">Foto</a>
+<tbody class=giacenze><tr ng:repeat="row in filtrate" ng:class="isSelectedRow($index)"><td>{{$index + 1}}<td ng:repeat="v in row">{{v || ''}}<td><a ng:click="showPhoto($index)">Foto</a>
 </table>
 </div></div>
 <div ng:show=photo class=photo>
