@@ -470,6 +470,9 @@ tr:nth-child(2n) {
 tr.selected {
   background-color: yellow;
 }
+tr:hover {
+  background-color: #efb;
+}
 
 th {
   font-weight: normal;
