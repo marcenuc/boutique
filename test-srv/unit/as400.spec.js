@@ -1,9 +1,8 @@
-/*global describe: false, beforeEach: false, afterEach: false, it: false, expect: false, jasmine: false, require: false, __dirname: false, process: false*/
-process.env.LANG = 'C';
+/*global describe:false, xdescribe:false, beforeEach:false, it:false, expect:false, jasmine:false, require:false, process:false*/
 var requirejs = require('requirejs');
-requirejs.config({ baseUrl: __dirname + '/../..', nodeRequire: require, paths: { 'dbconfig': 'app/js/config', 'views/lib/codici': 'app/js/codici' } });
+requirejs.config({ baseUrl: process.cwd(), nodeRequire: require });
 
-requirejs(['underscore', 'lib/as400', 'app/js/codici'], function (_, as400, codici) {
+requirejs(['underscore', 'lib/as400', 'views/lib/codici'], function (_, as400, codici) {
   'use strict';
 
   beforeEach(function () {

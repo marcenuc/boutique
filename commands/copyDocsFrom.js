@@ -1,9 +1,8 @@
 /*global require:false, process:false, console:false*/
-process.env.LANG = 'C';
 var requirejs = require('requirejs');
-requirejs.config({ baseUrl: process.cwd(), nodeRequire: require, paths: { 'dbconfig': 'app/js/config' } });
+requirejs.config({ baseUrl: process.cwd(), nodeRequire: require });
 
-requirejs(['underscore', 'util', 'nano', 'lib/couchutil', 'lib/servers', 'dbconfig', 'app/js/codici'], function (_, util, nano, couchutil, servers, dbconfig, codici) {
+requirejs(['underscore', 'util', 'nano', 'lib/couchutil', 'lib/servers', 'dbconfig', 'views/lib/codici'], function (_, util, nano, couchutil, servers, dbconfig, codici) {
   'use strict';
   var d, dd, baseId,
     source = nano(process.argv[2]).use(process.argv[3]),

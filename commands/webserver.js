@@ -1,5 +1,4 @@
-/*global console: false, require: false, process: false*/
-process.env.LANG = 'C';
+/*global console:false, require:false, process:false*/
 var requirejs = require('requirejs');
 requirejs.config({ baseUrl: process.cwd(), nodeRequire: require });
 

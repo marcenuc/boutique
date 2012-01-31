@@ -1,10 +1,10 @@
 <form ng:submit="find()" name=movimentoMagazzino>
 <fieldset><legend>Ricerca movimento magazzino</legend>
- <label>Causale: <select ng:model="form.causale" ng:options="causale.descrizione for causale in causali" required></select></label><br>
-   <span ng:show="form.causale">Segno: <b>{{form.causale.segno}}</b>,
-   Gruppo: <b>{{form.causale.gruppo}}</b></span><span ng:show="form.causale.causaleA >= 0">,
-   Causale associata: <b>{{causali[form.causale.causaleA].descrizione}}</b></span><p>
- <label>Da: <select ng:model="form.da" ng:options="c as r.value for (c, r) in aziende" required><option></select></label>
+ <label>Causale1: <select ng:model="form.causale1" ng:options="causale.descrizione for causale in causali" required></select></label><br>
+   <span ng:show="form.causale1">Segno: <b>{{form.causale1.segno}}</b>,
+   Gruppo: <b>{{form.causale1.gruppo}}</b></span><span ng:show="form.causale1.causale2 >= 0">,
+   Causale2: <b>{{causali[form.causale1.causale2].descrizione}}</b></span><p>
+ <label>Magazzino1: <select ng:model="form.magazzino1" ng:options="c as r.value for (c, r) in aziende" required><option></select></label>
  <label>Anno: <input ng:model="form.anno" size=5 maxlength=4 type=integer min=2000 max=2099 required></label>
  <label>Numero: <input ng:model="form.numero" size=7 type=integer min=0 required></label><p>
  <input type=submit value=Cerca ng:disabled="{{movimentoMagazzino.$invalid}}">
@@ -14,7 +14,7 @@
 <table summary="Lista movimenti da accodare">
  <caption>Movimenti da accodare</caption>
  <thead>
-  <tr><th>#<th>Da<th>Data<th>Causale<th>Gruppo<th>Numero
+  <tr><th>#<th>Magazzino1<th>Data<th>Causale1<th>Gruppo<th>Numero
   <tbody>
    <tr ng:repeat="row in pendenti.rows">
     <td><a ng:href="#/{{row.id}}">{{$index + 1}}</a>

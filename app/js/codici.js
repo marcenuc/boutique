@@ -1,22 +1,9 @@
-// TODO CODICI should be freezed to be guarded against modifications.
-var CODICI;
-
-(function () {
+/*global angular:false*/
+angular.module('app.shared', []).factory('codici', function () {
   'use strict';
-  /*global define: false, exports: false*/
-  if (typeof define === 'function') {
-    CODICI = {};
-    define(function () {
-      return CODICI;
-    });
-  } else if (typeof exports === 'object') {
-    CODICI = exports;
-  } else {
-    CODICI = {};
-  }
+  var codici = {};
 
-  var codici = CODICI;
-
+  // ### BEGIN ###
   codici.LEN_STAGIONE = 3;
   codici.LEN_MODELLO = 5;
   codici.LEN_ARTICOLO = 4;
@@ -30,16 +17,16 @@ var CODICI;
   codici.TIPI_AZIENDA = ['MAGAZZINO', 'NEGOZIO'];
   // TODO Questo dovrebbe essere un documento in CouchDB
   codici.CAUSALI_MOVIMENTO_MAGAZZINO = [
-    { descrizione: 'VENDITA', segno: -1, gruppo: 'A', causaleA: 1},
-    { descrizione: 'ACQUISTO', segno: 1, gruppo: 'B', causaleA: 0},
-    { descrizione: 'RESO SU VENDITA', segno: 1, gruppo: 'A', causaleA: 3},
-    { descrizione: 'RESO SU ACQUISTO', segno: -1, gruppo: 'B', causaleA: 2},
-    { descrizione: 'C/VENDITA', segno: -1, gruppo: 'A', causaleA: 5},
-    { descrizione: 'C/ACQUISTO', segno: 1, gruppo: 'B', causaleA: 4},
-    { descrizione: 'RESO SU C/VENDITA', segno: 1, gruppo: 'A', causaleA: 7},
-    { descrizione: 'RESO SU C/ACQUISTO', segno: -1, gruppo: 'B', causaleA: 6},
-    { descrizione: 'SCARICO PER CAMBIO MAGAZZINO', segno: -1, gruppo: 'A', causaleA: 9},
-    { descrizione: 'CARICO PER CAMBIO MAGAZZINO', segno: 1, gruppo: 'B', causaleA: 8},
+    { descrizione: 'VENDITA', segno: -1, gruppo: 'A', causale2: 1},
+    { descrizione: 'ACQUISTO', segno: 1, gruppo: 'B', causale2: 0},
+    { descrizione: 'RESO SU VENDITA', segno: 1, gruppo: 'A', causale2: 3},
+    { descrizione: 'RESO SU ACQUISTO', segno: -1, gruppo: 'B', causale2: 2},
+    { descrizione: 'C/VENDITA', segno: -1, gruppo: 'A', causale2: 5},
+    { descrizione: 'C/ACQUISTO', segno: 1, gruppo: 'B', causale2: 4},
+    { descrizione: 'RESO SU C/VENDITA', segno: 1, gruppo: 'A', causale2: 7},
+    { descrizione: 'RESO SU C/ACQUISTO', segno: -1, gruppo: 'B', causale2: 6},
+    { descrizione: 'SCARICO PER CAMBIO MAGAZZINO', segno: -1, gruppo: 'A', causale2: 9},
+    { descrizione: 'CARICO PER CAMBIO MAGAZZINO', segno: 1, gruppo: 'B', causale2: 8},
     { descrizione: 'VENDITA A CLIENTI', segno: -1, gruppo: 'C'},
     { descrizione: 'RETTIFICA INVENTARIO -', segno: -1, gruppo: 'D'},
     { descrizione: 'RETTIFICA INVENTARIO +', segno: 1, gruppo: 'D'}
@@ -310,7 +297,7 @@ var CODICI;
     var ids = codici.splitId(id);
     if (codici.isMovimentoMagazzino(ids)) {
       return {
-        da: ids[1],
+        magazzino1: ids[1],
         anno: ids[2],
         gruppo: ids[3],
         numero: parseInt(ids[4], 10)
@@ -318,39 +305,39 @@ var CODICI;
     }
   };
 
-  codici.espandiCausale = function (causale) {
-    var c, ret = {
+  codici.infoCausale = function (causale) {
+    var c2, info = {
       gruppo: causale.gruppo,
-      causale: [causale.descrizione, causale.segno]
+      causale1: [causale.descrizione, causale.segno]
     };
-    if (causale.hasOwnProperty('causaleA')) {
-      c = codici.CAUSALI_MOVIMENTO_MAGAZZINO[causale.causaleA];
-      ret.causaleA = [c.descrizione, c.segno];
+    if (causale.hasOwnProperty('causale2')) {
+      c2 = codici.CAUSALI_MOVIMENTO_MAGAZZINO[causale.causale2];
+      info.causale2 = [c2.descrizione, c2.segno];
     }
-    return ret;
+    return info;
   };
 
-  codici.newMovimentoMagazzino = function (da, data, numero, causale, a) {
+  codici.newMovimentoMagazzino = function (magazzino1, data, numero, causale, magazzino2) {
     //TODO DRY 6 is magic number
-    var c = codici.espandiCausale(causale),
-      id = codici.idMovimentoMagazzino(da.substring(0, 6), data.substring(0, 4), c.gruppo, numero),
+    var infoCausale = codici.infoCausale(causale),
+      id = codici.idMovimentoMagazzino(magazzino1.substring(0, 6), data.substring(0, 4), infoCausale.gruppo, numero),
       doc = {
         _id: id,
         data: data,
-        causale: c.causale,
+        causale1: infoCausale.causale1,
         columnNames: codici.COLUMN_NAMES.MovimentoMagazzino,
         rows: []
       };
-    if (da[6] === '_') {
-      doc.daEsterno = 1;
+    if (magazzino1[6] === '_') {
+      doc.esterno1 = 1;
     }
-    if (c.causaleA) {
-      doc.causaleA = c.causaleA;
-      if (a) {
-        if (a[6] === '_') {
-          doc.aEsterno = 1;
+    if (infoCausale.causale2) {
+      doc.causale2 = infoCausale.causale2;
+      if (magazzino2) {
+        if (magazzino2[6] === '_') {
+          doc.esterno2 = 1;
         }
-        doc.a = a.substring(0, 6);
+        doc.magazzino2 = magazzino2.substring(0, 6);
       }
     }
     return doc;
@@ -485,4 +472,7 @@ var CODICI;
   codici.hasExternalWarehouse = function (azienda) {
     return azienda.tipo !== 'NEGOZIO';
   };
-}());
+  // ### END ###
+
+  return codici;
+});

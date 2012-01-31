@@ -1,7 +1,6 @@
-/*global require: false, process: false*/
-process.env.LANG = 'C';
+/*global require:false, process:false*/
 var requirejs = require('requirejs');
-requirejs.config({ baseUrl: process.cwd(), nodeRequire: require, paths: { 'dbconfig': 'app/js/config' } });
+requirejs.config({ baseUrl: process.cwd(), nodeRequire: require });
 
 requirejs(['child_process', 'path', 'findit', 'lib/servers'], function (child_process, path, findit, servers) {
   'use strict';

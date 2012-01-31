@@ -1,7 +1,6 @@
-/*global console: false, require: false, process: false*/
-process.env.LANG = 'C';
+/*global console:false, require:false, process:false*/
 var requirejs = require('requirejs');
-requirejs.config({ baseUrl: process.cwd(), nodeRequire: require, paths: { 'dbconfig': 'app/js/config' } });
+requirejs.config({ baseUrl: process.cwd(), nodeRequire: require });
 
 requirejs(['util', 'nano', 'lib/servers', 'lib/as400', 'dbconfig'], function (util, nano, servers, as400, dbconfig) {
   'use strict';

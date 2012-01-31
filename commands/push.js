@@ -1,7 +1,6 @@
-/*global console: false, require: false, process: false*/
-process.env.LANG = 'C';
+/*global console:false, require:false, process:false*/
 var requirejs = require('requirejs');
-requirejs.config({ baseUrl: process.cwd(), nodeRequire: require, paths: { 'dbconfig': 'app/js/config', 'views/lib/codici': 'app/js/codici' } });
+requirejs.config({ baseUrl: process.cwd(), nodeRequire: require });
 
 requirejs(['util', 'path', 'fs', 'nano', 'couchdbs', 'lib/servers'], function (util, path, fs, nano, couchdbs, servers) {
   'use strict';

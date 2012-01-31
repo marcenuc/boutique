@@ -2,6 +2,7 @@
 cmd="${1:?What to do?}"
 shift
 cd `dirname "$0"`
+export LANG=C
 . ./environment
 js="commands/${cmd}.js"
 sh="commands/${cmd}.sh"

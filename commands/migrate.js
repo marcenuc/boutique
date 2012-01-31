@@ -1,9 +1,8 @@
 /*global require:false, process:false, console:false*/
-process.env.LANG = 'C';
 var requirejs = require('requirejs');
-requirejs.config({ baseUrl: process.cwd(), nodeRequire: require, paths: { 'dbconfig': 'app/js/config' } });
+requirejs.config({ baseUrl: process.cwd(), nodeRequire: require });
 
-requirejs(['util', 'nano', 'lib/servers', 'dbconfig'], function (util, nano, servers, dbconfig) {
+requirejs(['util', 'nano', 'lib/servers', 'views/lib/codici', 'dbconfig'], function (util, nano, servers, codici, dbconfig) {
   'use strict';
   var target = nano(servers.couchdb.authUrl()).use(dbconfig.db);
 
@@ -15,7 +14,6 @@ requirejs(['util', 'nano', 'lib/servers', 'dbconfig'], function (util, nano, ser
     if (err) {
       throw new Error(util.inspect(err));
     }
-    var movimenti = allMovimentoMagazzino.rows, i = movimenti.length, m;
 
     function save(doc) {
       target.insert(doc, doc._id, function (err) {
@@ -26,14 +24,33 @@ requirejs(['util', 'nano', 'lib/servers', 'dbconfig'], function (util, nano, ser
       });
     }
 
-    while (i > 0) {
-      i -= 1;
-      m = movimenti[i].doc;
-      if (m.verificato) {
-        m.accodato = 1;
-        delete m.verificato;
-        save(m);
+    function renameField(doc, oldField, newField) {
+      if (doc.hasOwnProperty(oldField)) {
+        doc[newField] = doc[oldField];
+        delete doc[oldField];
       }
     }
+
+    function migrate(mm) {
+      var codes;
+      if (mm.causale) {
+        codes = codici.parseIdMovimentoMagazzino(mm._id);
+        if (codes) {
+          renameField(mm, 'causale', 'causale1');
+          renameField(mm, 'causaleA', 'causale2');
+          renameField(mm, 'a', 'magazzino2');
+          renameField(mm, 'daEsterno', 'esterno1');
+          renameField(mm, 'aEsterno', 'esterno2');
+          return mm;
+        }
+      }
+    }
+
+    allMovimentoMagazzino.rows.forEach(function (row) {
+      var newDoc = migrate(row.doc);
+      if (newDoc) {
+        save(newDoc);
+      }
+    });
   });
 });

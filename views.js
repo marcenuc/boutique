@@ -1,4 +1,4 @@
-/*global define: false*/
+/*global define:false*/
 
 /*
  * This module contains all views used in CouchDB.
@@ -12,7 +12,7 @@ define(function (require) {
     rows.push([k, v]);
   }
 
-  // '_*' fields are only used for testing, and never loaded in CouchDB.'
+  // '_*' fields are only used for testing, and never loaded in CouchDB.
   return {
     _resetRows: function () {
       rows = [];
@@ -37,9 +37,9 @@ define(function (require) {
           codes = codici.parseIdMovimentoMagazzino(doc._id);
         if (codes) {
           year = parseInt(codes.anno, 10);
-          emit([codes.da, year, codes.gruppo, codes.numero], 1);
-          if (doc.a) {
-            emit([doc.a, codes.da, year, codes.gruppo, codes.numero], 1);
+          emit([codes.magazzino1, year, codes.gruppo, codes.numero], 1);
+          if (doc.magazzino2) {
+            emit([doc.magazzino2, codes.magazzino1, year, codes.gruppo, codes.numero], 1);
           }
         }
       }
@@ -50,7 +50,7 @@ define(function (require) {
         var codici = require('views/lib/codici'),
           codes = codici.parseIdMovimentoMagazzino(doc._id);
         if (codes) {
-          emit([codes.da, doc.data, doc.causale[0], codes.gruppo, codes.numero], 1);
+          emit([codes.magazzino1, doc.data, doc.causale1[0], codes.gruppo, codes.numero], 1);
         }
       }
     },
@@ -59,7 +59,7 @@ define(function (require) {
       var codici = require('views/lib/codici'),
         codes = codici.parseIdMovimentoMagazzino(doc._id);
       if (codes) {
-        emit([codes.da, parseInt(codes.anno, 10), codes.gruppo, codes.numero], 1);
+        emit([codes.magazzino1, parseInt(codes.anno, 10), codes.gruppo, codes.numero], 1);
       }
     },
 
@@ -99,20 +99,20 @@ define(function (require) {
             col = codici.colNamesToColIndexes(doc.columnNames);
             inProduzione = doc.inProduzione || 0;
             tipoMagazzino = doc.tipoMagazzino || codici.TIPO_MAGAZZINO_NEGOZIO;
-            segnoDa = doc.causale[1];
-            if (doc.a && !doc.aEsterno) {
-              segnoA = doc.causaleA[1];
+            segnoDa = doc.causale1[1];
+            if (doc.magazzino2 && !doc.esterno2) {
+              segnoA = doc.causale2[1];
               tipoMagazzinoA = doc.tipoMagazzinoA || codici.TIPO_MAGAZZINO_NEGOZIO;
             }
             for (i = 0, ii = rows.length; i < ii; i += 1) {
               r = rows[i];
               smact = codici.parseBarcodeAs400(r[col.barcode]);
-              if (!doc.daEsterno) {
-                emit([smact.modello, smact.articolo, smact.colore, smact.stagione, codes.da, inProduzione, tipoMagazzino,
+              if (!doc.esterno1) {
+                emit([smact.modello, smact.articolo, smact.colore, smact.stagione, codes.magazzino1, inProduzione, tipoMagazzino,
                       r[col.scalarino], smact.taglia, r[col.descrizioneTaglia], r[col.descrizione]], segnoDa * r[col.qta]);
               }
-              if (doc.a && !doc.aEsterno) {
-                emit([smact.modello, smact.articolo, smact.colore, smact.stagione, doc.a, inProduzione, tipoMagazzinoA,
+              if (doc.magazzino2 && !doc.esterno2) {
+                emit([smact.modello, smact.articolo, smact.colore, smact.stagione, doc.magazzino2, inProduzione, tipoMagazzinoA,
                       r[col.scalarino], smact.taglia, r[col.descrizioneTaglia], r[col.descrizione]], segnoA * r[col.qta]);
               }
             }

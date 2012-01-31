@@ -25,5 +25,5 @@
 <table summary="Lista aziende">
 <caption>Aziende</caption>
 <thead><tr><th>Codice<th>Nome<th>Tipo<th>Codice magazzino<th>Comune<th>Provincia<th>Nazione<th>Inattivo<th>Note<th>ALTRO
-<tbody><tr ng:repeat="(c, row) in aziende"><td>{{row.id | linkById}}<td>{{row.doc.nome}}<td>{{row.doc.tipo}}<td>{{row.doc.codiceMagazzino}}<td>{{row.doc.comune}}<td>{{row.doc.provincia}}<td>{{row.doc.nazione}}<td>{{row.doc.inattivo && 'X'}}<td>{{row.doc.note}}<td>{{row.id | linkListino}}
+<tbody><tr ng:repeat="(c, row) in aziende"><td><a my-link-by-id/><td>{{row.doc.nome}}<td>{{row.doc.tipo}}<td>{{row.doc.codiceMagazzino}}<td>{{row.doc.comune}}<td>{{row.doc.provincia}}<td>{{row.doc.nazione}}<td>{{row.doc.inattivo && 'X'}}<td>{{row.doc.note}}<td><a my-link-listino/>
 </table>

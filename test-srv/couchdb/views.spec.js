@@ -1,7 +1,7 @@
-/*global describe: false, beforeEach: false, afterEach: false, it: false, expect: false, jasmine: false, require: false, __dirname: false, process: false*/
+/*global describe:false, beforeEach:false, it:false, expect:false, jasmine:false, require:false, process:false*/
 process.env.LANG = 'C';
 var requirejs = require('requirejs');
-requirejs.config({ baseUrl: __dirname + '/../..', nodeRequire: require, paths: { 'dbconfig': 'app/js/config', 'views/lib/codici': 'app/js/codici' } });
+requirejs.config({ baseUrl: process.cwd(), nodeRequire: require });
 
 requirejs(['views', 'views/lib/codici'], function (views, codici) {
   'use strict';

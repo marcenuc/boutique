@@ -1,33 +1,46 @@
-/*global describe: false, beforeEach: false, it: false, expect: false, angular: false,
-  binding: false */
-
-describe('Filters', function () {
+/*global describe:false, beforeEach:false, it:false, expect:false, module:false, inject:false*/
+describe('Filter', function () {
   'use strict';
+  beforeEach(module('app.filters'));
 
-  describe('linkById', function () {
-    var linkById = angular.filter.linkById;
-
-    it('should create a link to the document with the given id', function () {
-      var link = linkById('Azienda_010101');
-      expect(link.attr('href')).toBe('#/Azienda_010101');
-      expect(link.text()).toBe('010101');
-    });
+  describe('barcodeAs400', function () {
+    it('should format barcode with spaces', inject(function (barcodeAs400Filter) {
+      expect(barcodeAs400Filter('101607544000800001')).toBe('101 60754 4000 8000 01');
+    }));
   });
-});
 
-// FIXME port this to Angular 0.10.4, i.e. test inputType 'codiceAzienda'
-xdescribe('Formatters', function () {
-  'use strict';
-
-  describe('codiceAzienda', function () {
-    var codiceAzienda = angular.formatter.codiceAzienda;
-
-    it('should format "Azienda_010101" to "010101"', function () {
-      expect(codiceAzienda.format('Azienda_010101')).toEqual('010101');
+  describe('input', function () {
+    describe('barcodeAs400', function () {
+      it('should format barcode with spaces for readability', function () {
+        inject(function ($compile, $rootScope) {
+          $rootScope.barcode = '101607544000800001';
+          var element = $compile('<input type=barcodeAs400 ng:model=barcode>')($rootScope);
+          $rootScope.$digest();
+          expect(element.val()).toEqual('101 60754 4000 8000 01');
+        });
+      });
     });
 
-    it('should parse "010101" as "Azienda_010101"', function () {
-      expect(codiceAzienda.parse('010101')).toEqual('Azienda_010101');
+    describe('codiceAzienda', function () {
+      it('should show only codice from idAzienda', function () {
+        inject(function ($compile, $rootScope) {
+          $rootScope.id = 'Azienda_010203';
+          var element = $compile('<input type=codiceAzienda ng:model=id>')($rootScope);
+          $rootScope.$digest();
+          expect(element.val()).toEqual('010203');
+        });
+      });
+    });
+
+    describe('money', function () {
+      it('should format money', function () {
+        inject(function ($compile, $rootScope) {
+          $rootScope.amount = '100';
+          var element = $compile('<input type=money ng:model=amount>')($rootScope);
+          $rootScope.$digest();
+          expect(element.val()).toEqual('1');
+        });
+      });
     });
   });
 });

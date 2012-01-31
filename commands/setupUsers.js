@@ -1,7 +1,6 @@
 /*global require:false, process:false, console:false*/
-process.env.LANG = 'C';
 var requirejs = require('requirejs');
-requirejs.config({ baseUrl: process.cwd(), nodeRequire: require, paths: { 'dbconfig': 'app/js/config' } });
+requirejs.config({ baseUrl: process.cwd(), nodeRequire: require });
 
 requirejs(['app/js/sha1', 'fs', 'util', 'nano', 'lib/servers'], function (sha1, fs, util, nano, servers) {
   'use strict';

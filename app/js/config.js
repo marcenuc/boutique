@@ -1,12 +1,5 @@
-var CONFIG;
-/*global define: false, exports: false*/
-if (typeof define === 'function') {
-  CONFIG = {};
-  define(CONFIG);
-} else if (typeof exports === 'object') {
-  CONFIG = exports;
-} else {
-  CONFIG = {};
-}
-CONFIG.db = 'boutique_db';
-CONFIG.designDoc = 'boutique_db';
+/*global angular:false*/
+angular.module('app.config', []).value('couchdb', {
+  db: 'boutique_db',
+  designDoc: 'boutique_db'
+});

@@ -1,8 +1,10 @@
 <form name=form>
 <h3>Movimento magazzino</h3>
- <p>Causale: <b>{{model.causale[0]}}</b>, Segno: <b>{{model.causale[1]}}</b><span ng:show="model.a">, Causale associata: <b>{{model.causaleA[0]}}</b></span>
- <p>Da: <b>{{nomeAzienda(codes.da)}}</b><span ng:show="model.a">, A: <b>{{nomeAzienda(model.a)}}</b></span>
- <p>Data: <b>{{model.data}}</b>, Numero: <b>{{codes.numero}}</b>, Gruppo numerazione: <b>{{codes.gruppo}}</b>
+<p>Data: <b>{{model.data}}</b>, Numero: <b>{{codes.numero}}</b>, Gruppo numerazione: <b>{{codes.gruppo}}</b>
+<table>
+<tr><td>Causale1: <b>{{model.causale1[0]}}</b>, Segno: <b>{{model.causale1[1]}}</b><td ng:show="model.magazzino2">Causale2: <b>{{model.causale2[0]}}</b>, Segno: <b>{{model.causale2[1]}}</b>
+<tr><td>Magazzino1: <b>{{nomeAzienda(codes.magazzino1)}}</b><td ng:show="model.magazzino2">Magazzino2: <b>{{nomeAzienda(model.magazzino2)}}</b>
+</table>
 <table>
  <caption>Righe dettaglio</caption>
  <thead>
@@ -15,7 +17,7 @@
     <td>[&nbsp;<a href="" ng:click="$parent.model.rows.splice($index, 1)" title="Elimina riga">X</a>&nbsp;]
    <tr>
     <th>Nuovo:
-    <td><input type=barcodeAs400 my:focus="" ng:model="newBarcode" size=26 ng:pattern="rexpBarcode">
+    <td><input type=barcodeAs400 my-focus ng:model=newBarcode size=26 ng:pattern=rexpBarcode>
     <td colspan=4>&nbsp;
     <td><input ng:model=newQta size=3 type=integer min=1>
     <td>&nbsp;

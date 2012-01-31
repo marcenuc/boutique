@@ -1,6 +1,8 @@
-/*global require: false, angular: false, document: false */
+/*global require:false, angular:false, document:false*/
 
-require(['domReady!', 'order!jszip', 'order!angular/angular', 'order!config', 'order!codici', 'order!validate_doc_update', 'order!services', 'order!controllers', 'order!filters', 'order!directives'], function () {
+require(['jszip', 'angular', 'config', 'codici', 'validators', 'app', 'services', 'controllers', 'filters', 'widgets'], function () {
   'use strict';
-  angular.compile(document)().$apply();
+  angular.element(document).ready(function () {
+    angular.bootstrap(document, ['app']);
+  });
 });

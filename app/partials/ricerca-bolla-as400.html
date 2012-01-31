@@ -16,12 +16,12 @@
 </table>
 </fieldset>
 <fieldset><legend>Nuovo movimento magazzino</legend>
- <label>Causale: <select ng:model="movimentoMagazzino.causale" ng:options="causale.descrizione for causale in causali" required></select></label><br>
-   <span ng:show="movimentoMagazzino.causale">Segno: <b>{{movimentoMagazzino.causale.segno}}</b>,
-   Gruppo: <b>{{movimentoMagazzino.causale.gruppo}}</b></span><span ng:show="movimentoMagazzino.causale.causaleA">,
-   Causale associata: <b>{{causali[movimentoMagazzino.causale.causaleA].descrizione}}</b></span><p>
- <label>Da: <select ng:model="movimentoMagazzino.da" ng:options="c as r.value for (c, r) in aziende" required><option></select></label>
- <label>A: <select ng:model="movimentoMagazzino.a" ng:options="c as r.value for (c, r) in aziende" ng:required="{{movimentoMagazzino.causale.causaleA}}"><option></select></label><p>
+ <label>Causale1: <select ng:model="movimentoMagazzino.causale1" ng:options="causale.descrizione for causale in causali" required></select></label><br>
+   <span ng:show="movimentoMagazzino.causale1">Segno: <b>{{movimentoMagazzino.causale1.segno}}</b>,
+   Gruppo: <b>{{movimentoMagazzino.causale1.gruppo}}</b></span><span ng:show="movimentoMagazzino.causale1.causale2">,
+   Causale2: <b>{{causali[movimentoMagazzino.causale1.causale2].descrizione}}</b></span><p>
+ <label>Magazzino1: <select ng:model="movimentoMagazzino.magazzino1" ng:options="c as r.value for (c, r) in aziende" required><option></select></label>
+ <label>Magazzino2: <select ng:model="movimentoMagazzino.magazzino2" ng:options="c as r.value for (c, r) in aziende" ng:required="{{movimentoMagazzino.causale1.causale2}}"><option></select></label><p>
  <label>Data (AAAAMMGG): <input ng:model="movimentoMagazzino.data" size=8 maxlength=8 type=data required></label><p>
  <input type=submit value="Carica come movimento magazzino" ng:disabled="{{caricamentoMovimentoMagazzino.$invalid}}">
 </fieldset>

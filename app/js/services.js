@@ -1,46 +1,9 @@
-/*jslint nomen: true */
-/*global angular: false, validate_doc_update: false, Ctrl: false, CONFIG: false, CODICI: false, JSZip: false, document: false*/
-
-(function () {
+/*global angular:false, JSZip:false*/
+angular.module('app.services', [], ['$provide', function ($provide) {
   'use strict';
   var VIEW_NAMES = ['aziende', 'contatori', 'movimentoMagazzinoPendente', 'riferimentiMovimentiMagazzino'];
 
-  /* App service which is responsible for the main configuration of the app. */
-  angular.service('Boutique', function ($route, $window) {
-    $route.when('/Azienda_:codice', { template: 'partials/azienda.html', controller: Ctrl.Azienda });
-    $route.when('/Azienda', { template: 'partials/azienda.html', controller: Ctrl.Azienda });
-    $route.when('/BollaAs400_:codice', { template: 'partials/ricerca-bolla-as400.html', controller: Ctrl.RicercaBollaAs400 });
-    $route.when('/BollaAs400', { template: 'partials/ricerca-bolla-as400.html', controller: Ctrl.RicercaBollaAs400 });
-    $route.when('/ricerca-giacenza', { template: 'partials/ricerca-giacenza.html', controller: Ctrl.RicercaArticoli });
-    $route.when('/MovimentoMagazzino', { template: 'partials/movimento-magazzino.html', controller: Ctrl.MovimentoMagazzino });
-    $route.when('/MovimentoMagazzino_', { template: 'partials/new-movimento-magazzino.html', controller: Ctrl.NewMovimentoMagazzino });
-    $route.when('/MovimentoMagazzino_:codice', { template: 'partials/edit-movimento-magazzino.html', controller: Ctrl.EditMovimentoMagazzino });
-    $route.when('/Listino', { template: 'partials/listino.html', controller: Ctrl.Listino });
-    $route.when('/Listino_:codice', { template: 'partials/edit-listino.html', controller: Ctrl.Listino });
-    $route.otherwise({ redirectTo: '/' });
-
-    this.$on('$afterRouteChange', function () {
-      $window.scrollTo(0, 0);
-    });
-
-  }, { $inject: ['$route', '$window'], $eager: true });
-
-
-  angular.service('$xhr.error', function ($route) {
-    return function (request, response) {
-      var msg, body;
-      if (response) {
-        body = response.body;
-        msg = 'ERROR ' + response.status + ': ' + (typeof body !== 'string' ? JSON.stringify(body) : body);
-      } else {
-        msg = 'REQUEST FAILED: ' + JSON.stringify(request);
-      }
-      $route.current.scope.SessionInfo.error(msg);
-    };
-  }, { $inject: ['$route'], $eager: true });
-
-
-  angular.service('CdbView', function ($resource) {
+  $provide.factory('CdbView', ['$resource', 'couchdb', function ($resource, couchdb) {
     var view, views = {};
 
     VIEW_NAMES.forEach(function (viewName) {
@@ -49,7 +12,7 @@
         params: { id: viewName }
       };
     });
-    view = $resource('/' + CONFIG.db + '/_design/' + CONFIG.designDoc + '/_view/:id', { id: '@_id' }, views);
+    view = $resource('/' + couchdb.db + '/_design/' + couchdb.designDoc + '/_view/:id', { id: '@_id' }, views);
 
     view.ultimoNumero = function (codiceAzienda, anno, gruppo, success, error) {
       var year = parseInt(anno, 10);
@@ -66,10 +29,10 @@
     };
 
     return view;
-  }, { $inject: ['$resource'] });
+  }]);
 
-  angular.service('Document', function ($resource) {
-    var r = $resource('/' + CONFIG.db + '/:id', { id: '@_id' }, {
+  $provide.factory('Document', ['$resource', 'couchdb', function ($resource, couchdb) {
+    var r = $resource('/' + couchdb.db + '/:id', { id: '@_id' }, {
       query: {
         method: 'GET',
         isArray: false,
@@ -98,10 +61,10 @@
     };
 
     return r;
-  }, { $inject: ['$resource'] });
+  }]);
 
 
-  angular.service('As400', function ($xhr) {
+  $provide.factory('As400', ['$http', function ($http) {
     return {
       bolla: function (intestazioneBolla, success) {
         var k, v, params = ['../as400/bolla'];
@@ -115,33 +78,42 @@
             params.push(k + '=' + v);
           }
         }
-        $xhr('GET', params.join('/'), success);
+        $http.get(params.join('/')).success(success);
       }
     };
-  }, { $inject: ['$xhr'] });
+  }]);
 
 
-  angular.service('SessionInfo', function ($resource, Document, xhrError, $location, CdbView) {
+  $provide.factory('SessionInfo', ['$http', 'Document', '$location', 'CdbView', 'codici', 'couchdb', function ($http, Document, $location, CdbView, codici, couchdb) {
     var info = { loading: 0, flash: {} };
 
     function loaded() {
       info.loading -= 1;
     }
 
-    function loadedError(url, code, response) {
-      loaded();
-      xhrError({ url: url }, { status: code, body: response });
+    function loadedData(obj, data) {
+      info.loading -= 1;
+      angular.copy(data, obj);
     }
 
+    /*jslint unparam:true*/
+    function loadedError(data, status, headers, config) {
+      info.loading -= 1;
+      info.error('Error ' + status + ' on ' + config.url + ': ' + JSON.stringify(data));
+    }
+    /*jslint unparam:false*/
+
     info.getResource = function (resourceUrl) {
+      var obj = {};
       info.loading += 1;
-      return $resource(resourceUrl).get(loaded, angular.bind(this, loadedError, resourceUrl));
+      $http.get(resourceUrl).success(angular.bind(this, loadedData, obj)).error(loadedError);
+      return obj;
     };
 
     info.getDocument = function (id) {
-      info.loading += 1;
-      return Document.get({ id: id }, loaded, angular.bind(this, loadedError, id));
+      return info.getResource('/' + couchdb.db + '/' + id);
     };
+
     info.prossimoNumero = function (codiceAzienda, anno, gruppo, success) {
       info.loading += 1;
       return CdbView.ultimoNumero(codiceAzienda, anno, gruppo,
@@ -180,7 +152,7 @@
       info.loading += 1;
       return Document.listini(loaded,
         angular.bind(this, loadedError, 'listini'),
-        CODICI.toSearchableListini);
+        codici.toSearchableListini);
     };
 
     // TODO DRY there's lot of repetition in this code
@@ -191,12 +163,12 @@
         if (success) {
           success.apply(null, arguments);
         }
-      }, function (code, response) {
+      }, function (response) {
         loaded();
         if (error) {
           error.apply(null, arguments);
         } else {
-          xhrError({ data: data }, { status: code, body: response });
+          info.error('Error ' + response.status + ' ' + response.data.error + ' on ' + response.config.data._id + ': ' + response.data.reason);
         }
       });
     };
@@ -237,32 +209,17 @@
       $location.path(path).replace();
     };
     return info;
-  }, { $inject: ['$resource', 'Document', '$xhr.error', '$location', 'CdbView'] });
+  }]);
 
   // TODO
-  angular.service('userCtx', function () {
-    return {
-      name: 'commerciale',
-      roles: ['boutique']
-    };
+  $provide.value('userCtx', {
+    name: 'commerciale',
+    roles: ['boutique']
   });
 
-  angular.service('Validator', function (userCtx) {
-    return {
-      check: function (doc, oldDoc) {
-        return validate_doc_update(doc, oldDoc, userCtx);
-      }
-    };
-  }, { $inject: ['userCtx'] });
-
-  angular.service('Downloads', function ($xhr, SessionInfo) {
-    /*
-     * WARNING: this service uses DOM directly to interact with the save.swf flash service.
-     * It's pretty hard to unit test it. However it should be easy to mock because it has
-     * very little business logic.
-     */
+  $provide.factory('Downloads', ['$http', '$document', 'SessionInfo', 'codici', function ($http, $document, SessionInfo, codici) {
     function setData(data) {
-      var el = document.getElementById('downloads');
+      var el = $document[0].getElementById('downloads');
       el.style.zIndex = 9999;
       el.style.visibility = 'visible';
       return el.setData(data);
@@ -282,8 +239,8 @@
         return a.barcode < b.barcode ? -1 : a.barcode > b.barcode ? 1 : 0;
       },
       MACTS: function (a, b) {
-        var mactA = a.barcode.substring(CODICI.LEN_STAGIONE),
-          mactB = b.barcode.substring(CODICI.LEN_STAGIONE);
+        var mactA = a.barcode.substring(codici.LEN_STAGIONE),
+          mactB = b.barcode.substring(codici.LEN_STAGIONE);
         if (mactA < mactB) {
           return -1;
         }
@@ -294,6 +251,7 @@
       }
     };
 
+    /*jslint unparam:true, evil:true*/
     // Taken from http://documentcloud.github.com/underscore Micro-Templating function.
     function applyTemplate(str, data) {
       var tmpl = 'var __p=[],print=function(){__p.push.apply(__p,arguments);};' +
@@ -312,6 +270,7 @@
         .replace(/\t/g, '\\t') + "');}return __p.join('');";
       return (new Function('obj', tmpl))(data);
     }
+    /*jslint unparam:false, evil:false*/
 
 
     return {
@@ -333,15 +292,14 @@
           if (i < ii) {
             t = templates[i];
             i += 1;
-            return $xhr('GET', 'templates/etichette' + t, function (status, template) {
-              if (status !== 200) {
-                return SessionInfo.error('Errore scaricando template etichette');
-              }
+            return $http.get('templates/etichette' + t).success(function (template) {
               ordinamenti.forEach(function (ordinamento) {
                 zip.add('etichette-' + ordinamento + t,
                   applyTemplate(template, { rows: labels.sort(labelComparators[ordinamento]) }));
               });
               addFiles();
+            }).error(function () {
+              SessionInfo.error('Errore scaricando template etichette');
             });
           }
           setData({
@@ -355,5 +313,5 @@
         addFiles();
       }
     };
-  }, { $inject: ['$xhr', 'SessionInfo'] });
-}());
+  }]);
+}]);

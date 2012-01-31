@@ -1,14 +1,8 @@
-/*jslint node: true */
-/*jshint node: true */
-/*global describe: false, beforeEach: false, afterEach: false, it: false, xit: false, expect: false, jasmine: false */
-
+/*global describe:false, beforeEach:false, it:false, expect:false, jasmine:false, require:false, process:false*/
 var requirejs = require('requirejs');
-requirejs.config({
-  baseUrl: __dirname + '/../..',
-  nodeRequire: require
-});
+requirejs.config({ baseUrl: process.cwd(), nodeRequire: require });
 
-requirejs(['app/js/codici'], function (codici) {
+requirejs(['views/lib/codici'], function (codici) {
   'use strict';
 
   describe('CAUSALI_MOVIMENTO_MAGAZZINO', function () {
