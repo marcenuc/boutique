@@ -17,10 +17,10 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
     $scope.form = { data: codici.newYyyyMmDdDate() };
 
     $scope.create = function () {
-      var mm = $scope.form,
-        magazzino2 = mm.magazzino2 && $scope.aziende[mm.magazzino2] ? $scope.aziende[mm.magazzino2].value : null;
+      var mm = $scope.form;
       SessionInfo.prossimoNumero(mm.magazzino1, mm.data.substring(0, 4), mm.causale1.gruppo, function (numero) {
-        var doc = codici.newMovimentoMagazzino($scope.aziende[mm.magazzino1].value, mm.data, numero, mm.causale1, magazzino2);
+        var magazzino2 = mm.magazzino2 && $scope.aziende[mm.magazzino2] ? $scope.aziende[mm.magazzino2].value : null,
+          doc = codici.newMovimentoMagazzino($scope.aziende[mm.magazzino1].value, mm.data, numero, mm.causale1, magazzino2);
         SessionInfo.save(doc, function (res) {
           $location.path(res.id);
         });
@@ -269,7 +269,8 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
         return SessionInfo.error('Righe non valide');
       }
       SessionInfo.prossimoNumero(mm.magazzino1, mm.data.substring(0, 4), mm.causale1.gruppo, function (numero) {
-        var doc = codici.newMovimentoMagazzino(mm.magazzino1, mm.data, numero, mm.causale1, mm.magazzino2);
+        var magazzino2 = mm.magazzino2 && $scope.aziende[mm.magazzino2] ? $scope.aziende[mm.magazzino2].value : null,
+          doc = codici.newMovimentoMagazzino($scope.aziende[mm.magazzino1].value, mm.data, numero, mm.causale1, magazzino2);
         doc.riferimento = $scope.id;
         doc.rows = rows;
         SessionInfo.save(doc, function (res) {
