@@ -3,6 +3,7 @@ nbproject
 manifest.mf
 build.xml
 *.swp
+*.un~
 
 config/server-configs.js
 local.properties

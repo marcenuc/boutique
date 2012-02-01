@@ -1,18 +1,11 @@
 <!doctype html>
-<html xmlns:ng="http://angularjs.org/">
+<html xmlns:ng="http://angularjs.org/" ng:app=app>
 <meta charset="utf-8">
+<!-- BEGIN CSS -->
+<link rel="stylesheet/less" type="text/css" href="main.less">
+<script src="less.js" type="text/javascript"></script>
+<!-- END CSS -->
 <title>Boutique</title>
-<script>
-/*
- AngularJS v0.10.6
- (c) 2010-2012 AngularJS http://angularjs.org
- License: MIT
-*/
-'use strict';(function(i){function d(a,b,c){return a[b]||(a[b]=c())}return d(d(i,"angular",Object),"module",function(){var a={};return function(b,c,e){c&&a.hasOwnProperty(b)&&(a[b]=null);return d(a,b,function(){function a(b,c){return function(){d.push([b,c,arguments]);return f}}if(!c)throw Error("No module: "+b);var d=[],g=[],h=a("$injector","invoke"),f={_invokeQueue:d,_runBlocks:g,requires:c,name:b,service:a("$provide","service"),factory:a("$provide","factory"),value:a("$provide","value"),filter:a("$filterProvider",
-"register"),config:h,run:function(a){g.push(a);return this}};e&&h(e);return f})}})})(window);
-</script>
-<script data-main="js/main" src="js/require.js"></script>
-<link rel=stylesheet href="css/app.css">
 <div class=header ng:controller=HeaderCtrl>
 <div id=session>Utente: {{session.userCtx.name}}</div>
 <ul class=menu>
@@ -30,3 +23,15 @@
 </div>
 </div>
 <ng:view>Loading...</ng:view>
+<!-- BEGIN JS -->
+<script src="js/angular.js"></script>
+<script src="js/app.js"></script>
+<script src="js/services.js"></script>
+<script src="js/controllers.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/widgets.js"></script>
+<script src="js/config.js"></script>
+<script src="js/codici.js"></script>
+<script src="js/validators.js"></script>
+<script src="js/jszip.js"></script>
+<!-- END JS -->
