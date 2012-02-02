@@ -275,7 +275,7 @@ requirejs(['views/lib/codici'], function (codici) {
     var u = codici.parseIdMovimentoMagazzino;
     it('should return origine, anno, gruppo, and numero', function () {
       expect(u('MovimentoMagazzino_019998_2011_A_22')).toEqual({
-        da: '019998',
+        magazzino1: '019998',
         anno: '2011',
         gruppo: 'A',
         numero: 22
@@ -370,33 +370,33 @@ requirejs(['views/lib/codici'], function (codici) {
       expect(u('123456', '20111224', 1, codici.CAUSALI_MOVIMENTO_MAGAZZINO[0], '010203')).toEqual({
         _id: codici.idMovimentoMagazzino('123456', '2011', 'A', 1),
         data: '20111224',
-        causale: ['VENDITA', -1],
-        a: '010203',
-        causaleA: ['ACQUISTO', 1],
+        causale1: ['VENDITA', -1],
+        magazzino2: '010203',
+        causale2: ['ACQUISTO', 1],
         columnNames: codici.COLUMN_NAMES.MovimentoMagazzino,
         rows: []
       });
     });
-    it('should set daEsterno', function () {
+    it('should set esterno1', function () {
       expect(u('123456_Azienda esempio', '20111224', 1, codici.CAUSALI_MOVIMENTO_MAGAZZINO[0], '010203')).toEqual({
         _id: codici.idMovimentoMagazzino('123456', '2011', 'A', 1),
-        daEsterno: 1,
+        esterno1: 1,
         data: '20111224',
-        causale: ['VENDITA', -1],
-        a: '010203',
-        causaleA: ['ACQUISTO', 1],
+        causale1: ['VENDITA', -1],
+        magazzino2: '010203',
+        causale2: ['ACQUISTO', 1],
         columnNames: codici.COLUMN_NAMES.MovimentoMagazzino,
         rows: []
       });
     });
-    it('should set aEsterno', function () {
+    it('should set esterno2', function () {
       expect(u('123456', '20111224', 1, codici.CAUSALI_MOVIMENTO_MAGAZZINO[0], '010203_Azienda esempio')).toEqual({
         _id: codici.idMovimentoMagazzino('123456', '2011', 'A', 1),
-        aEsterno: 1,
+        esterno2: 1,
         data: '20111224',
-        causale: ['VENDITA', -1],
-        a: '010203',
-        causaleA: ['ACQUISTO', 1],
+        causale1: ['VENDITA', -1],
+        magazzino2: '010203',
+        causale2: ['ACQUISTO', 1],
         columnNames: codici.COLUMN_NAMES.MovimentoMagazzino,
         rows: []
       });

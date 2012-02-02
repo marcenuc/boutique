@@ -43,7 +43,7 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
       });
 
       it('should emit one row for a only if defined', function () {
-        var mm = { _id: idMM, a: '020202', causaleA: ['ACQUISTO', 1], accodato: 1 };
+        var mm = { _id: idMM, magazzino2: '020202', causale2: ['ACQUISTO', 1], accodato: 1 };
         map(mm);
         expect(views._rows()).toEqual([
           [['010101', 2011, 'A', 1234], 1],
@@ -58,7 +58,7 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
 
     describe('MovimentoMagazzino', function () {
       it('should emit split id only if not accodato', function () {
-        var mm = { _id: idMM, data: '20111230', causale: ['VENDITA A CLIENTI', -1], accodato: 1 };
+        var mm = { _id: idMM, data: '20111230', causale1: ['VENDITA A CLIENTI', -1], accodato: 1 };
         map(mm);
         expect(views._rows()).toEqual([]);
         delete mm.accodato;
@@ -119,7 +119,7 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
           var mm = {
             _id: idMM,
             columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
-            causale: ['VENDITA A CLIENTI', -1],
+            causale1: ['VENDITA A CLIENTI', -1],
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
               ['105982901344800002', 6, '11', 'CALZE', 100, 1]
@@ -133,7 +133,7 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
           var mm = {
             _id: idMM,
             columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
-            causale: ['VENDITA A CLIENTI', -1],
+            causale1: ['VENDITA A CLIENTI', -1],
             accodato: 1,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
@@ -147,12 +147,12 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
           ]);
         });
 
-        it('should NOT emit ([macsAzStTm, scalarino, taglia, descrizioneTaglia, descrizione], qta) if daEsterno', function () {
+        it('should NOT emit ([macsAzStTm, scalarino, taglia, descrizioneTaglia, descrizione], qta) if esterno1', function () {
           var mm = {
             _id: idMM,
             columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
-            causale: ['VENDITA A CLIENTI', -1],
-            daEsterno: 1,
+            causale1: ['VENDITA A CLIENTI', -1],
+            esterno1: 1,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
               ['105982901344800002', 6, '11', 'CALZE', 100, 1]
@@ -168,7 +168,7 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
             columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
             tipoMagazzino: 1,
             inProduzione: 1,
-            causale: ['RETTIFICA INVENTARIO +', 1],
+            causale1: ['RETTIFICA INVENTARIO +', 1],
             accodato: 1,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
@@ -182,13 +182,13 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
           ]);
         });
 
-        it('should emit rows for causaleA if accodato', function () {
+        it('should emit rows for causale2 if accodato', function () {
           var mm = {
             _id: idMM,
             columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
-            causale: ['SCARICO PER CAMBIO MAGAZZINO', -1],
-            causaleA: ['CARICO PER CAMBIO MAGAZZINO', 1],
-            a: '020202',
+            causale1: ['SCARICO PER CAMBIO MAGAZZINO', -1],
+            causale2: ['CARICO PER CAMBIO MAGAZZINO', 1],
+            magazzino2: '020202',
             accodato: 1,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
@@ -204,14 +204,14 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
           ]);
         });
 
-        it('should NOT emit rows for causaleA if accodato and aEsterno', function () {
+        it('should NOT emit rows for causale2 if accodato and esterno2', function () {
           var mm = {
             _id: idMM,
             columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
-            causale: ['SCARICO PER CAMBIO MAGAZZINO', -1],
-            causaleA: ['CARICO PER CAMBIO MAGAZZINO', 1],
-            a: '020202',
-            aEsterno: 1,
+            causale1: ['SCARICO PER CAMBIO MAGAZZINO', -1],
+            causale2: ['CARICO PER CAMBIO MAGAZZINO', 1],
+            magazzino2: '020202',
+            esterno2: 1,
             accodato: 1,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
@@ -231,9 +231,9 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
             columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
             tipoMagazzino: 1,
             tipoMagazzinoA: 2,
-            causale: ['SCARICO PER CAMBIO MAGAZZINO', -1],
-            causaleA: ['CARICO PER CAMBIO MAGAZZINO', 1],
-            a: '020202',
+            causale1: ['SCARICO PER CAMBIO MAGAZZINO', -1],
+            causale2: ['CARICO PER CAMBIO MAGAZZINO', 1],
+            magazzino2: '020202',
             accodato: 1,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],

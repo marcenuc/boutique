@@ -31,7 +31,7 @@ describe('Controller', function () {
       expect(form.data).toBe(codici.newYyyyMmDdDate());
       form.magazzino1 = '010101';
       form.magazzino2 = '020202';
-      form.causale = causale;
+      form.causale1 = causale;
       $scope.create();
       expect(SessionInfo.prossimoNumero).toHaveBeenCalled();
       //TODO: expect(SessionInfo.save).toHaveBeenCalledWith(...);
