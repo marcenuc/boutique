@@ -30,7 +30,8 @@ describe('Controller', function () {
   beforeEach(module('app.services', 'app.shared', 'app.validators', 'app.controllers', function ($provide) {
     $provide.value('couchdb', { db: 'db', designDoc: 'ddoc' });
     var Downloads = jasmine.createSpyObj('Downloads', ['prepare']),
-      SessionInfo = jasmine.createSpyObj('SessionInfo', ['resetFlash', 'aziende', 'listini', 'prossimoNumero', 'save', 'getDocument', 'error', 'notice']),
+      SessionInfo = jasmine.createSpyObj('SessionInfo',
+        ['resetFlash', 'aziende', 'listini', 'prossimoNumero', 'save', 'getDocument', 'error', 'notice', 'movimentoMagazzinoPendente']),
       $location = jasmine.createSpyObj('$location', ['path']);
     $provide.value('Downloads', Downloads);
     $provide.value('SessionInfo', SessionInfo);
@@ -147,5 +148,33 @@ describe('Controller', function () {
       expect($scope.nomeAzienda('010101')).toBe('010101 Negozio1');
     }));
   });
+
+  describe('MovimentoMagazzino', function () {
+    it('should initialize $scope', inject(function ($controller, controllers, SessionInfo, $location, codici) {
+      var form, $scope = {}, pendenti = { rows: [] };
+      SessionInfo.movimentoMagazzinoPendente.andReturn(pendenti);
+      spyOn(codici, 'newYyyyMmDdDate').andReturn('20111231');
+      // ensure $scope is properly initialized
+      $controller(controllers.MovimentoMagazzino, $scope);
+      expect($scope.pendenti).toBe(pendenti);
+      expect($scope.aziende).toBe(AZIENDE);
+      expect($scope.causali).toBe(codici.CAUSALI_MOVIMENTO_MAGAZZINO);
+      form = $scope.form;
+      // ensure default year is current
+      expect(form.anno).toBe('2011');
+
+      // compile the form
+      form.magazzino1 = '010101';
+      form.causale1 = codici.findCausaleMovimentoMagazzino('VENDITA');
+      form.numero = 1;
+
+      $scope.find();
+      // should redirect to selected MovimentoMagazzino
+      expect($location.path).toHaveBeenCalledWith('MovimentoMagazzino_010101_2011_A_1');
+
+      expect($scope.nomeAzienda('010101')).toBe('010101 Negozio1');
+    }));
+  });
+
   //FIXME test all other controllers.
 });

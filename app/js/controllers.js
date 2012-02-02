@@ -146,6 +146,8 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
     $scope.pendenti = SessionInfo.movimentoMagazzinoPendente();
     $scope.aziende = SessionInfo.aziende();
     $scope.causali = codici.CAUSALI_MOVIMENTO_MAGAZZINO;
+    $scope.form = { anno: codici.newYyyyMmDdDate().substring(0, 4) };
+
     $scope.find = function () {
       var f = $scope.form;
       $location.path(codici.idMovimentoMagazzino(f.magazzino1, f.anno, f.causale1.gruppo, f.numero));
