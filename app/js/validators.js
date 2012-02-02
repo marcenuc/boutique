@@ -335,7 +335,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
       break;
     case 'MovimentoMagazzino':
       hasValidAziendaCode();
-      if ((oldDoc && oldDoc.accodato) || !hasCausale1('VENDITA A CLIENTI')) {
+      if ((oldDoc && oldDoc.accodato) || !doc.causale1 || (doc.accodato && !hasCausale1('VENDITA A CLIENTI'))) {
         mustBeAdmin();
       }
       if (oldDoc && oldDoc.accodato && !doc.accodato) {

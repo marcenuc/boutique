@@ -332,13 +332,21 @@ describe('Validation', function () {
         });
 
         describe('when causale is not "VENDITA A CLIENTI"', function () {
-          it('should not be authorized', inject(function (validate, codici) {
-            var vendita = codici.newMovimentoMagazzino(owner.name, '20111231', 1,
-              codici.findCausaleMovimentoMagazzino('VENDITA'));
-            expect(validate(vendita)).not.toBeAuthorized();
+          it('should be authorized if not accodato and not already accodato', inject(function (validate, codici) {
+            var causale = codici.findCausaleMovimentoMagazzino('VENDITA'),
+              vendita = codici.newMovimentoMagazzino(owner.name, '20111231', 1, causale),
+              venditaAccodata = angular.copy(vendita);
+            venditaAccodata.accodato = true;
+            expect(validate(vendita)).toBeAuthorized();
+            expect(validate(vendita, venditaAccodata)).not.toBeAuthorized();
+            expect(validate(venditaAccodata)).not.toBeAuthorized();
             vendita._deleted = true;
             expect(validate(vendita)).not.toBeAuthorized();
+            venditaAccodata._deleted = true;
+            expect(validate(venditaAccodata)).not.toBeAuthorized();
+          }));
 
+          it('should not be authorized', inject(function (validate) {
             expect(validate(doc)).not.toBeAuthorized();
             expect(validate(docDeleted)).not.toBeAuthorized();
           }));
