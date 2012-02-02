@@ -370,8 +370,7 @@ angular.module('app.shared', []).factory('codici', function () {
         modello: m[2],
         articolo: m[3],
         colore: m[4],
-        taglia: m[5],
-        codiceDescrizioneEScalarino: code.substring(0, 8)
+        taglia: m[5]
       };
     }
   };
