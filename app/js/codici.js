@@ -44,11 +44,12 @@ angular.module('app.shared', []).factory('codici', function () {
     return id.split('_');
   };
 
-  codici.findCausaleMovimentoMagazzino = function (descrizione) {
+  codici.findCausaleMovimentoMagazzino = function (descrizione, segno) {
     var c, i, ii, causali = codici.CAUSALI_MOVIMENTO_MAGAZZINO;
     for (i = 0, ii = causali.length; i < ii; i += 1) {
       c = causali[i];
-      if (c.descrizione === descrizione) {
+      if (c.descrizione === descrizione &&
+          (typeof segno === 'undefined' || segno === c.segno)) {
         return c;
       }
     }
@@ -200,6 +201,7 @@ angular.module('app.shared', []).factory('codici', function () {
     function pad(n) {
       return n < 10 ? '0' + n : n;
     }
+    //FIXME inject Date for easy testing
     var d = date || new Date();
     return String(d.getUTCFullYear()) + pad(d.getUTCMonth() + 1) + pad(d.getUTCDate());
   };

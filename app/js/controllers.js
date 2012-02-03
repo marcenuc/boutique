@@ -171,14 +171,8 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
     $scope.causali = codici.CAUSALI_MOVIMENTO_MAGAZZINO;
 
     function findCausale(causaleAs400) {
-      var c, i, ii;
-      for (i = 0, ii = $scope.causali.length; i < ii; i += 1) {
-        c = $scope.causali[i];
-        if (c.descrizione === causaleAs400) {
-          return c;
-        }
-      }
-      return $scope.causali[0];
+      var c = codici.findCausaleMovimentoMagazzino(causaleAs400[0], causaleAs400[1]);
+      return c || $scope.causali[0];
     }
 
     function setMovimentoMagazzino() {
@@ -264,6 +258,7 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
       }
     }
 
+    //TODO DRY this is identical to NewMovimentoMagazzino.create()
     $scope.save = function () {
       var mm = $scope.movimentoMagazzino,
         rows = buildRows();
@@ -298,7 +293,7 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
     $scope.limiteRisultati = 50;
 
     $scope.showPhoto = function (index) {
-      if (index >= $scope.filtrate.length) {
+      if (index >= $scope.filtrate.length || index < 0) {
         return $scope.hidePhoto();
       }
       var row = $scope.filtrate[index],
