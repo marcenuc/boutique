@@ -19,6 +19,13 @@ shift `expr $OPTIND - 1`
 export LANG=C
 
 case "$suite" in
+e2e)
+  exec java -jar test/lib/jstestdriver/JsTestDriver.jar \
+    --basePath "$PWD" \
+    --config config/jsTestDriver-scenario.conf \
+    --tests "$tests" \
+    --reset
+  ;;
 unit)
   exec java -jar test/lib/jstestdriver/JsTestDriver.jar \
     --basePath "$PWD" \
