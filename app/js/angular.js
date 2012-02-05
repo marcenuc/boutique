@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v0.10.7-0bc93cc0
+ * @license AngularJS v0.10.7-7433c8a3
  * (c) 2010-2012 AngularJS http://angularjs.org
  * License: MIT
  */
@@ -1215,7 +1215,7 @@ function setupModuleLoader(window) {
  * - `codeName` – `{string}` – Code name of the release, such as "jiggling-armfat".
  */
 var version = {
-  full: '0.10.7-0bc93cc0',    // all of these placeholder strings will be replaced by rake's
+  full: '0.10.7-7433c8a3',    // all of these placeholder strings will be replaced by rake's
   major: 0,    // compile task
   minor: 10,
   dot: 7,
@@ -11101,7 +11101,7 @@ function classDirective(name, selector) {
  * @example
    <doc:example>
      <doc:source>
-      <input type="button" value="set" ng:click="myVar='ng-input-indicator-wait'">
+      <input type="button" value="set" ng:click="myVar='ng-invalid'">
       <input type="button" value="clear" ng:click="myVar=''">
       <br>
       <span ng:class="myVar">Sample Text &nbsp;&nbsp;&nbsp;&nbsp;</span>
@@ -11109,17 +11109,17 @@ function classDirective(name, selector) {
      <doc:scenario>
        it('should check ng:class', function() {
          expect(element('.doc-example-live span').prop('className')).not().
-           toMatch(/ng-input-indicator-wait/);
+           toMatch(/ng-invalid/);
 
          using('.doc-example-live').element(':button:first').click();
 
          expect(element('.doc-example-live span').prop('className')).
-           toMatch(/ng-input-indicator-wait/);
+           toMatch(/ng-invalid/);
 
          using('.doc-example-live').element(':button:last').click();
 
          expect(element('.doc-example-live span').prop('className')).not().
-           toMatch(/ng-input-indicator-wait/);
+           toMatch(/ng-invalid/);
        });
      </doc:scenario>
    </doc:example>
@@ -11148,7 +11148,7 @@ var ngClassDirective = classDirective('', true);
         <ol ng:init="names=['John', 'Mary', 'Cate', 'Suz']">
           <li ng:repeat="name in names">
            <span ng:class-odd="'ng-format-negative'"
-                 ng:class-even="'ng-input-indicator-wait'">
+                 ng:class-even="'ng-invalid'">
              {{name}} &nbsp; &nbsp; &nbsp;
            </span>
           </li>
@@ -11159,7 +11159,7 @@ var ngClassDirective = classDirective('', true);
          expect(element('.doc-example-live li:first span').prop('className')).
            toMatch(/ng-format-negative/);
          expect(element('.doc-example-live li:last span').prop('className')).
-           toMatch(/ng-input-indicator-wait/);
+           toMatch(/ng-invalid/);
        });
      </doc:scenario>
    </doc:example>
@@ -13667,7 +13667,7 @@ var selectDirective = ['$formFactory', '$compile', '$parse',
           widget.$apply(function() {
             var optionGroup,
                 collection = valuesFn(modelScope) || [],
-                key = selectElement.val(),
+                key = selectElement[0].value, // jQuery is a bit too smart for us.
                 tempScope = inherit(modelScope),
                 value, optionElement, index, groupIndex, length, groupLength;
 
@@ -13681,8 +13681,9 @@ var selectDirective = ['$formFactory', '$compile', '$parse',
 
                 for(index = 1, length = optionGroup.length; index < length; index++) {
                   if ((optionElement = optionGroup[index].element)[0].selected) {
+                    key = optionElement[0].value;
                     if (keyName) tempScope[keyName] = key;
-                    tempScope[valueName] = collection[optionElement.val()];
+                    tempScope[valueName] = collection[key];
                     value.push(valueFn(tempScope));
                   }
                 }
