@@ -2,45 +2,91 @@
 var requirejs = require('requirejs');
 requirejs.config({ baseUrl: process.cwd(), nodeRequire: require });
 
-requirejs(['util', 'path', 'fs', 'nano', 'couchdbs', 'lib/servers'], function (util, path, fs, nano, couchdbs, servers) {
+requirejs(['path', 'fs', 'nano', 'couchdbs', 'lib/servers', 'q'], function (path, fs, nano, couchdbs, servers, Q) {
   'use strict';
-  var docsFolder = process.argv[2],
+  var docsBaseFolder = process.argv[2],
+    doReset = process.argv[3] === 'Yes, delete EVERYTHING! I am NOT joking!',
+    readFile = Q.node(fs.readFile, fs),
     dbServer = nano(servers.couchdb.authUrl());
 
-  Object.keys(couchdbs).forEach(function (dbName) {
-    dbServer.db.create(dbName, function (err) {
-      if (err && err['status-code'] !== 412) {
-        throw new Error('Error creating "' + dbName + '": ' + util.inspect(err));
+  function putDoc(db, doc, docId) {
+    var deferred = Q.defer();
+    db.get(docId, function (err, oldDoc) {
+      if (err && err['status-code'] !== 404) {
+        return deferred.reject(new Error(err));
       }
-      var docs = couchdbs[dbName],
-        db = dbServer.use(dbName);
-
-      if (docsFolder) {
-        fs.readdirSync(docsFolder).forEach(function (f) {
-          var m = f.match(/^([A-Za-z0-9_]+)\.json$/);
-          if (m) {
-            docs[m[1]] = JSON.parse(fs.readFileSync(path.join(docsFolder, f), 'utf8'));
-          }
-        });
+      if (oldDoc) {
+        doc._rev = oldDoc._rev;
       }
-      console.log('Pushing to "' + dbName + '":');
-      Object.keys(docs).forEach(function (docId) {
-        db.get(docId, function (err, oldDoc) {
-          if (err && err['status-code'] !== 404) {
-            throw new Error('Error getting "' + docId + '": ' + util.inspect(err));
-          }
-          var doc = docs[docId];
-          if (oldDoc) {
-            doc._rev = oldDoc._rev;
-          }
-          db.insert(doc, docId, function (err) {
-            if (err) {
-              throw new Error('Error creating "' + docId + '": ' + util.inspect(err));
-            }
-            console.log(' - ' + docId);
-          });
-        });
+      db.insert(doc, docId, function (err) {
+        if (err) {
+          return deferred.reject(new Error(err));
+        }
+        deferred.resolve(docId);
       });
     });
-  });
+    return deferred.promise;
+  }
+
+  function loadDocs(db, dbName) {
+    var deferred = Q.defer();
+    Q.when(docsBaseFolder, function (docsBaseFolder) {
+      if (!docsBaseFolder) {
+        return deferred.resolve([]);
+      }
+      deferred.resolve(
+        Q.ncall(fs.readdir, fs, path.join(docsBaseFolder, dbName))
+          .then(function (files) {
+            return Q.all(files.map(function (file) {
+              var m = file.match(/^([A-Za-z0-9_]+)\.json$/);
+              if (m) {
+                return readFile(path.join(docsBaseFolder, dbName, file), 'utf8').then(function (jsonString) {
+                  return putDoc(db, JSON.parse(jsonString), m[1]);
+                });
+              }
+            }));
+          })
+      );
+    });
+    return deferred.promise;
+  }
+
+  function createDb(dbName) {
+    var deferred = Q.defer();
+    dbServer.db.create(dbName, function (err) {
+      if (err && err['status-code'] !== 412) {
+        return deferred.reject(new Error(err));
+      }
+      var db = dbServer.scope(dbName),
+        systemDocs = couchdbs[dbName];
+      deferred.resolve(
+        Q.all(Object.keys(systemDocs).map(function (docId) {
+          return putDoc(db, systemDocs[docId], docId);
+        })).then(function (loadedSystemIds) {
+          return loadDocs(db, dbName).then(function (loadedDocIds) {
+            console.log('Pushed to "' + dbName + '":');
+            console.log(loadedSystemIds);
+            console.log(loadedDocIds);
+          });
+        })
+      );
+    });
+    return deferred.promise;
+  }
+
+  Q.all(Object.keys(couchdbs).map(function (dbName) {
+    var deferred = Q.defer();
+    if (!doReset) {
+      deferred.resolve(createDb(dbName));
+    } else {
+      dbServer.db.destroy(dbName, function (err) {
+        if (err && err['status-code'] !== 404) {
+          return deferred.reject(new Error(err));
+        }
+        deferred.resolve(createDb(dbName));
+      });
+    }
+    return deferred.promise;
+  }))
+    .end();
 });
