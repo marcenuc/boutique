@@ -21,7 +21,9 @@ requirejs(['path', 'connect', 'connect-exec', 'lib/sendFoto', 'lib/servers'], fu
     console.log('Serving tests.');
     server
       .use('/app', connect['static'](path.join(process.cwd(), 'app')))
-      .use('/test', connect['static'](path.join(process.cwd(), 'test')));
+      .use('/test', connect['static'](path.join(process.cwd(), 'test')))
+      .use('/test-resetdb',
+        cmdExec({ 'Content-Type': 'text/plain;charset=utf-8' }, process.cwd(), './run', ['push', 'test/docs', 'Yes, delete EVERYTHING! I am NOT joking!']));
   }
 
   server.use('/_session', function (req, res) {
