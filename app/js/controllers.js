@@ -300,9 +300,15 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
         codiciAzienda.forEach(function (codiceAzienda) {
           var azienda = aziende[codiceAzienda].doc;
           tipiAzienda[azienda.tipo] = true;
-          comuni[azienda.comune || '##'] = true;
-          province[azienda.provincia || '##'] = true;
-          nazioni[azienda.nazione || '##'] = true;
+          if (azienda.comune) {
+            comuni[azienda.comune] = true;
+          }
+          if (azienda.provincia) {
+            province[azienda.provincia] = true;
+          }
+          if (azienda.nazione) {
+            nazioni[azienda.nazione] = true;
+          }
         });
         $scope.tipiAzienda = Object.keys(tipiAzienda).sort();
         $scope.comuni = Object.keys(comuni).sort();

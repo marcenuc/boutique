@@ -11,6 +11,11 @@ describe('Controller', function () {
       value: '020202_Magazzino2',
       key: '020202',
       doc: { _id: 'Azienda_020202', nome: 'Magazzino2', tipo: 'MAGAZZINO', comune: 'Bari', provincia: 'BA', nazione: 'IT' }
+    },
+    '030303': {
+      value: '030303 Negozio3',
+      key: '030303',
+      doc: { _id: 'Azienda_030303', nome: 'Negozio3', tipo: 'NEGOZIO', comune: 'Madrid', nazione: 'ES' }
     }
   }),
     LISTINI = Object.freeze({
@@ -363,15 +368,15 @@ describe('Controller', function () {
       // it should put aziende in $scope
       expect($scope.aziende).toBe(AZIENDE);
       // it should default to current user's azienda or none
-      expect($scope.aziendeSelezionate).toEqual(['010101', '020202']);
+      expect($scope.aziendeSelezionate).toEqual(['010101', '020202', '030303']);
       // it should put tipiAzienda in $scope
       expect($scope.tipiAzienda).toEqual(['MAGAZZINO', 'NEGOZIO']);
       // it should put comuni in $scope
-      expect($scope.comuni).toEqual(['Bari', 'Tricase']);
+      expect($scope.comuni).toEqual(['Bari', 'Madrid', 'Tricase']);
       // it should put province in $scope
       expect($scope.province).toEqual(['BA', 'LE']);
       // it should put nazioni in $scope
-      expect($scope.nazioni).toEqual(['IT']);
+      expect($scope.nazioni).toEqual(['ES', 'IT']);
       // it should default to no results
       expect($scope.filtrate).toEqual([]);
       // it should default limiteRisultati to 50
