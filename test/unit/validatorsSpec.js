@@ -1,8 +1,7 @@
 /*global describe:false, beforeEach:false, afterEach:false, it:false, expect:false, module:false, inject:false, angular:false*/
 describe('Validation', function () {
   'use strict';
-  beforeEach(module('app.validators'));
-  beforeEach(module('app.shared'));
+  beforeEach(module('app.validators', 'app.shared'));
 
   function regExpEscape(str) {
     return str.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, "\\$&");
@@ -35,15 +34,23 @@ describe('Validation', function () {
     owner = Object.freeze({ name: '099999', roles: ['azienda'] }),
     admin = Object.freeze({ name: 'boutique', roles: ['boutique'] });
 
+  function setupSession(userCtx) {
+    return module('app.services', function ($provide) {
+      $provide.value('session', {
+        success: function (callback) {
+          callback({ userCtx: userCtx });
+        }
+      });
+    });
+  }
+
   describe('of update authorization', function () {
     describe('on Azienda', function () {
       var doc = { _id: 'Azienda_' + owner.name, nome: owner.name },
         docDeleted = { _id: 'Azienda_' + owner.name, _deleted: true };
 
       describe('for anonymous user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', anonymous);
-        }));
+        beforeEach(setupSession(anonymous));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -52,9 +59,7 @@ describe('Validation', function () {
       });
 
       describe('for other user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', other);
-        }));
+        beforeEach(setupSession(other));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -63,9 +68,7 @@ describe('Validation', function () {
       });
 
       describe('for owner user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', owner);
-        }));
+        beforeEach(setupSession(owner));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -74,9 +77,7 @@ describe('Validation', function () {
       });
 
       describe('for admin user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', admin);
-        }));
+        beforeEach(setupSession(admin));
 
         it('should be authorized', inject(function (validate) {
           expect(validate(doc)).toBeAuthorized();
@@ -90,9 +91,7 @@ describe('Validation', function () {
         docDeleted = { _id: 'Cliente_' + owner.name + '_1', _deleted: true };
 
       describe('for anonymous user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', anonymous);
-        }));
+        beforeEach(setupSession(anonymous));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -101,9 +100,7 @@ describe('Validation', function () {
       });
 
       describe('for other user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', other);
-        }));
+        beforeEach(setupSession(other));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -112,9 +109,7 @@ describe('Validation', function () {
       });
 
       describe('for owner user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', owner);
-        }));
+        beforeEach(setupSession(owner));
 
         it('should be authorized', inject(function (validate) {
           expect(validate(doc)).toBeAuthorized();
@@ -123,9 +118,7 @@ describe('Validation', function () {
       });
 
       describe('for admin user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', admin);
-        }));
+        beforeEach(setupSession(admin));
 
         it('should be authorized', inject(function (validate) {
           expect(validate(doc)).toBeAuthorized();
@@ -139,9 +132,7 @@ describe('Validation', function () {
         docDeleted = { _id: 'TaglieScalarini', _deleted: true };
 
       describe('for anonymous user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', anonymous);
-        }));
+        beforeEach(setupSession(anonymous));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -150,9 +141,7 @@ describe('Validation', function () {
       });
 
       describe('for other user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', other);
-        }));
+        beforeEach(setupSession(other));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -161,9 +150,7 @@ describe('Validation', function () {
       });
 
       describe('for owner user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', owner);
-        }));
+        beforeEach(setupSession(owner));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -172,9 +159,7 @@ describe('Validation', function () {
       });
 
       describe('for admin user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', admin);
-        }));
+        beforeEach(setupSession(admin));
 
         it('should be authorized', inject(function (validate) {
           expect(validate(doc)).toBeAuthorized();
@@ -188,9 +173,7 @@ describe('Validation', function () {
         docDeleted = { _id: 'ModelliEScalarini', _deleted: true };
 
       describe('for anonymous user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', anonymous);
-        }));
+        beforeEach(setupSession(anonymous));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -199,9 +182,7 @@ describe('Validation', function () {
       });
 
       describe('for other user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', other);
-        }));
+        beforeEach(setupSession(other));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -210,9 +191,7 @@ describe('Validation', function () {
       });
 
       describe('for owner user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', owner);
-        }));
+        beforeEach(setupSession(owner));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -221,9 +200,7 @@ describe('Validation', function () {
       });
 
       describe('for admin user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', admin);
-        }));
+        beforeEach(setupSession(admin));
 
         it('should be authorized', inject(function (validate) {
           expect(validate(doc)).toBeAuthorized();
@@ -237,9 +214,7 @@ describe('Validation', function () {
         docDeleted = { _id: 'ModelliEScalarini', _deleted: true };
 
       describe('for anonymous user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', anonymous);
-        }));
+        beforeEach(setupSession(anonymous));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -248,9 +223,7 @@ describe('Validation', function () {
       });
 
       describe('for other user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', other);
-        }));
+        beforeEach(setupSession(other));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -259,9 +232,7 @@ describe('Validation', function () {
       });
 
       describe('for owner user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', owner);
-        }));
+        beforeEach(setupSession(owner));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -270,9 +241,7 @@ describe('Validation', function () {
       });
 
       describe('for admin user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', admin);
-        }));
+        beforeEach(setupSession(admin));
 
         it('should be authorized', inject(function (validate) {
           expect(validate(doc)).toBeAuthorized();
@@ -287,9 +256,7 @@ describe('Validation', function () {
         docDeleted = { _id: id, _deleted: true };
 
       describe('for anonymous user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', anonymous);
-        }));
+        beforeEach(setupSession(anonymous));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -298,9 +265,7 @@ describe('Validation', function () {
       });
 
       describe('for other user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', other);
-        }));
+        beforeEach(setupSession(other));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -309,9 +274,7 @@ describe('Validation', function () {
       });
 
       describe('for owner user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', owner);
-        }));
+        beforeEach(setupSession(owner));
 
         describe('when causale is "VENDITA A CLIENTI"', function () {
           it('should be authorized if not already accodato', inject(function (validate, codici) {
@@ -354,9 +317,7 @@ describe('Validation', function () {
       });
 
       describe('for admin user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', admin);
-        }));
+        beforeEach(setupSession(admin));
 
         it('should be authorized', inject(function (validate) {
           expect(validate(doc)).toBeAuthorized();
@@ -370,9 +331,7 @@ describe('Validation', function () {
         docDeleted = { _id: 'Listino_' + owner.name, _deleted: true };
 
       describe('for anonymous user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', anonymous);
-        }));
+        beforeEach(setupSession(anonymous));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -381,9 +340,7 @@ describe('Validation', function () {
       });
 
       describe('for other user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', other);
-        }));
+        beforeEach(setupSession(other));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -392,9 +349,7 @@ describe('Validation', function () {
       });
 
       describe('for owner user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', owner);
-        }));
+        beforeEach(setupSession(owner));
 
         it('should not be authorized', inject(function (validate) {
           expect(validate(doc)).not.toBeAuthorized();
@@ -403,9 +358,7 @@ describe('Validation', function () {
       });
 
       describe('for admin user', function () {
-        beforeEach(module('app.services', function ($provide) {
-          $provide.value('userCtx', admin);
-        }));
+        beforeEach(setupSession(admin));
 
         it('should be authorized', inject(function (validate) {
           expect(validate(doc)).toBeAuthorized();
@@ -416,9 +369,7 @@ describe('Validation', function () {
   });
 
   describe('of type', function () {
-    beforeEach(module('app.services', function ($provide) {
-      $provide.value('userCtx', admin);
-    }));
+    beforeEach(setupSession(admin));
 
     function expectRequired(validate, doc, field, validValues, invalidValues) {
       var msg = 'Required: ' + field,

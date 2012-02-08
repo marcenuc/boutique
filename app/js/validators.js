@@ -2,7 +2,7 @@
 angular.module('app.validators', [], ['$provide', function ($provide) {
   'use strict';
   function validateDocUpdate(doc, oldDoc, userCtx, secObj, CODICI) {
-    var es = [],
+    var errors = [],
       codici = CODICI || require('views/lib/codici'),
       typeAndCode = codici.typeAndCodeFromId(doc._id),
       codes = typeAndCode && typeAndCode[2] ? typeAndCode[2].split('_') : null;
@@ -19,7 +19,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
       if (secObj) {
         throw { unauthorized: msg };
       }
-      es.push({ message: msg });
+      errors.push({ message: msg });
     }
 
     function isAdmin() {
@@ -47,7 +47,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
       if (secObj) {
         throw { forbidden: message };
       }
-      es.push({ message: message });
+      errors.push({ message: message });
       //return undefined;
     }
 
@@ -277,7 +277,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
     if (doc._deleted) {
       mustBeAdmin();
       // don't validate on deletion
-      return secObj ? undefined : { errors: es };
+      return secObj ? undefined : { errors: errors };
     }
 
     switch ((typeAndCode || [])[1]) {
@@ -297,7 +297,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
       mustHave('taglie', 'array');
       mustHave('listeDescrizioni', 'array');
       mustHave('colonneTaglie', 'array');
-      if (!es.length) {
+      if (!errors.length) {
         hasEquivalentData('descrizioniTaglie', 'taglie');
         hasEquivalentData('taglie', 'descrizioniTaglie');
         if (doc.listeDescrizioni.some(function (listaDescrizioni, scalarino) {
@@ -419,14 +419,17 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
     }
 
     if (!secObj) {
-      return { errors: es };
+      return { errors: errors };
     }
   }
 
   $provide.value('validateDocUpdate', validateDocUpdate);
 
-  $provide.factory('validate', ['codici', function (codici) {
+  $provide.factory('validate', ['session', 'codici', function (session, codici) {
     var userCtx = { name: 'boutique' };
+    session.success(function (sessionData) {
+      userCtx = sessionData.userCtx;
+    });
     return function (doc, oldDoc) {
       return validateDocUpdate(doc, oldDoc, userCtx, undefined, codici);
     };
