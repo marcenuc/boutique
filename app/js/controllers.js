@@ -3,11 +3,12 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
   'use strict';
   var Ctrl = {};
 
-  Ctrl.Header = function ($scope, SessionInfo) {
-    $scope.SessionInfo = SessionInfo;
-    $scope.session = SessionInfo.getResource('../_session');
+  Ctrl.Header = function ($scope, session) {
+    session.success(function (data) {
+      $scope.userCtx = data.userCtx;
+    });
   };
-  Ctrl.Header.$inject = ['$scope', 'SessionInfo'];
+  Ctrl.Header.$inject = ['$scope', 'session'];
 
   Ctrl.NewMovimentoMagazzino = function ($scope, SessionInfo, $location, codici) {
     SessionInfo.resetFlash();
@@ -278,7 +279,7 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
   };
   Ctrl.RicercaBollaAs400.$inject = ['$scope', 'As400', 'SessionInfo', 'CdbView', '$location', 'codici'];
 
-  Ctrl.RicercaArticoli = function ($scope, SessionInfo, Downloads, codici) {
+  Ctrl.RicercaArticoli = function ($scope, SessionInfo, Downloads, codici, session, Azienda) {
     SessionInfo.resetFlash();
 
     var listini = SessionInfo.listini(),
@@ -288,23 +289,63 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
       selectedRow = 0;
 
     $scope.aziendeSelezionate = [];
-    $scope.aziende = SessionInfo.aziende();
+    session.success(function (session) {
+      Azienda.all().success(function (aziende) {
+        var tipiAzienda = {}, comuni = {}, province = {}, nazioni = {}, username = session.userCtx.name, codiciAzienda = Object.keys(aziende);
+        $scope.aziende = aziende;
+        if (aziende.hasOwnProperty(username)) {
+          $scope.aziendeSelezionate = [username];
+        }
+        codiciAzienda.forEach(function (codiceAzienda) {
+          var azienda = aziende[codiceAzienda].doc;
+          tipiAzienda[azienda.tipo] = true;
+          comuni[azienda.comune || '##'] = true;
+          province[azienda.provincia || '##'] = true;
+          nazioni[azienda.nazione || '##'] = true;
+        });
+        $scope.tipiAzienda = Object.keys(tipiAzienda).sort();
+        $scope.comuni = Object.keys(comuni).sort();
+        $scope.province = Object.keys(province).sort();
+        $scope.nazioni = Object.keys(nazioni).sort();
+        $scope.quickSearch = {};
+        $scope.$watch('quickSearch', function () {
+          $scope.aziendeSelezionate = codiciAzienda.filter(function (codiceAzienda) {
+            var azienda = aziende[codiceAzienda].doc, qs = $scope.quickSearch;
+            return (!qs.tipoAzienda || azienda.tipo === qs.tipoAzienda) &&
+                   (!qs.comune || azienda.comune === qs.comune) &&
+                   (!qs.provincia || azienda.provincia === qs.provincia) &&
+                   (!qs.nazione || azienda.nazione === qs.nazione);
+          });
+        });
+      });
+    });
     $scope.filtrate = [];
     $scope.limiteRisultati = 50;
+
+    $scope.togglePhotoType = function () {
+      $scope.photoType = $scope.photoType === 'foto' ? 'tessuto' : 'foto';
+      $scope.showPhoto(selectedRow);
+    };
+    $scope.photoType = 'foto';
 
     $scope.showPhoto = function (index) {
       if (index >= $scope.filtrate.length || index < 0) {
         return $scope.hidePhoto();
       }
-      var row = $scope.filtrate[index],
+      var img,
+        row = $scope.filtrate[index],
         photo = {
           descrizione: row[1],
           stagione: row[2],
           modello: row[3],
           articolo: row[4],
           colore: row[5]
-        },
-        img = ['../img/', photo.stagione, photo.modello, photo.articolo, photo.colore, '.jpg'].join('');
+        };
+      if ($scope.photoType === 'tessuto') {
+        img = ['../tessuto/', photo.articolo, photo.colore, '.jpg'].join('');
+      } else {
+        img = ['../foto/', photo.stagione, photo.modello, photo.articolo, photo.colore, '.jpg'].join('');
+      }
 
       if ($scope.photo && $scope.photo.show[0]) {
         photo.img = ['spinner.gif', img];
@@ -489,7 +530,7 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
       Downloads.prepare(toLabels(), 'etichette');
     };
   };
-  Ctrl.RicercaArticoli.$inject = ['$scope', 'SessionInfo', 'Downloads', 'codici'];
+  Ctrl.RicercaArticoli.$inject = ['$scope', 'SessionInfo', 'Downloads', 'codici', 'session', 'Azienda'];
 
   Ctrl.Azienda = function ($scope, $routeParams, SessionInfo, codici, validate) {
     SessionInfo.resetFlash();

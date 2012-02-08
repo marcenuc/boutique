@@ -14,9 +14,12 @@ define({
       port: <%= proxyed_port %>,
       images: {
         rootFolder: '<%= photo_folder %>',
-        inputs: {
+        foto: {
           foto: '/(\\d{16})\\.[a-z]+$',
           schizzi: '/(\\d{8})\\.[a-z]+$'
+        },
+        tessuti: {
+          tessuti: '/(\\d{8})\\.[a-z]+$'
         },
         output: 'pubblicate'
       }

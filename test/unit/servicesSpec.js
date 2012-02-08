@@ -1,7 +1,7 @@
 /*global describe:false, beforeEach:false, afterEach:false, it:false, expect:false, module:false, inject:false*/
 describe('Service', function () {
   'use strict';
-  beforeEach(module('app.services', function ($provide) {
+  beforeEach(module('app.services', 'app.shared', function ($provide) {
     $provide.value('couchdb', { db: 'db', designDoc: 'ddoc' });
   }));
 
@@ -90,9 +90,37 @@ describe('Service', function () {
     });
   });
 
-  describe('userCtx', function () {
-    it('should have "roles" === ["boutique"]', inject(['userCtx', function (userCtx) {
-      expect(userCtx.roles).toEqual(['boutique']);
-    }]));
+  describe('session', function () {
+    it('should query session data', function () {
+      var session = { userCtx: { name: 'boutique' } };
+      $hb.expectGET('../_session').respond(session);
+      inject(['session', function (session) {
+        $hb.flush();
+        expect(session).toEqual(session);
+      }]);
+    });
+  });
+
+  describe('Azienda', function () {
+    var aziende = { rows: [
+      { id: 'Azienda_099999', key: '099999', doc: { _id: 'Azienda_099999', nome: 'Mag1', tipo: 'MAGAZZINO' } },
+      { id: 'Azienda_010101', key: '010101', doc: { _id: 'Azienda_010101', nome: 'Neg1', tipo: 'NEGOZIO' } },
+      { id: 'Azienda_020202', key: '020202', doc: { _id: 'Azienda_020202', nome: 'Neg2', tipo: 'NEGOZIO' } }
+    ] };
+    describe('all', function () {
+      beforeEach(function () {
+        $hb.expectGET('/db/_design/ddoc/_view/aziende?include_docs=true').respond(JSON.stringify(aziende));
+      });
+
+      it('should return map of all aziende', inject(function (Azienda) {
+        var resp = Azienda.all();
+        expect(typeof resp.then).toBe('function');
+        resp.success(function (data) {
+          expect(typeof data).toBe('object');
+          expect(Object.keys(data)).toEqual(['099999', '010101', '020202']);
+        });
+        $hb.flush();
+      }));
+    });
   });
 });

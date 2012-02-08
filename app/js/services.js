@@ -103,6 +103,11 @@ angular.module('app.services', [], ['$provide', function ($provide) {
     }
     /*jslint unparam:false*/
 
+    info.startLoading = function () {
+      info.loading += 1;
+    };
+    info.doneLoading = loaded;
+
     info.getResource = function (resourceUrl) {
       var obj = {};
       info.loading += 1;
@@ -211,11 +216,15 @@ angular.module('app.services', [], ['$provide', function ($provide) {
     return info;
   }]);
 
-  // TODO
-  $provide.value('userCtx', {
-    name: 'commerciale',
-    roles: ['boutique']
-  });
+  $provide.factory('session', ['SessionInfo', '$http', function (SessionInfo, $http) {
+    SessionInfo.startLoading();
+
+    var done = SessionInfo.doneLoading,
+      session = $http({ method: 'GET', url: '../_session' });
+    session.then(done, done);
+
+    return session;
+  }]);
 
   $provide.factory('Downloads', ['$http', '$document', 'SessionInfo', 'codici', function ($http, $document, SessionInfo, codici) {
     function setData(data) {
@@ -311,6 +320,32 @@ angular.module('app.services', [], ['$provide', function ($provide) {
         i = 0;
         ii = templates.length;
         addFiles();
+      }
+    };
+  }]);
+
+  function viewToMapByKey(json) {
+    var map = {};
+    JSON.parse(json).rows.forEach(function (row) {
+      map[row.key] = row;
+    });
+    return map;
+  }
+
+  $provide.factory('Azienda', ['SessionInfo', '$http', 'couchdb', function (SessionInfo, $http, couchdb) {
+    SessionInfo.startLoading();
+
+    var done = SessionInfo.doneLoading,
+      aziende = $http({
+        method: 'GET',
+        url: '/' + couchdb.db + '/_design/' + couchdb.designDoc + '/_view/aziende?include_docs=true',
+        transformResponse: viewToMapByKey
+      });
+    aziende.then(done, done);
+
+    return {
+      all: function () {
+        return aziende;
       }
     };
   }]);

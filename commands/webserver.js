@@ -30,7 +30,8 @@ requirejs(['path', 'connect', 'connect-exec', 'lib/sendFoto', 'lib/servers'], fu
     res.setHeader('Content-Type', 'application/json;charset=utf-8');
     res.end(JSON.stringify({ userCtx: { name: req.remoteUser } }));
   })
-    .use('/img', sendFoto(path.join(images.rootFolder, images.output), { '11': '12', '10': '12', '92': '12' }))
+    .use('/tessuto', connect['static'](path.join(images.rootFolder, images.output, 'tessuti')))
+    .use('/foto', sendFoto(path.join(images.rootFolder, images.output, 'foto'), { '11': '12', '10': '12', '92': '12' }))
     .use('/as400',
       cmdExec({ 'Content-Type': 'application/json;charset=utf-8' }, process.cwd(), 'java', ['-jar', 'as400-querier.jar']));
 

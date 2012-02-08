@@ -1,7 +1,18 @@
 /*global describe:false, beforeEach:false, afterEach:false, it:false, expect:false, module:false, inject:false, jasmine:false, spyOn:false*/
 describe('Controller', function () {
   'use strict';
-  var AZIENDE = Object.freeze({ '010101': { value: '010101 Negozio1' }, '020202': { value: '020202_Magazzino Esterno 2' } }),
+  var AZIENDE = Object.freeze({
+    '010101': {
+      value: '010101 Negozio1',
+      key: '010101',
+      doc: { _id: 'Azienda_010101', nome: 'Negozio1', tipo: 'NEGOZIO', comune: 'Tricase', provincia: 'LE', nazione: 'IT' }
+    },
+    '020202': {
+      value: '020202_Magazzino2',
+      key: '020202',
+      doc: { _id: 'Azienda_020202', nome: 'Magazzino2', tipo: 'MAGAZZINO', comune: 'Bari', provincia: 'BA', nazione: 'IT' }
+    }
+  }),
     LISTINI = Object.freeze({
       '1': { _id: 'Listino_1', col: { costo: 0, prezzo1: 1, prezzo2: 2, offerta: 3  }, prezzi: { '112': { '60456': { '5000': [100, 300, 200, '*'] } } } },
       '010101': { _id: 'Listino_010101', col: { costo: 0, prezzo1: 1, prezzo2: 2, offerta: 3  }, prezzi: {}, versioneBase: '1' }
@@ -35,14 +46,20 @@ describe('Controller', function () {
 
   beforeEach(module('app.services', 'app.shared', 'app.validators', 'app.controllers', function ($provide) {
     $provide.value('couchdb', { db: 'db', designDoc: 'ddoc' });
-    var Downloads = jasmine.createSpyObj('Downloads', ['prepare']),
+    var session = jasmine.createSpyObj('session', ['success']),
+      Azienda = jasmine.createSpyObj('Azienda', ['all']),
+      aziende = jasmine.createSpyObj('aziende', ['success']),
+      Downloads = jasmine.createSpyObj('Downloads', ['prepare']),
       SessionInfo = jasmine.createSpyObj('SessionInfo',
-        ['resetFlash', 'aziende', 'listini', 'prossimoNumero', 'save', 'getDocument', 'error', 'notice', 'movimentoMagazzinoPendente']),
+        ['resetFlash', 'aziende', 'listini', 'prossimoNumero', 'save', 'getResource', 'getDocument', 'error', 'notice', 'movimentoMagazzinoPendente']),
       $location = jasmine.createSpyObj('$location', ['path']);
+    $provide.value('Azienda', Azienda);
     $provide.value('Downloads', Downloads);
     $provide.value('SessionInfo', SessionInfo);
     $provide.value('$location', $location);
+    $provide.value('session', session);
 
+    Azienda.all.andReturn(aziende);
     SessionInfo.aziende.andReturn(AZIENDE);
     SessionInfo.listini.andReturn(LISTINI);
     SessionInfo.getDocument.andCallFake(getDocument);
@@ -51,6 +68,21 @@ describe('Controller', function () {
   afterEach(inject(function (SessionInfo) {
     expect(SessionInfo.resetFlash).toHaveBeenCalledWith();
   }));
+
+  describe('Header', function () {
+    it('should initialize $scope', inject(function ($controller, controllers, session, SessionInfo) {
+      var $scope = {};
+      // FAKE CALL for afterEach: this is the only exception...
+      SessionInfo.resetFlash();
+      // ensure $scope is properly initialized
+      $controller(controllers.Header, $scope);
+      expect(session.success).toHaveBeenCalled();
+      expect(typeof session.success.mostRecentCall.args[0]).toBe('function');
+      session.success.mostRecentCall.args[0]({ userCtx: { name: 'boutique' } });
+      // it should put userCtx in $scope
+      expect($scope.userCtx).toEqual({ name: 'boutique' });
+    }));
+  });
 
   describe('NewMovimentoMagazzino', function () {
     it('should initialize $scope', inject(function ($controller, controllers, SessionInfo, $location, codici) {
@@ -293,14 +325,43 @@ describe('Controller', function () {
   });
 
   describe('RicercaArticoli', function () {
-    it('should initialize $scope', inject(function ($controller, controllers, SessionInfo, Downloads, codici) {
-      var form, $scope = {};
+    it('should default to current user\'s azienda if it exists', inject(function ($controller, controllers, Azienda, session) {
+      var $scope = {}, aziende = Azienda.all();
+      $controller(controllers.RicercaArticoli, $scope);
+      expect(session.success).toHaveBeenCalled();
+      expect(typeof session.success.mostRecentCall.args[0]).toBe('function');
+      session.success.mostRecentCall.args[0]({ userCtx: { name: '010101' } });
+      expect(aziende.success).toHaveBeenCalled();
+      expect($scope.aziende).toBeUndefined();
+      expect($scope.aziendeSelezionate).toEqual([]);
+      $scope.$watch = jasmine.createSpy();
+      aziende.success.mostRecentCall.args[0](AZIENDE);
+      // it should put aziende in $scope
+      expect($scope.aziende).toBe(AZIENDE);
+      expect($scope.aziendeSelezionate).toEqual(['010101']);
+    }));
+
+    it('should initialize $scope', inject(function ($controller, controllers, SessionInfo, Downloads, codici, Azienda, session) {
+      var form, $scope = {}, aziende = Azienda.all();
       // ensure $scope is properly initialized
       $controller(controllers.RicercaArticoli, $scope);
+      session.success.mostRecentCall.args[0]({ userCtx: { name: 'boutique' } });
+      $scope.$watch = jasmine.createSpy();
+      aziende.success.mostRecentCall.args[0](AZIENDE);
+      // it should show 'foto' by default
+      expect($scope.photoType).toBe('foto');
       // it should put aziende in $scope
       expect($scope.aziende).toBe(AZIENDE);
       // it should default to current user's azienda or none
       expect($scope.aziendeSelezionate).toEqual([]);
+      // it should put tipiAzienda in $scope
+      expect($scope.tipiAzienda).toEqual(['MAGAZZINO', 'NEGOZIO']);
+      // it should put comuni in $scope
+      expect($scope.comuni).toEqual(['Bari', 'Tricase']);
+      // it should put province in $scope
+      expect($scope.province).toEqual(['BA', 'LE']);
+      // it should put nazioni in $scope
+      expect($scope.nazioni).toEqual(['IT']);
       // it should default to no results
       expect($scope.filtrate).toEqual([]);
       // it should default limiteRisultati to 50
@@ -321,7 +382,7 @@ describe('Controller', function () {
         modello: '60456',
         articolo: '5000',
         colore: '5000',
-        img: ['../img/1126045650005000.jpg', 'spinner.gif'],
+        img: ['../foto/1126045650005000.jpg', 'spinner.gif'],
         show: [true, false]
       });
       expect($scope.isSelectedRow(0)).toBe('selected');
@@ -339,7 +400,7 @@ describe('Controller', function () {
         modello: '60456',
         articolo: '5000',
         colore: '5000',
-        img: ['spinner.gif', '../img/1126045650005000.jpg'],
+        img: ['spinner.gif', '../foto/1126045650005000.jpg'],
         show: [false, true]
       });
       $scope.nextPhoto();
@@ -350,7 +411,7 @@ describe('Controller', function () {
         modello: '60456',
         articolo: '5000',
         colore: '5000',
-        img: ['../img/1126045650005000.jpg', 'spinner.gif'],
+        img: ['../foto/1126045650005000.jpg', 'spinner.gif'],
         show: [true, false]
       });
       $scope.hidePhoto();

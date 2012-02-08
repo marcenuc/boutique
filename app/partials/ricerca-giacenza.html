@@ -1,16 +1,23 @@
-<form ng:submit="filtraGiacenza()" name=ricercaArticoli>
+<form ng-submit="filtraGiacenza()" name=ricercaArticoli>
 <fieldset><legend>Usa il '.' come carattere jolly.</legend>
 <div>
-  <label>Aziende: <select ng:model=aziendeSelezionate multiple ng:options="c as r.value for (c, r) in aziende"></select></label>
-  <label>Modello: <input ng:model=modello size=5 maxlength=5 pattern="^[.\d]{0,5}$"></label>
-  <label>Articolo: <input ng:model=articolo size=4 maxlength=4 pattern="^[.\d]{0,4}$"></label>
-  <label>Colore: <input ng:model=colore size=4 maxlength=4 pattern="^[.\d]{0,4}$"></label>
-  <label>Descrizione taglia: <input ng:model=descrizioneTaglia size=3 maxlength=3 pattern="^.{0,3}$"></label>
-  <label>Stagione: <input ng:model=stagione size=3 maxlength=3 pattern="^[.\d]{0,3}$"></label>
+<table><tr>
+<td><label>Aziende: <select ng-model=aziendeSelezionate multiple ng-options="c as r.value for (c, r) in aziende"></select></label>
+<td><label>Tipo azienda: <select ng-model="quickSearch.tipoAzienda" ng-options="t for t in tipiAzienda"><option></select></label>
+<br><label>Comune: <select ng-model="quickSearch.comune" ng-options="c for c in comuni"><option></select></label>
+<td><label>Provincia: <select ng-model="quickSearch.provincia" ng-options="p for p in province"><option></select></label>
+<br><label>Nazione: <select ng-model="quickSearch.nazione" ng-options="n for n in nazioni"><option></select></label>
+<tr><td colspan=2>Aziende selezionate: {{aziendeSelezionate.join(', ')}}
+</table>
+  <label>Modello: <input ng-model=modello size=5 maxlength=5 pattern="^[.\d]{0,5}$"></label>
+  <label>Articolo: <input ng-model=articolo size=4 maxlength=4 pattern="^[.\d]{0,4}$"></label>
+  <label>Colore: <input ng-model=colore size=4 maxlength=4 pattern="^[.\d]{0,4}$"></label>
+  <label>Descrizione taglia: <input ng-model=descrizioneTaglia size=3 maxlength=3 pattern="^.{0,3}$"></label>
+  <label>Stagione: <input ng-model=stagione size=3 maxlength=3 pattern="^[.\d]{0,3}$"></label>
   <hr>
-  <label>LIMITE RISULTATI: <input ng:model=limiteRisultati size=3 pattern="^\d*$"></label>
+  <label>LIMITE RISULTATI: <input ng-model=limiteRisultati size=3 pattern="^\d*$"></label>
   <input type=submit value=Cerca>
-  &nbsp;&nbsp;<a ng:click="prepareDownloads()">Prepara etichette</a>
+  &nbsp;&nbsp;<a ng-click="prepareDownloads()">Prepara etichette</a>
   <object id=downloads type="application/x-shockwave-flash" data="save.swf"><param name=allowScriptAccess value=always /><param name=wmode value=opaque /></object>
 </div>
 </fieldset>
@@ -19,22 +26,23 @@
 <div class="header-background"> </div>
 <div class="fixed-table-container-inner">
 <table class=fixed>
-<thead><tr><th class=first><div class=th>#</div><th><div class=th>Azienda</div><th><div class=th>Descrizione</div><th><div class=th>Stag.</div><th><div class=th>Modello</div><th><div class=th>Articolo</div><th><div class=th>Colore</div><th><div class=th>T.Mag.</div><th><div class=th>Stato</div><th><div class=th>Sc. {{scalarino}}<th ng:repeat="t in taglie"><div class=th>{{t}}</div><th><div class=th>Qta</div><th><div class=th>List.</div><th><div class=th>Prezzo</div><th><div class=th>ALTRO</div>
-<tr class="hidden-header"><th class=first><div class=th>#</div><th><div class=th>Azienda</div><th><div class=th>Descrizione</div><th><div class=th>Stag.</div><th><div class=th>Modello</div><th><div class=th>Articolo</div><th><div class=th>Colore</div><th><div class=th>T.Mag.</div><th><div class=th>Stato</div><th><div class=th>Sc. {{scalarino}}<th ng:repeat="t in taglie"><div class=th>{{t}}</div><th><div class=th>Qta</div><th><div class=th>List.</div><th><div class=th>Prezzo</div><th><div class=th>ALTRO</div>
-<tfoot><tr><th colspan=10 style="text-align:right">Quantità totali:<th ng:repeat="totale in totaliColonna" class=n>{{totale || ''}}
-<tbody class=giacenze><tr ng:repeat="row in filtrate" ng:class="isSelectedRow($index)"><td>{{$index + 1}}<td ng:repeat="v in row">{{v || ''}}<td><a ng:click="showPhoto($index)">Foto</a>
+<thead><tr><th class=first><div class=th>#</div><th><div class=th>Azienda</div><th><div class=th>Descrizione</div><th><div class=th>Stag.</div><th><div class=th>Modello</div><th><div class=th>Articolo</div><th><div class=th>Colore</div><th><div class=th>T.Mag.</div><th><div class=th>Stato</div><th><div class=th>Sc. {{scalarino}}<th ng-repeat="t in taglie"><div class=th>{{t}}</div><th><div class=th>Qta</div><th><div class=th>List.</div><th><div class=th>Prezzo</div><th><div class=th>ALTRO</div>
+<tr class="hidden-header"><th class=first><div class=th>#</div><th><div class=th>Azienda</div><th><div class=th>Descrizione</div><th><div class=th>Stag.</div><th><div class=th>Modello</div><th><div class=th>Articolo</div><th><div class=th>Colore</div><th><div class=th>T.Mag.</div><th><div class=th>Stato</div><th><div class=th>Sc. {{scalarino}}<th ng-repeat="t in taglie"><div class=th>{{t}}</div><th><div class=th>Qta</div><th><div class=th>List.</div><th><div class=th>Prezzo</div><th><div class=th>ALTRO</div>
+<tfoot><tr><th colspan=10 style="text-align:right">Quantità totali:<th ng-repeat="totale in totaliColonna" class=n>{{totale || ''}}
+<tbody class=giacenze><tr ng-repeat="row in filtrate" ng-class="isSelectedRow($index)"><td>{{$index + 1}}<td ng-repeat="v in row">{{v || ''}}<td><a ng-click="showPhoto($index)">Foto</a>
 </table>
 </div></div>
-<div ng:show=photo class=photo>
+<div ng-show=photo class=photo>
 <ul class=menu>
-<li><a ng:click="prevPhoto()">Precedente</a>
-<li><a ng:click="nextPhoto()">Successiva</a>
-<li><a ng:click="hidePhoto()">Nascondi</a>
+<li><a ng-click="prevPhoto()">Precedente</a>
+<li><a ng-click="nextPhoto()">Successiva</a>
+<li><a ng-click="hidePhoto()">Nascondi</a>
 </ul>
 <table>
 <tr><th>Descrizione<th>Stagione<th>Modello<th>Articolo<th>Colore 
 <tr><td>{{photo.descrizione}}<td>{{photo.stagione}}<td>{{photo.modello}}<td>{{photo.articolo}}<td>{{photo.colore}}
 </table>
-<img ng:show="photo.show[0]" ng:src="{{photo.img[0]}}">
-<img ng:show="photo.show[1]" ng:src="{{photo.img[1]}}">
+<div>{{photoType}} <a ng-click="togglePhotoType()">[&nbsp;Mostra foto/tessuto&nbsp;]</a></div>
+<img ng-show="photo.show[0]" ng-src="{{photo.img[0]}}">
+<img ng-show="photo.show[1]" ng-src="{{photo.img[1]}}">
 </div>
