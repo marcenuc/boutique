@@ -18,7 +18,7 @@ requirejs(['fs', 'child_process', 'path', 'findit', 'lib/servers'], function (fs
   }
 
   function findFiles(inputFolder, outputFolder) {
-    var pattern = images.inputs[inputFolder];
+    var pattern = images[inputFolder];
     findit.sync(path.join(images.rootFolder, inputFolder), function (file) {
       append(file, pattern, outputFolder);
     });
