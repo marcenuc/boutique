@@ -3,12 +3,13 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
   'use strict';
   var Ctrl = {};
 
-  Ctrl.Header = function ($scope, session) {
+  Ctrl.Header = function ($scope, session, SessionInfo) {
+    $scope.SessionInfo = SessionInfo;
     session.success(function (data) {
       $scope.userCtx = data.userCtx;
     });
   };
-  Ctrl.Header.$inject = ['$scope', 'session'];
+  Ctrl.Header.$inject = ['$scope', 'session', 'SessionInfo'];
 
   Ctrl.NewMovimentoMagazzino = function ($scope, SessionInfo, $location, codici) {
     SessionInfo.resetFlash();

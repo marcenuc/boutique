@@ -79,6 +79,8 @@ describe('Controller', function () {
       expect(session.success).toHaveBeenCalled();
       expect(typeof session.success.mostRecentCall.args[0]).toBe('function');
       session.success.mostRecentCall.args[0]({ userCtx: { name: 'boutique' } });
+      // it should put SessionInfo in $scope
+      expect($scope.SessionInfo).toBe(SessionInfo);
       // it should put userCtx in $scope
       expect($scope.userCtx).toEqual({ name: 'boutique' });
     }));
