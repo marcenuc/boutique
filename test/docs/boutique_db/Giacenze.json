@@ -1,0 +1,9 @@
+{
+  "_id": "Giacenze",
+  "columnNames": ["stagione", "modello", "articolo", "colore", "codiceAzienda", "inProduzione", "tipoMagazzino", "giacenze"],
+  "rows": [
+    ["112", "60456", "5000", "5000", "099999", 0, 3, { "66": 3 }],
+    ["112", "60456", "5000", "8000", "099999", 0, 3, { "66": 3 }],
+    ["112", "60456", "8000", "5000", "099999", 0, 3, { "66": 3 }]
+  ]
+}

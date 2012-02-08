@@ -1,0 +1,7 @@
+{
+  "_id": "TaglieScalarini",
+  "taglie": [null, { "37": "37", "38": "38" }, { "SM": "66" }, { "TU": "01" }],
+  "descrizioniTaglie": [null, { "37": "37", "38": "38" }, { "66": "SM" }, { "01": "TU" }],
+  "listeDescrizioni": [null, ["37", "38"], ["SM"], ["TU"]],
+  "colonneTaglie": [null, { "37": 0, "38": 1 }, { "66": 0 }, { "01": 0 }]
+}
