@@ -338,6 +338,10 @@ describe('Controller', function () {
       expect($scope.aziendeSelezionate).toEqual([]);
       $scope.$watch = jasmine.createSpy();
       aziende.success.mostRecentCall.args[0](AZIENDE);
+      expect($scope.$watch).toHaveBeenCalled();
+      expect($scope.$watch.mostRecentCall.args[0]).toBe('quickSearch');
+      expect(typeof $scope.$watch.mostRecentCall.args[1]).toBe('function');
+      $scope.$watch.mostRecentCall.args[1]();
       // it should put aziende in $scope
       expect($scope.aziende).toBe(AZIENDE);
       expect($scope.aziendeSelezionate).toEqual(['010101']);
@@ -350,12 +354,16 @@ describe('Controller', function () {
       session.success.mostRecentCall.args[0]({ userCtx: { name: 'boutique' } });
       $scope.$watch = jasmine.createSpy();
       aziende.success.mostRecentCall.args[0](AZIENDE);
+      expect($scope.$watch).toHaveBeenCalled();
+      expect($scope.$watch.mostRecentCall.args[0]).toBe('quickSearch');
+      expect(typeof $scope.$watch.mostRecentCall.args[1]).toBe('function');
+      $scope.$watch.mostRecentCall.args[1]();
       // it should show 'foto' by default
       expect($scope.photoType).toBe('foto');
       // it should put aziende in $scope
       expect($scope.aziende).toBe(AZIENDE);
       // it should default to current user's azienda or none
-      expect($scope.aziendeSelezionate).toEqual([]);
+      expect($scope.aziendeSelezionate).toEqual(['010101', '020202']);
       // it should put tipiAzienda in $scope
       expect($scope.tipiAzienda).toEqual(['MAGAZZINO', 'NEGOZIO']);
       // it should put comuni in $scope

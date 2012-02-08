@@ -310,13 +310,22 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
         $scope.nazioni = Object.keys(nazioni).sort();
         $scope.quickSearch = {};
         $scope.$watch('quickSearch', function () {
-          $scope.aziendeSelezionate = codiciAzienda.filter(function (codiceAzienda) {
-            var azienda = aziende[codiceAzienda].doc, qs = $scope.quickSearch;
-            return (!qs.tipoAzienda || azienda.tipo === qs.tipoAzienda) &&
-                   (!qs.comune || azienda.comune === qs.comune) &&
-                   (!qs.provincia || azienda.provincia === qs.provincia) &&
-                   (!qs.nazione || azienda.nazione === qs.nazione);
-          });
+          var qs = $scope.quickSearch,
+            fields = Object.keys(qs),
+            emptyQS = fields.every(function (field) {
+              return !qs[field];
+            });
+          if (emptyQS) {
+            $scope.aziendeSelezionate = aziende.hasOwnProperty(username) ? [username] : codiciAzienda;
+          } else {
+            $scope.aziendeSelezionate = codiciAzienda.filter(function (codiceAzienda) {
+              var azienda = aziende[codiceAzienda].doc;
+              return fields.every(function (field) {
+                var qsf = qs[field];
+                return !qsf || azienda[field] === qsf;
+              });
+            });
+          }
         });
       });
     });
