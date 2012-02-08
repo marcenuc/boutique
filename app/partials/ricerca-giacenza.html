@@ -7,7 +7,7 @@
 <br><label>Comune: <select ng-model="quickSearch.comune" ng-options="c for c in comuni"><option></select></label>
 <td><label>Provincia: <select ng-model="quickSearch.provincia" ng-options="p for p in province"><option></select></label>
 <br><label>Nazione: <select ng-model="quickSearch.nazione" ng-options="n for n in nazioni"><option></select></label>
-<tr><td colspan=2>Aziende selezionate: {{aziendeSelezionate.join(', ')}}
+<tr><td colspan=3>Aziende selezionate: {{aziendeSelezionate.join(', ')}}
 </table>
   <label>Modello: <input ng-model=modello size=5 maxlength=5 pattern="^[.\d]{0,5}$"></label>
   <label>Articolo: <input ng-model=articolo size=4 maxlength=4 pattern="^[.\d]{0,4}$"></label>
