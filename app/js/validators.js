@@ -425,7 +425,8 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
 
   $provide.value('validateDocUpdate', validateDocUpdate);
 
-  $provide.factory('validate', ['userCtx', 'codici', function (userCtx, codici) {
+  $provide.factory('validate', ['codici', function (codici) {
+    var userCtx = { name: 'boutique' };
     return function (doc, oldDoc) {
       return validateDocUpdate(doc, oldDoc, userCtx, undefined, codici);
     };
