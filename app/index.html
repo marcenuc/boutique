@@ -7,14 +7,16 @@
 <!-- END CSS -->
 <title>Boutique</title>
 <div class=header ng:controller=HeaderCtrl>
-<div id=session>Utente: {{userCtx.name}}</div>
-<ul class=menu>
+<div class=menu>
+<ul>
 <li><a href="#/ricerca-giacenza">Ricerca giacenza</a>
 <li><a href="#/MovimentoMagazzino">Movimento magazzino</a>
 <li><a href="#/BollaAs400">Bolle As400</a>
 <li><a href="#/Azienda">Aziende</a>
 <li><a href="#/Listino">Listini</a>
 </ul>
+<span>Utente: <b>{{userCtx.name}}</b></span>
+</div>
 <div id=loading ng:show="SessionInfo.loading">Loading<span ng:cloak> ({{SessionInfo.loading}})</span>...</div>
 <div class=flash>
   <ul ng:repeat="(class, messages) in SessionInfo.flash" ng:class=class>

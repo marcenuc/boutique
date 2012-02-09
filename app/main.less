@@ -6,42 +6,39 @@ select[multiple] {
 }
 
 .menu {
-  clear: both;
-  list-style: none;
-  border-bottom: 0.1em solid black;
-  margin-bottom: 2em;
-  padding: 0 0 0.5em;
+  margin: 0 5px;
+  padding: 0 0 5px 0;
 }
 
-.menu:before {
+.menu ul {
+  display: inline;
+  list-style: none;
+}
+
+.menu ul:before {
   content: "[";
 }
 
-.menu:after {
+.menu ul:after {
   content: "]";
 }
 
-.menu > li {
+.menu ul > li {
   display: inline;
 }
 
-.menu > li:before {
+.menu ul > li:before {
   content: "|";
   padding-right: 0.3em;
 }
 
-.menu > li:nth-child(1):before {
+.menu ul > li:nth-child(1):before {
   content: "";
   padding: 0;
 }
 
 body {
 	font-size: 75%;
-}
-
-#session {
-  float: right;
-  padding: 1px 5px 0 5px;
 }
 
 #loading {
