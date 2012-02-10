@@ -3,9 +3,9 @@
 <div>
 <table><tr>
 <td><label>Aziende: <select ng-model=aziendeSelezionate multiple ng-options="c as r.value for (c, r) in aziende"></select></label>
-<td><label>Tipo azienda: <select ng-model="quickSearch.tipo" ng-options="t for t in tipiAzienda"><option></select></label>
+<td class=n><label>Tipo azienda: <select ng-model="quickSearch.tipo" ng-options="t for t in tipiAzienda"><option></select></label>
 <br><label>Comune: <select ng-model="quickSearch.comune" ng-options="c for c in comuni"><option></select></label>
-<td><label>Provincia: <select ng-model="quickSearch.provincia" ng-options="p for p in province"><option></select></label>
+<td class=n><label>Provincia: <select ng-model="quickSearch.provincia" ng-options="p for p in province"><option></select></label>
 <br><label>Nazione: <select ng-model="quickSearch.nazione" ng-options="n for n in nazioni"><option></select></label>
 <tr><td colspan=3>Aziende selezionate: {{aziendeSelezionate.join(', ')}}
 </table>
