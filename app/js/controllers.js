@@ -4,37 +4,32 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
   var Ctrl = {};
 
   Ctrl.Header = function ($scope, session, SessionInfo) {
+    $scope.session = session;
     $scope.SessionInfo = SessionInfo;
-    session.success(function (data) {
-      $scope.userCtx = data.userCtx;
-    });
   };
   Ctrl.Header.$inject = ['$scope', 'session', 'SessionInfo'];
 
-  Ctrl.NewMovimentoMagazzino = function ($scope, SessionInfo, $location, codici) {
+  Ctrl.NewMovimentoMagazzino = function ($scope, SessionInfo, $location, codici, Azienda) {
     SessionInfo.resetFlash();
 
-    $scope.aziende = SessionInfo.aziende();
+    $scope.aziende = Azienda.all();
     $scope.causali = codici.CAUSALI_MOVIMENTO_MAGAZZINO;
     $scope.form = { data: codici.newYyyyMmDdDate() };
 
     $scope.create = function () {
-      var mm = $scope.form;
-      SessionInfo.prossimoNumero(mm.magazzino1, mm.data.substring(0, 4), mm.causale1.gruppo, function (numero) {
-        var magazzino2 = mm.magazzino2 && $scope.aziende[mm.magazzino2] ? $scope.aziende[mm.magazzino2].value : null,
-          doc = codici.newMovimentoMagazzino($scope.aziende[mm.magazzino1].value, mm.data, numero, mm.causale1, magazzino2);
-        SessionInfo.save(doc, function (res) {
-          $location.path(res.id);
+      $scope.aziende.then(function (aziende) {
+        var mm = $scope.form;
+        SessionInfo.prossimoNumero(mm.magazzino1, mm.data.substring(0, 4), mm.causale1.gruppo, function (numero) {
+          var magazzino2 = mm.magazzino2 && aziende[mm.magazzino2] ? aziende[mm.magazzino2].value : null,
+            doc = codici.newMovimentoMagazzino(aziende[mm.magazzino1].value, mm.data, numero, mm.causale1, magazzino2);
+          SessionInfo.save(doc, function (res) {
+            $location.path(res.id);
+          });
         });
       });
     };
   };
-  Ctrl.NewMovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$location', 'codici'];
-
-  function nomeAzienda(aziende, codiceAzienda) {
-    var azienda = aziende[codiceAzienda];
-    return azienda ? azienda.value : codiceAzienda;
-  }
+  Ctrl.NewMovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$location', 'codici', 'Azienda'];
 
   //TODO DRY use codici.formatMoney()
   function formatPrezzo(prezzo) {
@@ -42,27 +37,31 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
     return prezzo ? s.slice(0, -2) + ',' + s.slice(-2) : '0';
   }
 
-  Ctrl.EditMovimentoMagazzino = function ($scope, SessionInfo, $routeParams, Downloads, codici) {
+  Ctrl.EditMovimentoMagazzino = function ($scope, SessionInfo, $routeParams, Downloads, codici, Azienda, Doc, Listino) {
     SessionInfo.resetFlash();
     // TODO use codici
     $scope.rexpBarcode = /^\d{3} ?\d{5} ?\d{4} ?\d{4} ?\d{2}$/;
 
     // TODO put _id in $routeParams.codice
-    var id = 'MovimentoMagazzino_' + $routeParams.codice,
-      aziende = SessionInfo.aziende(),
-      listini = SessionInfo.listini(),
-      taglieScalarini = SessionInfo.getDocument('TaglieScalarini'),
-      modelliEScalarini = SessionInfo.getDocument('ModelliEScalarini');
+    var id = 'MovimentoMagazzino_' + $routeParams.codice;
 
     $scope.codes = codici.parseIdMovimentoMagazzino(id);
     if (!$scope.codes) {
       return SessionInfo.error('Codice non valido: ' + $routeParams.codice);
     }
-    $scope.model = SessionInfo.getDocument(id);
     $scope.col = codici.colNamesToColIndexes(codici.COLUMN_NAMES.MovimentoMagazzino);
     $scope.newQta = 1;
 
-    function toLabels() {
+    $scope.nomeMagazzino1 = Azienda.nome($scope.codes.magazzino1);
+
+    Doc.find(id).success(function (model) {
+      $scope.model = model;
+      if (model.magazzino2) {
+        $scope.nomeMagazzino2 = Azienda.nome(model.magazzino2);
+      }
+    });
+
+    function toLabels(listini) {
       var prezziArticolo, label, labels = [], colListino, col = $scope.col,
         codiceAzienda = codici.parseIdMovimentoMagazzino($scope.model._id).magazzino1,
         rows = $scope.model.rows, r, i, ii, j, jj;
@@ -94,39 +93,53 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
     }
 
     $scope.prepareDownloads = function () {
-      Downloads.prepare(toLabels(), $scope.model._id);
+      Listino.all().success(function (listini) {
+        Downloads.prepare(toLabels(listini), $scope.model._id);
+      });
     };
 
-    $scope.save = function () {
-      var newRow, codes, descs, col = $scope.col;
-      if ($scope.newBarcode) {
-        codes = codici.parseBarcodeAs400($scope.newBarcode);
-        if (!codes) {
-          return SessionInfo.error('Codice non valido: "' + $scope.newBarcode + '"');
-        }
-        descs = codici.descrizioniModello(codes.stagione, codes.modello, codes.taglia, taglieScalarini.descrizioniTaglie, modelliEScalarini.lista);
-        if (descs[0]) {
-          return SessionInfo.error(descs[0] + ': "' + $scope.newBarcode + '"');
-        }
-        newRow = [];
-        newRow[col.barcode] = $scope.newBarcode;
-        newRow[col.scalarino] = descs[1].scalarino;
-        newRow[col.descrizioneTaglia] = descs[1].descrizioneTaglia;
-        newRow[col.descrizione] = descs[1].descrizione;
-        newRow[col.costo] = 0;
-        newRow[col.qta] = $scope.newQta;
-        $scope.model.rows.push(newRow);
-        $scope.newBarcode = '';
-        $scope.newQta = 1;
-      }
+    function save() {
       SessionInfo.save($scope.model, function (res) {
         $scope.model._rev = res.rev;
         SessionInfo.notice('Salvato ' + res.id);
       });
+    }
+
+    $scope.save = function () {
+      if (!$scope.newBarcode) {
+        return save();
+      }
+      var codes = codici.parseBarcodeAs400($scope.newBarcode);
+      if (!codes) {
+        return SessionInfo.error('Codice non valido: "' + $scope.newBarcode + '"');
+      }
+      Doc.find('TaglieScalarini').success(function (taglieScalarini) {
+        Doc.find('ModelliEScalarini').success(function (modelliEScalarini) {
+          var newRow, col = $scope.col,
+            descrizioniTaglie = taglieScalarini.descrizioniTaglie,
+            listaModelli = modelliEScalarini.lista,
+            descs = codici.descrizioniModello(codes.stagione, codes.modello, codes.taglia, descrizioniTaglie, listaModelli);
+          if (descs[0]) {
+            return SessionInfo.error(descs[0] + ': "' + $scope.newBarcode + '"');
+          }
+          newRow = [];
+          newRow[col.barcode] = $scope.newBarcode;
+          newRow[col.scalarino] = descs[1].scalarino;
+          newRow[col.descrizioneTaglia] = descs[1].descrizioneTaglia;
+          newRow[col.descrizione] = descs[1].descrizione;
+          newRow[col.costo] = 0;
+          newRow[col.qta] = $scope.newQta;
+          $scope.model.rows.push(newRow);
+          save();
+
+          $scope.newBarcode = '';
+          $scope.newQta = 1;
+        });
+      });
     };
 
     $scope.qtaTotale = function () {
-      if (!$scope.model.rows) {
+      if (!($scope.model && $scope.model.rows)) {
         return 0;
       }
       var colQta = $scope.col.qta;
@@ -134,19 +147,14 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
         return a + b[colQta];
       }, 0);
     };
-
-    //TODO DRY copiata in Ctrl.MovimentoMagazzino()
-    $scope.nomeAzienda = function (codiceAzienda) {
-      return nomeAzienda(aziende, codiceAzienda);
-    };
   };
-  Ctrl.EditMovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$routeParams', 'Downloads', 'codici'];
+  Ctrl.EditMovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$routeParams', 'Downloads', 'codici', 'Azienda', 'Doc', 'Listino'];
 
-  Ctrl.MovimentoMagazzino = function ($scope, SessionInfo, $location, codici) {
+  Ctrl.MovimentoMagazzino = function ($scope, SessionInfo, $location, codici, Azienda) {
     SessionInfo.resetFlash();
 
     $scope.pendenti = SessionInfo.movimentoMagazzinoPendente();
-    $scope.aziende = SessionInfo.aziende();
+    $scope.aziende = Azienda.all();
     $scope.causali = codici.CAUSALI_MOVIMENTO_MAGAZZINO;
     $scope.form = { anno: codici.newYyyyMmDdDate().substring(0, 4) };
 
@@ -154,13 +162,8 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
       var f = $scope.form;
       $location.path(codici.idMovimentoMagazzino(f.magazzino1, f.anno, f.causale1.gruppo, f.numero));
     };
-
-    //TODO DRY copiata in Ctrl.EditMovimentoMagazzino
-    $scope.nomeAzienda = function (codiceAzienda) {
-      return nomeAzienda($scope.aziende, codiceAzienda);
-    };
   };
-  Ctrl.MovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$location', 'codici'];
+  Ctrl.MovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$location', 'codici', 'Azienda'];
 
   Ctrl.RicercaBollaAs400 = function ($scope, As400, SessionInfo, CdbView, $location, codici) {
     SessionInfo.resetFlash();
@@ -406,6 +409,11 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
       return new RegExp('^' + ($scope.descrizioneTaglia || '.{1,' + codici.LEN_DESCRIZIONE_TAGLIA + '}') + '$', 'i');
     }
 
+    function nomeAzienda(codiceAzienda) {
+      var azienda = $scope.aziende[codiceAzienda];
+      return azienda ? azienda.value : codiceAzienda;
+    }
+
     $scope.filtraGiacenza = function () {
       var giacenzeRiga, taglia, qta, riga, versioneListino, prezzi, colPrezzi,
         scalarino, taglie = [], nn = '--', TAGLIE_PER_SCALARINO = 12,
@@ -425,12 +433,12 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
           desscal = ms[r[0] + r[1]];
           if (!desscal) {
             accoda = true;
-            riga = [nomeAzienda($scope.aziende, r[4]), '## NON IN ANAGRAFE ##', r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PRODUZIONE' : 'PRONTO'), '##', -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
+            riga = [nomeAzienda(r[4]), '## NON IN ANAGRAFE ##', r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PRODUZIONE' : 'PRONTO'), '##', -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
             totaleRiga = 0;
           } else {
             scalarino = desscal[1];
             descrizioniTaglia = descrizioniTaglie[scalarino];
-            riga = [nomeAzienda($scope.aziende, r[4]), desscal[0], r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PRODUZIONE' : 'PRONTO'), scalarino, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            riga = [nomeAzienda(r[4]), desscal[0], r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PRODUZIONE' : 'PRONTO'), scalarino, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
             giacenzeRiga = r[7];
             for (taglia in giacenzeRiga) {
               if (giacenzeRiga.hasOwnProperty(taglia)) {

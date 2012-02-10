@@ -38,6 +38,7 @@ describe('Controller', function () {
     case 'MovimentoMagazzino_010101_2012_A_1':
       doc.columnNames = ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'];
       doc.rows = [['112604565000500066', 2, 'SM', 'SMOKING', 100, 2]];
+      doc.magazzino2 = '020202';
       break;
     case 'CausaliAs400':
       doc['2'] = { '73': ['C/VENDITA', -1] };
@@ -49,22 +50,32 @@ describe('Controller', function () {
     return doc;
   }
 
+  function getPromise($q, doc) {
+    var deferred = $q.defer();
+    deferred.resolve(doc);
+    return deferred.promise;
+  }
+
   beforeEach(module('app.services', 'app.shared', 'app.validators', 'app.controllers', function ($provide) {
     $provide.value('couchdb', { db: 'db', designDoc: 'ddoc' });
     var session = jasmine.createSpyObj('session', ['success']),
-      Azienda = jasmine.createSpyObj('Azienda', ['all']),
-      aziende = jasmine.createSpyObj('aziende', ['success']),
+      Doc = jasmine.createSpyObj('Doc', ['find']),
+      Azienda = jasmine.createSpyObj('Azienda', ['all', 'nome']),
+      Listino = jasmine.createSpyObj('Listino', ['all']),
+      listini = jasmine.createSpyObj('listini', ['success']),
       Downloads = jasmine.createSpyObj('Downloads', ['prepare']),
       SessionInfo = jasmine.createSpyObj('SessionInfo',
-        ['resetFlash', 'aziende', 'listini', 'prossimoNumero', 'save', 'getResource', 'getDocument', 'error', 'notice', 'movimentoMagazzinoPendente']),
+        ['resetFlash', 'aziende', 'listini', 'prossimoNumero', 'save', 'getResource', 'getDocument', 'error', 'notice', 'movimentoMagazzinoPendente', 'startLoading', 'doneLoading']),
       $location = jasmine.createSpyObj('$location', ['path']);
+    $provide.value('Doc', Doc);
     $provide.value('Azienda', Azienda);
+    $provide.value('Listino', Listino);
     $provide.value('Downloads', Downloads);
     $provide.value('SessionInfo', SessionInfo);
     $provide.value('$location', $location);
     $provide.value('session', session);
 
-    Azienda.all.andReturn(aziende);
+    Listino.all.andReturn(listini);
     SessionInfo.aziende.andReturn(AZIENDE);
     SessionInfo.listini.andReturn(LISTINI);
     SessionInfo.getDocument.andCallFake(getDocument);
@@ -75,32 +86,31 @@ describe('Controller', function () {
   }));
 
   describe('Header', function () {
-    it('should initialize $scope', inject(function ($controller, controllers, session, SessionInfo) {
-      var $scope = {};
+    it('should initialize $scope', inject(function ($rootScope, $controller, controllers, session, SessionInfo) {
+      var $scope = $rootScope;
       // FAKE CALL for afterEach: this is the only exception...
       SessionInfo.resetFlash();
       // ensure $scope is properly initialized
       $controller(controllers.Header, $scope);
-      expect(session.success).toHaveBeenCalled();
-      expect(typeof session.success.mostRecentCall.args[0]).toBe('function');
-      session.success.mostRecentCall.args[0]({ userCtx: { name: 'boutique' } });
       // it should put SessionInfo in $scope
       expect($scope.SessionInfo).toBe(SessionInfo);
-      // it should put userCtx in $scope
-      expect($scope.userCtx).toEqual({ name: 'boutique' });
+      // it should put session in $scope
+      expect($scope.session).toBe(session);
     }));
   });
 
   describe('NewMovimentoMagazzino', function () {
-    it('should initialize $scope', inject(function ($controller, controllers, SessionInfo, $location, codici) {
-      var form, $scope = {}, causale = codici.findCausaleMovimentoMagazzino('VENDITA');
+    it('should initialize $scope', inject(function ($q, $rootScope, $controller, controllers, SessionInfo, $location, codici, Azienda) {
+      var form, $scope = $rootScope, aziende = getPromise($q, AZIENDE), causale = codici.findCausaleMovimentoMagazzino('VENDITA');
       spyOn(codici, 'newYyyyMmDdDate').andReturn('20111231');
+      Azienda.all.andReturn(aziende);
       // ensure $scope is properly initialized
       $controller(controllers.NewMovimentoMagazzino, $scope);
       // it should put aziende in $scope
-      expect($scope.aziende).toBe(AZIENDE);
+      expect($scope.aziende).toBe(aziende);
       // it should put causali in $scope
       expect($scope.causali).toBe(codici.CAUSALI_MOVIMENTO_MAGAZZINO);
+
       form = $scope.form;
       // it should set today as default date in form
       expect(form.data).toBe('20111231');
@@ -111,6 +121,7 @@ describe('Controller', function () {
       form.causale1 = causale;
 
       $scope.create();
+      $scope.$digest();
       // it should lookup prossimoNumero
       expect(SessionInfo.prossimoNumero).toHaveBeenCalled();
       expect(SessionInfo.prossimoNumero.mostRecentCall.args[0]).toBe('010101');
@@ -140,8 +151,9 @@ describe('Controller', function () {
       $provide.value('$routeParams', { codice: '010101_2012_A_1' });
     }));
 
-    it('should initialize $scope', inject(function ($controller, controllers, SessionInfo, $routeParams, Downloads, codici) {
-      var saveCb, $scope = {}, id = 'MovimentoMagazzino_' + $routeParams.codice,
+    it('should initialize $scope', inject(function ($controller, controllers, SessionInfo, $routeParams, Downloads, codici, Azienda, Listino, Doc) {
+      var saveCb, $scope = {}, listini = Listino.all(),
+        id = 'MovimentoMagazzino_' + $routeParams.codice,
         label = {
           descrizione: 'SMOKING',
           barcode: '112604565000500066',
@@ -154,7 +166,16 @@ describe('Controller', function () {
           prezzo1: '3,00',
           prezzo2: '2,00',
           offerta: '*'
+        },
+        find = {
+          TaglieScalarini: jasmine.createSpyObj('findTaglieScalarini', ['success']),
+          ModelliEScalarini: jasmine.createSpyObj('findModelliEScalarini', ['success'])
         };
+      find[id] = jasmine.createSpyObj('find', ['success']);
+      Doc.find.andCallFake(function (docId) {
+        return find[docId];
+      });
+      Azienda.nome.andReturn('PIPPO');
       // ensure $scope is properly initialized
       $controller(controllers.EditMovimentoMagazzino, $scope);
       // it should put barcode pattern in $scope
@@ -162,15 +183,29 @@ describe('Controller', function () {
       // it should parse $routeParams.codice
       //TODO test what happens if $routeParams.codice is not valid.
       expect($scope.codes).toEqual({ magazzino1: '010101', anno: '2012', gruppo: 'A', numero: 1 });
-      // it should put doc requested by $routeParams.codice in $scope.model
-      expect($scope.model).toEqual(getDocument(id));
       // it should put column indexes in $scope
       expect($scope.col).toEqual(codici.colNamesToColIndexes(codici.COLUMN_NAMES.MovimentoMagazzino));
       // it should default qta for new row to 1
       expect($scope.newQta).toBe(1);
 
+      // it should put nomeMagazzino1 in $scope
+      expect(Azienda.nome).toHaveBeenCalledWith('010101');
+      expect($scope.nomeMagazzino1).toBe('PIPPO');
+
+      expect(Doc.find).toHaveBeenCalledWith(id);
+      expect(find[id].success).toHaveBeenCalled();
+      expect($scope.model).toBeUndefined();
+      find[id].success.mostRecentCall.args[0](getDocument(id));
+      // it should put doc requested by $routeParams.codice in $scope.model
+      expect($scope.model).toEqual(getDocument(id));
+      // it should put nomeMagazzino2 in $scope
+      expect(Azienda.nome).toHaveBeenCalledWith('020202');
+      expect($scope.nomeMagazzino2).toBe('PIPPO');
+
       $scope.prepareDownloads();
       // it should prepare download with correct labels and doc._id as filename.
+      expect(listini.success).toHaveBeenCalled();
+      listini.success.mostRecentCall.args[0](LISTINI);
       expect(Downloads.prepare).toHaveBeenCalledWith([label, label], id);
 
       // compile form
@@ -180,6 +215,12 @@ describe('Controller', function () {
       $scope.save();
       // it shouldn't show errors
       expect(SessionInfo.error).not.toHaveBeenCalled();
+      // it should fetch TaglieScalarini
+      expect(find.TaglieScalarini.success).toHaveBeenCalled();
+      find.TaglieScalarini.success.mostRecentCall.args[0](getDocument('TaglieScalarini'));
+      // it should fetch ModelliEScalarini
+      expect(find.ModelliEScalarini.success).toHaveBeenCalled();
+      find.ModelliEScalarini.success.mostRecentCall.args[0](getDocument('ModelliEScalarini'));
       // it should save the document in $scope.model
       expect(SessionInfo.save).toHaveBeenCalled();
       expect(SessionInfo.save.mostRecentCall.args[0]).toBe($scope.model);
@@ -187,7 +228,7 @@ describe('Controller', function () {
       // it should reset form to default values
       expect($scope.newBarcode).toBe('');
       expect($scope.newQta).toBe(1);
-      // it should append row with form's data
+      // it should append row with form's data to model.rows
       expect($scope.model.rows).toEqual([
         ['112604565000500066', 2, 'SM', 'SMOKING', 100, 2],
         ['112604565000800066', 2, 'SM', 'SMOKING', 0, 3]
@@ -200,15 +241,14 @@ describe('Controller', function () {
 
       // it should sum qta from each row
       expect($scope.qtaTotale()).toBe(5);
-
-      // it should append nome to codice
-      expect($scope.nomeAzienda('010101')).toBe('010101 Negozio1');
     }));
   });
 
   describe('MovimentoMagazzino', function () {
-    it('should initialize $scope', inject(function ($controller, controllers, SessionInfo, $location, codici) {
-      var form, $scope = {}, pendenti = { rows: [] };
+    it('should initialize $scope', inject(function ($q, $rootScope, $controller, controllers, SessionInfo, $location, codici, Azienda) {
+      var form, $scope = $rootScope, aziende = getPromise($q, AZIENDE), pendenti = { rows: [] };
+
+      Azienda.all.andReturn(aziende);
       SessionInfo.movimentoMagazzinoPendente.andReturn(pendenti);
       spyOn(codici, 'newYyyyMmDdDate').andReturn('20111231');
       // ensure $scope is properly initialized
@@ -216,7 +256,7 @@ describe('Controller', function () {
       // it should put movimenti pendenti in $scope.pendenti
       expect($scope.pendenti).toBe(pendenti);
       // it should put aziende in $scope
-      expect($scope.aziende).toBe(AZIENDE);
+      expect($scope.aziende).toBe(aziende);
       // it should put causali in $scope
       expect($scope.causali).toBe(codici.CAUSALI_MOVIMENTO_MAGAZZINO);
       form = $scope.form;
@@ -232,8 +272,8 @@ describe('Controller', function () {
       // it should redirect to selected MovimentoMagazzino
       expect($location.path).toHaveBeenCalledWith('MovimentoMagazzino_010101_2011_A_1');
 
-      // it should append nome to codice
-      expect($scope.nomeAzienda('010101')).toBe('010101 Negozio1');
+      // it should promise Azienda.nome
+      expect($scope.nomeAzienda).toBe(Azienda.nome);
     }));
   });
 

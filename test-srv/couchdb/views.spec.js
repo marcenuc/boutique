@@ -29,6 +29,17 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
     });
   });
 
+  describe('listini map', function () {
+    var map = views.listini;
+    describe('Listino', function () {
+      it('should emit (versione, null)', function () {
+        map({ _id: 'Listino_1' });
+        map({ _id: 'Listino_010101', versioneBase: '1' });
+        expect(views._rows()).toEqual([['1', null], ['010101', null]]);
+      });
+    });
+  });
+
   describe('movimentoMagazzinoAccodato map', function () {
     var map = views.movimentoMagazzinoAccodato;
 

@@ -3,7 +3,7 @@
 <p>Data: <b>{{model.data}}</b>, Numero: <b>{{codes.numero}}</b>, Gruppo numerazione: <b>{{codes.gruppo}}</b>
 <table>
 <tr><td>Causale1: <b>{{model.causale1[0]}}</b>, Segno: <b>{{model.causale1[1]}}</b><td ng:show="model.magazzino2">Causale2: <b>{{model.causale2[0]}}</b>, Segno: <b>{{model.causale2[1]}}</b>
-<tr><td>Magazzino1: <b>{{nomeAzienda(codes.magazzino1)}}</b><td ng:show="model.magazzino2">Magazzino2: <b>{{nomeAzienda(model.magazzino2)}}</b>
+<tr><td>Magazzino1: <b>{{nomeMagazzino1}}</b><td ng:show="model.magazzino2">Magazzino2: <b>{{nomeMagazzino2}}</b>
 </table>
 <table>
  <caption>Righe dettaglio</caption>

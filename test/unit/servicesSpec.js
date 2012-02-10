@@ -85,37 +85,164 @@ describe('Service', function () {
   });
 
   describe('session', function () {
-    it('should query session data', inject(function ($httpBackend) {
-      var session = { userCtx: { name: 'boutique' } };
-      $httpBackend.expectGET('../_session').respond(session);
-      inject(['session', function (session) {
-        $httpBackend.flush();
-        expect(session).toEqual(session);
-      }]);
+    var sessionData;
+
+    beforeEach(inject(function ($httpBackend) {
+      sessionData = { userCtx: { name: 'boutique' } };
+      $httpBackend.expectGET('../_session').respond(sessionData);
+    }));
+
+    it('should promise session data', inject(function (session, $httpBackend) {
+      var callback = jasmine.createSpy();
+      expect(typeof session.then).toBe('function');
+      session.then(callback);
+      $httpBackend.flush();
+      expect(callback).toHaveBeenCalledWith(sessionData);
     }));
   });
 
   describe('Azienda', function () {
     var aziende = { rows: [
-      { id: 'Azienda_099999', key: '099999', doc: { _id: 'Azienda_099999', nome: 'Mag1', tipo: 'MAGAZZINO' } },
-      { id: 'Azienda_010101', key: '010101', doc: { _id: 'Azienda_010101', nome: 'Neg1', tipo: 'NEGOZIO' } },
-      { id: 'Azienda_020202', key: '020202', doc: { _id: 'Azienda_020202', nome: 'Neg2', tipo: 'NEGOZIO' } }
+      { id: 'Azienda_099999', key: '099999', value: '099999_Mag1', doc: { _id: 'Azienda_099999', nome: 'Mag1', tipo: 'MAGAZZINO' } },
+      { id: 'Azienda_010101', key: '010101', value: '010101 Neg1', doc: { _id: 'Azienda_010101', nome: 'Neg1', tipo: 'NEGOZIO' } },
+      { id: 'Azienda_020202', key: '020202', value: '020202 Neg2', doc: { _id: 'Azienda_020202', nome: 'Neg2', tipo: 'NEGOZIO' } }
     ] };
 
-    beforeEach(inject(function ($httpBackend) {
-      $httpBackend.expectGET('/db/_design/ddoc/_view/aziende?include_docs=true').respond(JSON.stringify(aziende));
+    beforeEach(function () {
+      module(function ($provide) {
+        $provide.value('SessionInfo', jasmine.createSpyObj('SessionInfo', ['startLoading', 'doneLoading']));
+      });
+      inject(function ($httpBackend) {
+        $httpBackend.expectGET('/db/_design/ddoc/_view/aziende?include_docs=true').respond(JSON.stringify(aziende));
+      });
+    });
+
+    it('should notify loading status', inject(function ($httpBackend, SessionInfo) {
+      expect(SessionInfo.startLoading).not.toHaveBeenCalled();
+      inject(function (Azienda) {
+        // dummy test that Azienda was instantiated
+        expect(typeof Azienda).toBe('object');
+        expect(SessionInfo.startLoading).toHaveBeenCalledWith();
+        expect(SessionInfo.doneLoading).not.toHaveBeenCalled();
+        $httpBackend.flush();
+        expect(SessionInfo.doneLoading).toHaveBeenCalled();
+      });
     }));
 
     describe('all', function () {
-      it('should return map of all aziende', inject(function ($httpBackend, Azienda) {
-        var resp = Azienda.all();
+      it('should promise a map of all aziende', inject(function ($httpBackend, Azienda) {
+        var resp = Azienda.all(), callback = jasmine.createSpy();
         expect(typeof resp.then).toBe('function');
-        resp.success(function (data) {
-          expect(typeof data).toBe('object');
-          expect(Object.keys(data)).toEqual(['099999', '010101', '020202']);
-        });
+        resp.then(callback);
         $httpBackend.flush();
+        expect(callback).toHaveBeenCalledWith({
+          '099999': { id: 'Azienda_099999', key: '099999', value: '099999_Mag1', doc: { _id: 'Azienda_099999', nome: 'Mag1', tipo: 'MAGAZZINO' } },
+          '010101': { id: 'Azienda_010101', key: '010101', value: '010101 Neg1', doc: { _id: 'Azienda_010101', nome: 'Neg1', tipo: 'NEGOZIO' } },
+          '020202': { id: 'Azienda_020202', key: '020202', value: '020202 Neg2', doc: { _id: 'Azienda_020202', nome: 'Neg2', tipo: 'NEGOZIO' } }
+        });
       }));
+    });
+
+    describe('nome', function () {
+      it('should promise the name of azienda', inject(function ($httpBackend, Azienda) {
+        var resp = Azienda.nome('010101'), callback = jasmine.createSpy();
+        expect(typeof resp.then).toBe('function');
+        resp.then(callback);
+        $httpBackend.flush();
+        expect(callback).toHaveBeenCalledWith('010101 Neg1');
+      }));
+    });
+  });
+
+  describe('Listino', function () {
+    var listini = { rows: [
+      { id: 'Listino_1', key: '1', value: null, doc: { _id: 'Listino_1', columnNames: ['costo', 'prezzo1', 'prezzo2', 'offerta'], prezzi: { '112': { '60456': { '5000': [100, 300, 200, '*'] } } } } },
+      { id: 'Listino_010101', key: '010101', value: null, doc: { _id: 'Listino_010101', columnNames: ['costo', 'prezzo1', 'prezzo2', 'offerta'], prezzi: {}, versioneBase: '1' } }
+    ] };
+
+    beforeEach(function () {
+      module(function ($provide) {
+        $provide.value('SessionInfo', jasmine.createSpyObj('SessionInfo', ['startLoading', 'doneLoading']));
+      });
+      inject(function ($httpBackend) {
+        $httpBackend.expectGET('/db/_design/ddoc/_view/listini?include_docs=true').respond(JSON.stringify(listini));
+      });
+    });
+
+    it('should notify loading status', inject(function ($httpBackend, SessionInfo) {
+      expect(SessionInfo.startLoading).not.toHaveBeenCalled();
+      inject(function (Listino) {
+        expect(typeof Listino.all).toBe('function');
+        expect(SessionInfo.startLoading).toHaveBeenCalledWith();
+        expect(SessionInfo.doneLoading).not.toHaveBeenCalled();
+        $httpBackend.flush();
+        expect(SessionInfo.doneLoading).toHaveBeenCalled();
+      });
+    }));
+
+    describe('all', function () {
+      it('should return map of all listini', inject(function ($httpBackend, Listino) {
+        var keys, data, resp = Listino.all(), callback = jasmine.createSpy();
+        expect(typeof resp.then).toBe('function');
+        resp.success(callback);
+        $httpBackend.flush();
+        expect(callback).toHaveBeenCalled();
+        data = callback.mostRecentCall.args[0];
+        expect(typeof data).toBe('object');
+        keys = Object.keys(data);
+        expect(keys).toEqual(['1', '010101']);
+        keys.forEach(function (versioneListino) {
+          expect(data[versioneListino].doc).toBeUndefined();
+          expect(data[versioneListino].col).toEqual({ costo: 0, prezzo1: 1, prezzo2: 2, offerta: 3  });
+        });
+      }));
+    });
+  });
+
+  describe('Doc', function () {
+    var doc = { _id: 'docid', foo: 'bar' };
+
+    describe('find', function () {
+      it('should notify loading status', function () {
+        module(function ($provide) {
+          $provide.value('SessionInfo', jasmine.createSpyObj('SessionInfo', ['startLoading', 'doneLoading']));
+        });
+        inject(function ($httpBackend, Doc, SessionInfo) {
+          $httpBackend.expectGET('/db/' + doc._id).respond(JSON.stringify(doc));
+          Doc.find(doc._id);
+          expect(SessionInfo.startLoading).toHaveBeenCalledWith();
+          expect(SessionInfo.doneLoading).not.toHaveBeenCalled();
+          $httpBackend.flush();
+          expect(SessionInfo.doneLoading).toHaveBeenCalled();
+        });
+      });
+
+      describe('when ok', function () {
+        it('should return promise for document of given _id', inject(function ($httpBackend, Doc) {
+          $httpBackend.expectGET('/db/' + doc._id).respond(JSON.stringify(doc));
+          var resp = Doc.find(doc._id), callback = jasmine.createSpy('callback');
+          resp.success(callback);
+          $httpBackend.flush();
+          expect(callback).toHaveBeenCalled();
+          expect(callback.mostRecentCall.args[0]).toEqual(doc);
+        }));
+      });
+
+      describe('when not found', function () {
+        beforeEach(module(function ($provide) {
+          $provide.value('SessionInfo', jasmine.createSpyObj('SessionInfo', ['error', 'startLoading', 'doneLoading']));
+        }));
+
+        it('should display errors to user', inject(function ($httpBackend, Doc, SessionInfo) {
+          $httpBackend.expectGET('/db/' + doc._id).respond(404, { error: 'not_found', reason: 'missing' });
+          Doc.find(doc._id);
+          expect(SessionInfo.startLoading).toHaveBeenCalledWith();
+          expect(SessionInfo.doneLoading).not.toHaveBeenCalled();
+          $httpBackend.flush();
+          expect(SessionInfo.doneLoading).toHaveBeenCalled();
+          expect(SessionInfo.error).toHaveBeenCalledWith('Error 404 not_found on docid: missing');
+        }));
+      });
     });
   });
 });

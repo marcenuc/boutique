@@ -18,7 +18,7 @@
   <tbody>
    <tr ng:repeat="row in pendenti.rows">
     <td><a ng:href="#/{{row.id}}">{{$index + 1}}</a>
-    <td>{{nomeAzienda(row.key[0])}}
+    <td>{{row.key[0]}}
     <td>{{row.key[1]}}
     <td>{{row.key[2]}}
     <td>{{row.key[3]}}

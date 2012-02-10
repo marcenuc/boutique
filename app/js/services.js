@@ -219,11 +219,14 @@ angular.module('app.services', [], ['$provide', function ($provide) {
   $provide.factory('session', ['SessionInfo', '$http', function (SessionInfo, $http) {
     SessionInfo.startLoading();
 
+    // TODO show errors to user
     var done = SessionInfo.doneLoading,
-      session = $http({ method: 'GET', url: '../_session' });
-    session.then(done, done);
+      promise = $http({ method: 'GET', url: '../_session' });
+    promise.then(done, done);
 
-    return session;
+    return promise.then(function (value) {
+      return value.data;
+    });
   }]);
 
   $provide.factory('Downloads', ['$http', '$document', 'SessionInfo', 'codici', function ($http, $document, SessionInfo, codici) {
@@ -327,7 +330,7 @@ angular.module('app.services', [], ['$provide', function ($provide) {
   function viewToMapByKey(json) {
     var map = {};
     JSON.parse(json).rows.forEach(function (row) {
-      map[row.key] = row;
+      map[row.key] = row.value === null ? row.doc : row;
     });
     return map;
   }
@@ -335,17 +338,67 @@ angular.module('app.services', [], ['$provide', function ($provide) {
   $provide.factory('Azienda', ['SessionInfo', '$http', 'couchdb', function (SessionInfo, $http, couchdb) {
     SessionInfo.startLoading();
 
+    //TODO show errors to users instead of log
     var done = SessionInfo.doneLoading,
-      aziende = $http({
+      promise = $http({
         method: 'GET',
         url: '/' + couchdb.db + '/_design/' + couchdb.designDoc + '/_view/aziende?include_docs=true',
         transformResponse: viewToMapByKey
       });
-    aziende.then(done, done);
+    promise.then(done, done);
 
     return {
       all: function () {
-        return aziende;
+        return promise.then(function (value) {
+          return value.data;
+        });
+      },
+      nome: function (codiceAzienda) {
+        return promise.then(function (value) {
+          var azienda = value.data[codiceAzienda];
+          return azienda ? azienda.value : codiceAzienda;
+        });
+      }
+    };
+  }]);
+
+  $provide.factory('Listino', ['SessionInfo', '$http', 'couchdb', 'codici', function (SessionInfo, $http, couchdb, codici) {
+    SessionInfo.startLoading();
+
+    function setCol(listini) {
+      Object.keys(listini).forEach(function (versioneListino) {
+        var listino = listini[versioneListino];
+        listino.col = codici.colNamesToColIndexes(listino.columnNames);
+      });
+      return listini;
+    }
+
+    //TODO show errors to users instead of log
+    var done = SessionInfo.doneLoading,
+      promise = $http({
+        method: 'GET',
+        url: '/' + couchdb.db + '/_design/' + couchdb.designDoc + '/_view/listini?include_docs=true',
+        transformResponse: [viewToMapByKey, setCol]
+      });
+    promise.then(done, done);
+
+    return {
+      all: function () {
+        return promise;
+      }
+    };
+  }]);
+
+  $provide.factory('Doc', ['$http', 'couchdb', 'SessionInfo', function ($http, couchdb, SessionInfo) {
+    return {
+      find: function (id) {
+        SessionInfo.startLoading();
+        var done = SessionInfo.doneLoading,
+          promise = $http.get('/' + couchdb.db + '/' + id).error(function (data, status) {
+            SessionInfo.error('Error ' + status + ' ' + data.error + ' on ' + id + ': ' + data.reason);
+          });
+        promise.then(done, done);
+        return promise;
       }
     };
   }]);

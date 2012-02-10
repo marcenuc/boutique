@@ -31,6 +31,14 @@ define(function (require) {
       }
     },
 
+    listini: function mapListini(doc) {
+      var codici = require('views/lib/codici'),
+        codes = codici.parseIdListino(doc._id);
+      if (codes) {
+        emit(codes.versione, null);
+      }
+    },
+
     movimentoMagazzinoAccodato: function mapMovimentoMagazzinoAccodato(doc) {
       if (doc.accodato) {
         var year, codici = require('views/lib/codici'),
