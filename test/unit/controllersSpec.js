@@ -60,7 +60,7 @@ describe('Controller', function () {
     $provide.value('couchdb', { db: 'db', designDoc: 'ddoc' });
     var session = jasmine.createSpyObj('session', ['success']),
       Doc = jasmine.createSpyObj('Doc', ['find']),
-      Azienda = jasmine.createSpyObj('Azienda', ['all', 'nome']),
+      Azienda = jasmine.createSpyObj('Azienda', ['all', 'nome', 'nomi']),
       Listino = jasmine.createSpyObj('Listino', ['all']),
       listini = jasmine.createSpyObj('listini', ['success']),
       Downloads = jasmine.createSpyObj('Downloads', ['prepare']),
@@ -246,9 +246,10 @@ describe('Controller', function () {
 
   describe('MovimentoMagazzino', function () {
     it('should initialize $scope', inject(function ($q, $rootScope, $controller, controllers, SessionInfo, $location, codici, Azienda) {
-      var form, $scope = $rootScope, aziende = getPromise($q, AZIENDE), pendenti = { rows: [] };
+      var form, $scope = $rootScope, aziende = getPromise($q, AZIENDE), nomi = getPromise($q, 'nomi'), pendenti = { rows: [] };
 
       Azienda.all.andReturn(aziende);
+      Azienda.nomi.andReturn(nomi);
       SessionInfo.movimentoMagazzinoPendente.andReturn(pendenti);
       spyOn(codici, 'newYyyyMmDdDate').andReturn('20111231');
       // ensure $scope is properly initialized
@@ -272,8 +273,8 @@ describe('Controller', function () {
       // it should redirect to selected MovimentoMagazzino
       expect($location.path).toHaveBeenCalledWith('MovimentoMagazzino_010101_2011_A_1');
 
-      // it should promise Azienda.nome
-      expect($scope.nomeAzienda).toBe(Azienda.nome);
+      // it should promise Azienda.nomi
+      expect($scope.nomeAzienda).toBe(nomi);
     }));
   });
 

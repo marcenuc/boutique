@@ -162,6 +162,8 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
       var f = $scope.form;
       $location.path(codici.idMovimentoMagazzino(f.magazzino1, f.anno, f.causale1.gruppo, f.numero));
     };
+
+    $scope.nomeAzienda = Azienda.nomi();
   };
   Ctrl.MovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$location', 'codici', 'Azienda'];
 

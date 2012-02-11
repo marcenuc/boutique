@@ -152,6 +152,16 @@ describe('Service', function () {
         expect(callback).toHaveBeenCalledWith('010101 Neg1');
       }));
     });
+
+    describe('nomi', function () {
+      it('should promise map of codiceAzienda to nome of azienda', inject(function ($httpBackend, Azienda) {
+        var resp = Azienda.nomi(), callback = jasmine.createSpy();
+        expect(typeof resp.then).toBe('function');
+        resp.then(callback);
+        $httpBackend.flush();
+        expect(callback).toHaveBeenCalledWith({ '099999': '099999_Mag1', '010101': '010101 Neg1', '020202': '020202 Neg2' });
+      }));
+    });
   });
 
   describe('Listino', function () {

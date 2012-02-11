@@ -358,6 +358,15 @@ angular.module('app.services', [], ['$provide', function ($provide) {
           var azienda = value.data[codiceAzienda];
           return azienda ? azienda.value : codiceAzienda;
         });
+      },
+      nomi: function () {
+        return promise.then(function (value) {
+          var map = {}, aziende = value.data;
+          Object.keys(aziende).forEach(function (codiceAzienda) {
+            map[codiceAzienda] = aziende[codiceAzienda].value;
+          });
+          return map;
+        });
       }
     };
   }]);
