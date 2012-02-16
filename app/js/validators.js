@@ -427,7 +427,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
 
   $provide.factory('validate', ['session', 'codici', function (session, codici) {
     var userCtx = { name: 'boutique' };
-    session.success(function (sessionData) {
+    session.then(function (sessionData) {
       userCtx = sessionData.userCtx;
     });
     return function (doc, oldDoc) {

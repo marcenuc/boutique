@@ -9,7 +9,19 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
   };
   Ctrl.Header.$inject = ['$scope', 'session', 'SessionInfo'];
 
-  Ctrl.NewMovimentoMagazzino = function ($scope, SessionInfo, $location, codici, Azienda) {
+  function createMovimentoMagazzino(Doc, MovimentoMagazzino, $location, promiseAziende, mm, rows, riferimento) {
+    promiseAziende.then(function (aziende) {
+      var magazzino1 = aziende[mm.magazzino1].doc,
+        magazzino2 = aziende.hasOwnProperty(mm.magazzino2) ? aziende[mm.magazzino2].doc : null;
+      MovimentoMagazzino.build(magazzino1, mm.data, mm.causale1, rows, magazzino2, riferimento).then(function (newDoc) {
+        Doc.save(newDoc).then(function (savedDoc) {
+          $location.path(savedDoc._id);
+        });
+      });
+    });
+  }
+
+  Ctrl.NewMovimentoMagazzino = function ($scope, SessionInfo, $location, codici, Doc, Azienda, MovimentoMagazzino) {
     SessionInfo.resetFlash();
 
     $scope.aziende = Azienda.all();
@@ -17,19 +29,10 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
     $scope.form = { data: codici.newYyyyMmDdDate() };
 
     $scope.create = function () {
-      $scope.aziende.then(function (aziende) {
-        var mm = $scope.form;
-        SessionInfo.prossimoNumero(mm.magazzino1, mm.data.substring(0, 4), mm.causale1.gruppo, function (numero) {
-          var magazzino2 = mm.magazzino2 && aziende[mm.magazzino2] ? aziende[mm.magazzino2].value : null,
-            doc = codici.newMovimentoMagazzino(aziende[mm.magazzino1].value, mm.data, numero, mm.causale1, magazzino2);
-          SessionInfo.save(doc, function (res) {
-            $location.path(res.id);
-          });
-        });
-      });
+      createMovimentoMagazzino(Doc, MovimentoMagazzino, $location, $scope.aziende, $scope.form);
     };
   };
-  Ctrl.NewMovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$location', 'codici', 'Azienda'];
+  Ctrl.NewMovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$location', 'codici', 'Doc', 'Azienda', 'MovimentoMagazzino'];
 
   //TODO DRY use codici.formatMoney()
   function formatPrezzo(prezzo) {
@@ -54,7 +57,7 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
 
     $scope.nomeMagazzino1 = Azienda.nome($scope.codes.magazzino1);
 
-    Doc.find(id).success(function (model) {
+    Doc.find(id).then(function (model) {
       $scope.model = model;
       if (model.magazzino2) {
         $scope.nomeMagazzino2 = Azienda.nome(model.magazzino2);
@@ -93,15 +96,15 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
     }
 
     $scope.prepareDownloads = function () {
-      Listino.all().success(function (listini) {
+      Listino.all().then(function (listini) {
         Downloads.prepare(toLabels(listini), $scope.model._id);
       });
     };
 
     function save() {
-      SessionInfo.save($scope.model, function (res) {
-        $scope.model._rev = res.rev;
-        SessionInfo.notice('Salvato ' + res.id);
+      Doc.save($scope.model).then(function (savedDoc) {
+        $scope.model._rev = savedDoc._rev;
+        SessionInfo.notice('Salvato ' + savedDoc._id);
       });
     }
 
@@ -113,8 +116,8 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
       if (!codes) {
         return SessionInfo.error('Codice non valido: "' + $scope.newBarcode + '"');
       }
-      Doc.find('TaglieScalarini').success(function (taglieScalarini) {
-        Doc.find('ModelliEScalarini').success(function (modelliEScalarini) {
+      Doc.find('TaglieScalarini').then(function (taglieScalarini) {
+        Doc.find('ModelliEScalarini').then(function (modelliEScalarini) {
           var newRow, col = $scope.col,
             descrizioniTaglie = taglieScalarini.descrizioniTaglie,
             listaModelli = modelliEScalarini.lista,
@@ -150,10 +153,10 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
   };
   Ctrl.EditMovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$routeParams', 'Downloads', 'codici', 'Azienda', 'Doc', 'Listino'];
 
-  Ctrl.MovimentoMagazzino = function ($scope, SessionInfo, $location, codici, Azienda) {
+  Ctrl.MovimentoMagazzino = function ($scope, SessionInfo, $location, codici, Azienda, MovimentoMagazzino) {
     SessionInfo.resetFlash();
 
-    $scope.pendenti = SessionInfo.movimentoMagazzinoPendente();
+    $scope.pendenti = MovimentoMagazzino.pendenti();
     $scope.aziende = Azienda.all();
     $scope.causali = codici.CAUSALI_MOVIMENTO_MAGAZZINO;
     $scope.form = { anno: codici.newYyyyMmDdDate().substring(0, 4) };
@@ -165,35 +168,29 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
 
     $scope.nomeAzienda = Azienda.nomi();
   };
-  Ctrl.MovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$location', 'codici', 'Azienda'];
+  Ctrl.MovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$location', 'codici', 'Azienda', 'MovimentoMagazzino'];
 
-  Ctrl.RicercaBollaAs400 = function ($scope, As400, SessionInfo, CdbView, $location, codici) {
+  Ctrl.RicercaBollaAs400 = function ($scope, As400, SessionInfo, MovimentoMagazzino, $location, codici, Azienda, Doc) {
     SessionInfo.resetFlash();
 
-    var taglieScalarini = SessionInfo.getDocument('TaglieScalarini'),
-      modelliEScalarini = SessionInfo.getDocument('ModelliEScalarini'),
-      causaliAs400 = SessionInfo.getDocument('CausaliAs400');
+    Doc.load(['TaglieScalarini', 'ModelliEScalarini']);
 
-    $scope.aziende = SessionInfo.aziende();
+    $scope.aziende = Azienda.all();
     $scope.causali = codici.CAUSALI_MOVIMENTO_MAGAZZINO;
-
-    function findCausale(causaleAs400) {
-      var c = codici.findCausaleMovimentoMagazzino(causaleAs400[0], causaleAs400[1]);
-      return c || $scope.causali[0];
-    }
 
     function setMovimentoMagazzino() {
       var r0 = $scope.bollaAs400.rows[0],
-        col = codici.colNamesToColIndexes($scope.bollaAs400.columnNames),
-        codiceCliente = r0[col.codiceCliente],
-        tipoMagazzino = r0[col.tipoMagazzino],
-        codiceCausaleAs400 = r0[col.causale];
+        col = codici.colNamesToColIndexes($scope.bollaAs400.columnNames);
 
       $scope.movimentoMagazzino = {
-        magazzino1: codiceCliente,
-        causale1: findCausale(causaliAs400[tipoMagazzino][codiceCausaleAs400]),
+        magazzino1: r0[col.codiceCliente],
         data: codici.newYyyyMmDdDate()
       };
+      Doc.find('CausaliAs400').then(function (causaliAs400) {
+        var causaleAs400 = causaliAs400[r0[col.tipoMagazzino]][r0[col.causale]],
+          causale = codici.findCausaleMovimentoMagazzino(causaleAs400[0], causaleAs400[1]);
+        $scope.movimentoMagazzino.causale1 = causale || $scope.causali[0];
+      });
     }
 
     function cercaBollaAs400() {
@@ -216,18 +213,17 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
        */
       $scope.id = buildId();
 
-      CdbView.riferimentoMovimentoMagazzino($scope.id, function (resp) {
-        var riferimento = resp.rows[0];
-        if (!riferimento) {
+      MovimentoMagazzino.findByRiferimento($scope.id).then(function (resp) {
+        var movimento = resp.rows[0];
+        if (!movimento) {
           return cercaBollaAs400();
         }
         SessionInfo.notice('Bolla già caricata su Boutique');
-        SessionInfo.keepFlash = true;
-        $location.path(riferimento.id);
+        SessionInfo.goTo(movimento.id);
       });
     };
 
-    function buildRows() {
+    function buildRows(taglieScalarini, modelliEScalarini) {
       var r0 = $scope.bollaAs400.rows[0],
         col = codici.colNamesToColIndexes($scope.bollaAs400.columnNames),
         codiceCliente = r0[col.codiceCliente],
@@ -265,38 +261,31 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
       }
     }
 
-    //TODO DRY this is identical to NewMovimentoMagazzino.create()
     $scope.save = function () {
-      var mm = $scope.movimentoMagazzino,
-        rows = buildRows();
-      if (!rows) {
-        return SessionInfo.error('Righe non valide');
-      }
-      SessionInfo.prossimoNumero(mm.magazzino1, mm.data.substring(0, 4), mm.causale1.gruppo, function (numero) {
-        var magazzino2 = mm.magazzino2 && $scope.aziende[mm.magazzino2] ? $scope.aziende[mm.magazzino2].value : null,
-          doc = codici.newMovimentoMagazzino($scope.aziende[mm.magazzino1].value, mm.data, numero, mm.causale1, magazzino2);
-        doc.riferimento = $scope.id;
-        doc.rows = rows;
-        SessionInfo.save(doc, function (res) {
-          $location.path(res.id);
+      Doc.find('TaglieScalarini').then(function (taglieScalarini) {
+        Doc.find('ModelliEScalarini').then(function (modelliEScalarini) {
+          var rows = buildRows(taglieScalarini, modelliEScalarini);
+          if (!rows) {
+            return SessionInfo.error('Righe non valide');
+          }
+          createMovimentoMagazzino(Doc, MovimentoMagazzino, $location, $scope.aziende, $scope.movimentoMagazzino, rows, $scope.id);
         });
       });
     };
   };
-  Ctrl.RicercaBollaAs400.$inject = ['$scope', 'As400', 'SessionInfo', 'CdbView', '$location', 'codici'];
+  Ctrl.RicercaBollaAs400.$inject = ['$scope', 'As400', 'SessionInfo', 'MovimentoMagazzino', '$location', 'codici', 'Azienda', 'Doc'];
 
-  Ctrl.RicercaArticoli = function ($scope, SessionInfo, Downloads, codici, session, Azienda) {
+  Ctrl.RicercaArticoli = function ($scope, SessionInfo, Downloads, codici, session, Azienda, Doc, Listino) {
     SessionInfo.resetFlash();
 
-    var listini = SessionInfo.listini(),
-      taglieScalarini = SessionInfo.getDocument('TaglieScalarini'),
-      modelliEScalarini = SessionInfo.getDocument('ModelliEScalarini'),
-      giacenze = SessionInfo.getDocument('Giacenze'),
-      selectedRow = 0;
+    Doc.load(['TaglieScalarini', 'ModelliEScalarini', 'Giacenze']);
+    Listino.load();
+
+    var selectedRow = 0;
 
     $scope.aziendeSelezionate = [];
-    session.success(function (session) {
-      Azienda.all().success(function (aziende) {
+    session.then(function (session) {
+      Azienda.all().then(function (aziende) {
         var tipiAzienda = {}, comuni = {}, province = {}, nazioni = {}, username = session.userCtx.name, codiciAzienda = Object.keys(aziende);
         $scope.aziende = aziende;
         if (aziende.hasOwnProperty(username)) {
@@ -411,88 +400,102 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
       return new RegExp('^' + ($scope.descrizioneTaglia || '.{1,' + codici.LEN_DESCRIZIONE_TAGLIA + '}') + '$', 'i');
     }
 
-    function nomeAzienda(codiceAzienda) {
-      var azienda = $scope.aziende[codiceAzienda];
-      return azienda ? azienda.value : codiceAzienda;
-    }
+    function filtraGiacenza(taglieScalarini, modelliEScalarini, giacenze, listini) {
+      Azienda.nomi().then(function (nomeAzienda) {
+        var giacenzeRiga, taglia, qta, riga, versioneListino, prezzi, colPrezzi, azienda,
+          scalarino, taglie = [], nn = '--', TAGLIE_PER_SCALARINO = 12,
+          rows = giacenze.rows, r, i, ii,
+          count = 0, filtrate = [], maxCount = $scope.limiteRisultati,
+          desscal, ms = modelliEScalarini.lista,
+          colonnaTaglia, colonneTaglie = taglieScalarini.colonneTaglie,
+          descrizioniTaglia, descrizioniTaglie = taglieScalarini.descrizioniTaglie,
+          accoda, filtroSmacAz = getFiltroSmacAz(), filtroTaglia = getFiltroTaglia(),
+          totaleRiga, totaleRighe = 0, totaliColonna = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-    $scope.filtraGiacenza = function () {
-      var giacenzeRiga, taglia, qta, riga, versioneListino, prezzi, colPrezzi,
-        scalarino, taglie = [], nn = '--', TAGLIE_PER_SCALARINO = 12,
-        rows = giacenze.rows, r, i, ii,
-        count = 0, filtrate = [], maxCount = $scope.limiteRisultati,
-        desscal, ms = modelliEScalarini.lista,
-        colonnaTaglia, colonneTaglie = taglieScalarini.colonneTaglie,
-        descrizioniTaglia, descrizioniTaglie = taglieScalarini.descrizioniTaglie,
-        accoda, filtroSmacAz = getFiltroSmacAz(), filtroTaglia = getFiltroTaglia(),
-        totaleRiga, totaleRighe = 0, totaliColonna = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
-      for (i = 0, ii = rows.length; i < ii && count < maxCount; i += 1) {
-        r = rows[i];
-        if (filtroSmacAz.test(r.slice(0, 5).join(''))) {
-          accoda = false;
-          totaleRiga = 0;
-          desscal = ms[r[0] + r[1]];
-          if (!desscal) {
-            accoda = true;
-            riga = [nomeAzienda(r[4]), '## NON IN ANAGRAFE ##', r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PRODUZIONE' : 'PRONTO'), '##', -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
+        for (i = 0, ii = rows.length; i < ii && count < maxCount; i += 1) {
+          r = rows[i];
+          if (filtroSmacAz.test(r.slice(0, 5).join(''))) {
+            accoda = false;
             totaleRiga = 0;
-          } else {
-            scalarino = desscal[1];
-            descrizioniTaglia = descrizioniTaglie[scalarino];
-            riga = [nomeAzienda(r[4]), desscal[0], r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PRODUZIONE' : 'PRONTO'), scalarino, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-            giacenzeRiga = r[7];
-            for (taglia in giacenzeRiga) {
-              if (giacenzeRiga.hasOwnProperty(taglia)) {
-                if (filtroTaglia.test(descrizioniTaglia[taglia])) {
-                  accoda = true;
-                  qta = giacenzeRiga[taglia];
-                  totaleRiga += qta;
-                  colonnaTaglia = colonneTaglie[scalarino][taglia];
-                  //TODO DRY '9' is a magic number
-                  riga[9 + colonnaTaglia] = qta;
-                  totaliColonna[colonnaTaglia] += qta;
+            azienda = nomeAzienda[r[4]] || r[4];
+            desscal = ms[r[0] + r[1]];
+            if (!desscal) {
+              accoda = true;
+              riga = [azienda, '## NON IN ANAGRAFE ##', r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PRODUZIONE' : 'PRONTO'), '##', -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
+              totaleRiga = 0;
+            } else {
+              scalarino = desscal[1];
+              descrizioniTaglia = descrizioniTaglie[scalarino];
+              riga = [azienda, desscal[0], r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PRODUZIONE' : 'PRONTO'), scalarino, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+              giacenzeRiga = r[7];
+              for (taglia in giacenzeRiga) {
+                if (giacenzeRiga.hasOwnProperty(taglia)) {
+                  if (filtroTaglia.test(descrizioniTaglia[taglia])) {
+                    accoda = true;
+                    qta = giacenzeRiga[taglia];
+                    totaleRiga += qta;
+                    colonnaTaglia = colonneTaglie[scalarino][taglia];
+                    //TODO DRY '9' is a magic number
+                    riga[9 + colonnaTaglia] = qta;
+                    totaliColonna[colonnaTaglia] += qta;
+                  }
                 }
               }
             }
-          }
-          if (accoda) {
-            riga.push(totaleRiga);
-            prezzi = codici.readListino(listini, r[4], r[0], r[1], r[2]);
-            if (prezzi) {
-              versioneListino = prezzi[2];
-              colPrezzi = prezzi[0];
-              riga.push(versioneListino, codici.formatMoney(prezzi[1][colPrezzi.prezzo2]) + (prezzi[1][colPrezzi.offerta] || ''));
-            } else {
-              versioneListino = listini[r[4]].versioneBase || r[4];
-              riga.push(versioneListino, '###');
+            if (accoda) {
+              riga.push(totaleRiga);
+              prezzi = codici.readListino(listini, r[4], r[0], r[1], r[2]);
+              if (prezzi) {
+                versioneListino = prezzi[2];
+                colPrezzi = prezzi[0];
+                riga.push(versioneListino, codici.formatMoney(prezzi[1][colPrezzi.prezzo2]) + (prezzi[1][colPrezzi.offerta] || ''));
+              } else {
+                versioneListino = listini[r[4]].versioneBase || r[4];
+                riga.push(versioneListino, '###');
+              }
+              totaleRighe += totaleRiga;
+              count = filtrate.push(riga);
             }
-            totaleRighe += totaleRiga;
-            count = filtrate.push(riga);
           }
         }
-      }
-      scalarino = nn;
-      r = filtrate[0];
-      if (r) {
-        desscal = ms[r[2] + r[3]];
-        if (desscal) {
-          scalarino = desscal[1];
-          taglie = taglieScalarini.listeDescrizioni[scalarino];
-          for (i = taglie.length; i < TAGLIE_PER_SCALARINO; i += 1) {
-            taglie[i] = nn;
+        scalarino = nn;
+        r = filtrate[0];
+        if (r) {
+          desscal = ms[r[2] + r[3]];
+          if (desscal) {
+            scalarino = desscal[1];
+            taglie = taglieScalarini.listeDescrizioni[scalarino];
+            for (i = taglie.length; i < TAGLIE_PER_SCALARINO; i += 1) {
+              taglie[i] = nn;
+            }
           }
         }
-      }
-      totaliColonna.push(totaleRighe);
+        totaliColonna.push(totaleRighe);
 
-      $scope.filtrate = filtrate;
-      $scope.scalarino = scalarino;
-      $scope.taglie = taglie;
-      $scope.totaliColonna = totaliColonna;
+        $scope.filtrate = filtrate;
+        $scope.scalarino = scalarino;
+        $scope.taglie = taglie;
+        $scope.totaliColonna = totaliColonna;
+      });
+    }
+
+    function withAllDocs(cb) {
+      Doc.find('TaglieScalarini').then(function (taglieScalarini) {
+        Doc.find('ModelliEScalarini').then(function (modelliEScalarini) {
+          Doc.find('Giacenze').then(function (giacenze) {
+            Listino.all().then(function (listini) {
+              cb(taglieScalarini, modelliEScalarini, giacenze, listini);
+            });
+          });
+        });
+      });
+    }
+
+    $scope.filtraGiacenza = function () {
+      withAllDocs(filtraGiacenza);
     };
 
-    function toLabels() {
+    function toLabels(taglieScalarini, modelliEScalarini, giacenze, listini) {
       var giacenzeRiga, taglia, prezziArticolo, label, colListino,
         col = codici.colNamesToColIndexes(giacenze.columnNames),
         count = 0, labels = [], maxCount = $scope.limiteRisultati,
@@ -553,85 +556,92 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
     }
 
     $scope.prepareDownloads = function () {
-      Downloads.prepare(toLabels(), 'etichette');
+      withAllDocs(function (taglieScalarini, modelliEScalarini, giacenze, listini) {
+        Downloads.prepare(toLabels(taglieScalarini, modelliEScalarini, giacenze, listini), 'etichette');
+      });
     };
   };
-  Ctrl.RicercaArticoli.$inject = ['$scope', 'SessionInfo', 'Downloads', 'codici', 'session', 'Azienda'];
+  Ctrl.RicercaArticoli.$inject = ['$scope', 'SessionInfo', 'Downloads', 'codici', 'session', 'Azienda', 'Doc', 'Listino'];
 
-  Ctrl.Azienda = function ($scope, $routeParams, SessionInfo, codici, validate) {
+  Ctrl.Azienda = function ($scope, $routeParams, SessionInfo, codici, validate, Azienda, Doc) {
     SessionInfo.resetFlash();
 
     var id = null;
     if ($routeParams.codice) {
       id = codici.idAzienda($routeParams.codice);
-      $scope.azienda = SessionInfo.getDocument(id);
+      $scope.azienda = Doc.find(id);
     }
-    $scope.aziende = SessionInfo.aziende({ include_docs: 'true' });
+    $scope.aziende = Azienda.all();
     $scope.tipiAzienda = codici.TIPI_AZIENDA;
 
-    function getOldAziendaDocument() {
-      var codes = codici.parseIdAzienda($scope.azienda._id), oldAzienda;
+    function getOldAziendaDocument(aziende, id) {
+      var codes = codici.parseIdAzienda(id), oldAzienda;
       if (codes) {
-        oldAzienda = $scope.aziende[codes.codice];
+        oldAzienda = aziende[codes.codice];
         if (oldAzienda) {
           return oldAzienda.doc;
         }
       }
     }
 
-    function aggiornaAzienda() {
-      angular.copy($scope.azienda, getOldAziendaDocument());
+    function aggiornaAzienda(aziende, azienda) {
+      angular.copy(azienda, getOldAziendaDocument(aziende, azienda._id));
     }
 
-    function isIdChanged() {
-      return id !== $scope.azienda._id;
+    function isIdChanged(azienda) {
+      return id !== azienda._id;
     }
 
-    function checkUpdate() {
-      return !SessionInfo.setFlash(validate($scope.azienda, getOldAziendaDocument()));
+    function checkUpdate(aziende, azienda) {
+      return !SessionInfo.setFlash(validate(azienda, getOldAziendaDocument(aziende, azienda._id)));
     }
 
-    function createListinoAzienda() {
-      var codes = codici.parseIdAzienda($scope.azienda._id),
+    function createListinoAzienda(azienda) {
+      var codes = codici.parseIdAzienda(azienda._id),
         listino = {
           _id: codici.idListino(codes.codice),
           columnNames: codici.COLUMN_NAMES.Listino,
           prezzi: {},
           versioneBase: '1'
         };
-      SessionInfo.save(listino, function () {
-        SessionInfo.goTo('/' + $scope.azienda._id);
+      Doc.save(listino).then(function () {
+        SessionInfo.goTo('/' + azienda._id);
       });
     }
 
     //FIXME i contatti non vengono salvati.
     $scope.save = function () {
-      if (isIdChanged()) {
-        delete $scope.azienda._rev;
-      }
-      // TODO use $validate event
-      if (checkUpdate()) {
-        SessionInfo.save($scope.azienda, function (res) {
-          var isNew = !$scope.azienda._rev;
-          $scope.azienda._rev = res.rev;
-          SessionInfo.notice('Salvato');
+      $scope.aziende.then(function (aziende) {
+        $scope.azienda.then(function (azienda) {
+          var isNew = isIdChanged(azienda);
           if (isNew) {
-            createListinoAzienda();
-          } else {
-            aggiornaAzienda();
+            delete azienda._rev;
           }
+          // TODO use $validate event
+          if (checkUpdate(aziende, azienda)) {
+            Doc.save(azienda).then(function (azienda) {
+              SessionInfo.notice('Salvato');
+              if (isNew) {
+                createListinoAzienda(azienda);
+              } else {
+                aggiornaAzienda(aziende, azienda);
+              }
+            });
+          }
+          return azienda;
         });
-      }
+      });
     };
   };
-  Ctrl.Azienda.$inject = ['$scope', '$routeParams', 'SessionInfo', 'codici', 'validate'];
+  Ctrl.Azienda.$inject = ['$scope', '$routeParams', 'SessionInfo', 'codici', 'validate', 'Azienda', 'Doc'];
 
-  Ctrl.Listino = function ($scope, $routeParams, SessionInfo, $location, codici) {
+  Ctrl.Listino = function ($scope, $routeParams, SessionInfo, $location, codici, Doc) {
     SessionInfo.resetFlash();
 
-    if ($routeParams.codice) {
+    var id = $routeParams.codice ? codici.idListino($routeParams.codice) : null;
+    if (id) {
       $scope.prezzi = [];
-      $scope.listino = SessionInfo.getDocument(codici.idListino($routeParams.codice));
+      Doc.load([id]);
     }
 
     $scope.fetch = function () {
@@ -643,45 +653,48 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
     }
 
     $scope.findRows = function () {
-      if ($scope.stagione || $scope.modello || $scope.articolo) {
-        var filtroStagione = getFiltro($scope.stagione, codici.LEN_STAGIONE),
-          filtroModello = getFiltro($scope.modello, codici.LEN_MODELLO),
-          filtroArticolo = getFiltro($scope.articolo, codici.LEN_ARTICOLO);
-        $scope.prezzi = codici.findProperties($scope.listino.prezzi, filtroStagione, filtroModello, filtroArticolo);
-      }
+      Doc.find(id).then(function (listino) {
+        if ($scope.stagione || $scope.modello || $scope.articolo) {
+          var filtroStagione = getFiltro($scope.stagione, codici.LEN_STAGIONE),
+            filtroModello = getFiltro($scope.modello, codici.LEN_MODELLO),
+            filtroArticolo = getFiltro($scope.articolo, codici.LEN_ARTICOLO);
+          $scope.prezzi = codici.findProperties(listino.prezzi, filtroStagione, filtroModello, filtroArticolo);
+        }
+      });
     };
 
     $scope.save = function () {
-      var ps = $scope.listino.prezzi,
-        ok = $scope.prezzi.every(function (r) {
-          var stagione = r[0], modello = r[1], articolo = r[2], vals = r[3];
-          return (codici.isCode(stagione, codici.LEN_STAGIONE) &&
-              codici.isCode(modello, codici.LEN_MODELLO) &&
-              codici.isCode(articolo, codici.LEN_ARTICOLO) &&
-              codici.isNumero(vals[0]) &&
-              codici.isNumero(vals[1]) &&
-              codici.isNumero(vals[2]));
-        });
-      if (ok) {
+      Doc.find(id).then(function (listino) {
+        var ps = listino.prezzi,
+          ok = $scope.prezzi.every(function (r) {
+            var stagione = r[0], modello = r[1], articolo = r[2], vals = r[3];
+            return (codici.isCode(stagione, codici.LEN_STAGIONE) &&
+                codici.isCode(modello, codici.LEN_MODELLO) &&
+                codici.isCode(articolo, codici.LEN_ARTICOLO) &&
+                codici.isNumero(vals[0]) &&
+                codici.isNumero(vals[1]) &&
+                codici.isNumero(vals[2]));
+          });
+        if (!ok) {
+          return SessionInfo.error('Valori non validi');
+        }
         $scope.prezzi.forEach(function (r) {
           var stagione = r[0], modello = r[1], articolo = r[2], vals = r[3],
+            // FIXME write tests (I think it's broken): it removes offerta if empty.
             v = vals[4] ? vals : vals.slice(0, 4);
           codici.setProperty(ps, stagione, modello, articolo, v);
         });
         // TODO trovare un modo generale di non trasmettere campi vuoti o null.
-        if (!$scope.listino.versioneBase) {
-          delete $scope.listino.versioneBase;
+        if (!listino.versioneBase) {
+          delete listino.versioneBase;
         }
-        SessionInfo.save($scope.listino, function (res) {
-          $scope.listino._rev = res.rev;
-          SessionInfo.notice('Salvato ' + res.id);
+        Doc.save(listino).then(function (listino) {
+          SessionInfo.notice('Salvato ' + listino._id);
         });
-      } else {
-        SessionInfo.error('Valori non validi');
-      }
+      });
     };
   };
-  Ctrl.Listino.$inject = ['$scope', '$routeParams', 'SessionInfo', '$location', 'codici'];
+  Ctrl.Listino.$inject = ['$scope', '$routeParams', 'SessionInfo', '$location', 'codici', 'Doc'];
 
   $provide.value('controllers', Ctrl);
 }]);

@@ -1,68 +1,6 @@
 /*global angular:false, JSZip:false*/
 angular.module('app.services', [], ['$provide', function ($provide) {
   'use strict';
-  var VIEW_NAMES = ['aziende', 'contatori', 'movimentoMagazzinoPendente', 'riferimentiMovimentiMagazzino'];
-
-  $provide.factory('CdbView', ['$resource', 'couchdb', function ($resource, couchdb) {
-    var view, views = {};
-
-    VIEW_NAMES.forEach(function (viewName) {
-      views[viewName] = {
-        method: 'GET',
-        params: { id: viewName }
-      };
-    });
-    view = $resource('/' + couchdb.db + '/_design/' + couchdb.designDoc + '/_view/:id', { id: '@_id' }, views);
-
-    view.ultimoNumero = function (codiceAzienda, anno, gruppo, success, error) {
-      var year = parseInt(anno, 10);
-      return view.contatori({
-        descending: 'true',
-        limit: 1,
-        startkey: JSON.stringify([codiceAzienda, year, gruppo, {}]),
-        endkey: JSON.stringify([codiceAzienda, year, gruppo])
-      }, success, error);
-    };
-
-    view.riferimentoMovimentoMagazzino = function (idRiferimento, success, error) {
-      return view.riferimentiMovimentiMagazzino({ key: JSON.stringify(idRiferimento) }, success, error);
-    };
-
-    return view;
-  }]);
-
-  $provide.factory('Document', ['$resource', 'couchdb', function ($resource, couchdb) {
-    var r = $resource('/' + couchdb.db + '/:id', { id: '@_id' }, {
-      query: {
-        method: 'GET',
-        isArray: false,
-        params: {
-          id: '_all_docs',
-          include_docs: 'true'
-        }
-      },
-      save: { method: 'PUT' }
-    });
-
-    function range(key) {
-      return {
-        startkey: '"' + key + '_"',
-        endkey: '"' + key + '_\uFFF0"'
-      };
-    }
-
-    r.listini = function (success, error, mangler) {
-      return r.query(range('Listino'), undefined, success, error, mangler);
-    };
-
-    r.clienti = function (codiceAzienda, success) {
-      var baseId = codiceAzienda.replace(/^Azienda_/, 'Cliente_');
-      return r.query(range(baseId), success);
-    };
-
-    return r;
-  }]);
-
 
   $provide.factory('As400', ['$http', function ($http) {
     return {
@@ -78,104 +16,22 @@ angular.module('app.services', [], ['$provide', function ($provide) {
             params.push(k + '=' + v);
           }
         }
+        // FIXME RETURN PROMISE
         $http.get(params.join('/')).success(success);
       }
     };
   }]);
 
 
-  $provide.factory('SessionInfo', ['$http', 'Document', '$location', 'CdbView', 'codici', 'couchdb', function ($http, Document, $location, CdbView, codici, couchdb) {
+  $provide.factory('SessionInfo', ['$location', function ($location) {
     var info = { loading: 0, flash: {} };
-
-    function loaded() {
-      info.loading -= 1;
-    }
-
-    function loadedData(obj, data) {
-      info.loading -= 1;
-      angular.copy(data, obj);
-    }
-
-    /*jslint unparam:true*/
-    function loadedError(data, status, headers, config) {
-      info.loading -= 1;
-      info.error('Error ' + status + ' on ' + config.url + ': ' + JSON.stringify(data));
-    }
-    /*jslint unparam:false*/
 
     info.startLoading = function () {
       info.loading += 1;
     };
-    info.doneLoading = loaded;
 
-    info.getResource = function (resourceUrl) {
-      var obj = {};
-      info.loading += 1;
-      $http.get(resourceUrl).success(angular.bind(this, loadedData, obj)).error(loadedError);
-      return obj;
-    };
-
-    info.getDocument = function (id) {
-      return info.getResource('/' + couchdb.db + '/' + id);
-    };
-
-    info.prossimoNumero = function (codiceAzienda, anno, gruppo, success) {
-      info.loading += 1;
-      return CdbView.ultimoNumero(codiceAzienda, anno, gruppo,
-        function (res) {
-          loaded();
-          var numero = res.rows.length ? res.rows[0].key[3] : 0;
-          success(numero + 1);
-        },
-        angular.bind(this, loadedError, 'ultimoNumero'));
-    };
-
-    VIEW_NAMES.forEach(function (viewName) {
-      if (viewName !== 'aziende') {
-        info[viewName] = function (params) {
-          info.loading += 1;
-          return CdbView[viewName](params, loaded, angular.bind(this, loadedError, viewName));
-        };
-      }
-    }, this);
-    info.aziende = function (params) {
-      info.loading += 1;
-      return CdbView.aziende(params, undefined, loaded,
-        angular.bind(this, loadedError, 'aziende'),
-        function (response) {
-          var aziende = {}, rows = response.rows, i, ii, r, codes;
-          for (i = 0, ii = rows.length; i < ii; i += 1) {
-            r = rows[i];
-            codes = r.id.split('_', 2);
-            aziende[codes[1]] = r;
-          }
-          return aziende;
-        });
-    };
-
-    info.listini = function () {
-      info.loading += 1;
-      return Document.listini(loaded,
-        angular.bind(this, loadedError, 'listini'),
-        codici.toSearchableListini);
-    };
-
-    // TODO DRY there's lot of repetition in this code
-    info.save = function (data, success, error) {
-      info.loading += 1;
-      return Document.save(data, function () {
-        loaded();
-        if (success) {
-          success.apply(null, arguments);
-        }
-      }, function (response) {
-        loaded();
-        if (error) {
-          error.apply(null, arguments);
-        } else {
-          info.error('Error ' + response.status + ' ' + response.data.error + ' on ' + response.config.data._id + ': ' + response.data.reason);
-        }
-      });
+    info.doneLoading = function loaded() {
+      info.loading -= 1;
     };
 
     info.resetFlash = function () {
@@ -185,10 +41,12 @@ angular.module('app.services', [], ['$provide', function ($provide) {
         info.flash = {};
       }
     };
+
     info.setFlash = function (flash) {
       info.flash = flash;
       return flash.hasOwnProperty('errors') && flash.errors.length;
     };
+
     // TODO DRY error and notice are identical
     info.error = function (msg, append) {
       if (!append) {
@@ -211,7 +69,7 @@ angular.module('app.services', [], ['$provide', function ($provide) {
 
     info.goTo = function (path) {
       info.keepFlash = true;
-      $location.path(path).replace();
+      $location.path(path);
     };
     return info;
   }]);
@@ -219,7 +77,7 @@ angular.module('app.services', [], ['$provide', function ($provide) {
   $provide.factory('session', ['SessionInfo', '$http', function (SessionInfo, $http) {
     SessionInfo.startLoading();
 
-    // TODO show errors to user
+    // TODO show errors to user (use Doc?)
     var done = SessionInfo.doneLoading,
       promise = $http({ method: 'GET', url: '../_session' });
     promise.then(done, done);
@@ -301,6 +159,7 @@ angular.module('app.services', [], ['$provide', function ($provide) {
           });
         });
         function addFiles() {
+          // TODO use $q.all()
           if (i < ii) {
             t = templates[i];
             i += 1;
@@ -335,33 +194,32 @@ angular.module('app.services', [], ['$provide', function ($provide) {
     return map;
   }
 
-  $provide.factory('Azienda', ['SessionInfo', '$http', 'couchdb', function (SessionInfo, $http, couchdb) {
-    SessionInfo.startLoading();
+  function viewPath(couchdb, viewNameWithParams) {
+    return '/' + couchdb.db + '/_design/' + couchdb.designDoc + '/_view/' + viewNameWithParams;
+  }
 
-    //TODO show errors to users instead of log
-    var done = SessionInfo.doneLoading,
-      promise = $http({
-        method: 'GET',
-        url: '/' + couchdb.db + '/_design/' + couchdb.designDoc + '/_view/aziende?include_docs=true',
-        transformResponse: viewToMapByKey
-      });
-    promise.then(done, done);
+  function docPath(couchdb, docId) {
+    return '/' + couchdb.db + '/' + docId;
+  }
+
+  $provide.factory('Azienda', ['Doc', 'couchdb', function (Doc, couchdb) {
+    function find() {
+      return Doc.find('AZIENDE', viewPath(couchdb, 'aziende?include_docs=true'), viewToMapByKey);
+    }
 
     return {
       all: function () {
-        return promise.then(function (value) {
-          return value.data;
-        });
+        return find();
       },
       nome: function (codiceAzienda) {
-        return promise.then(function (value) {
-          var azienda = value.data[codiceAzienda];
+        return find().then(function (aziende) {
+          var azienda = aziende[codiceAzienda];
           return azienda ? azienda.value : codiceAzienda;
         });
       },
       nomi: function () {
-        return promise.then(function (value) {
-          var map = {}, aziende = value.data;
+        return find().then(function (aziende) {
+          var map = {};
           Object.keys(aziende).forEach(function (codiceAzienda) {
             map[codiceAzienda] = aziende[codiceAzienda].value;
           });
@@ -371,9 +229,7 @@ angular.module('app.services', [], ['$provide', function ($provide) {
     };
   }]);
 
-  $provide.factory('Listino', ['SessionInfo', '$http', 'couchdb', 'codici', function (SessionInfo, $http, couchdb, codici) {
-    SessionInfo.startLoading();
-
+  $provide.factory('Listino', ['Doc', 'couchdb', 'codici', function (Doc, couchdb, codici) {
     function setCol(listini) {
       Object.keys(listini).forEach(function (versioneListino) {
         var listino = listini[versioneListino];
@@ -382,32 +238,124 @@ angular.module('app.services', [], ['$provide', function ($provide) {
       return listini;
     }
 
-    //TODO show errors to users instead of log
-    var done = SessionInfo.doneLoading,
-      promise = $http({
-        method: 'GET',
-        url: '/' + couchdb.db + '/_design/' + couchdb.designDoc + '/_view/listini?include_docs=true',
-        transformResponse: [viewToMapByKey, setCol]
-      });
-    promise.then(done, done);
-
     return {
       all: function () {
-        return promise;
+        return Doc.find('LISTINI', viewPath(couchdb, 'listini?include_docs=true'), [viewToMapByKey, setCol]);
+      },
+      load: function () {
+        return Doc.load(['LISTINI'], [viewPath(couchdb, 'listini?include_docs=true')], [[viewToMapByKey, setCol]])[0];
       }
     };
   }]);
 
-  $provide.factory('Doc', ['$http', 'couchdb', 'SessionInfo', function ($http, couchdb, SessionInfo) {
+  $provide.factory('cache', ['$cacheFactory', function ($cacheFactory) {
+    return $cacheFactory('docs');
+  }]);
+
+  $provide.factory('Doc', ['$http', 'couchdb', 'SessionInfo', 'cache', function ($http, couchdb, SessionInfo, cache) {
+    function load(docIds, docPaths, responseTransformers) {
+      return docIds.map(function (id, i) {
+        var path = (docPaths && docPaths[i]) || docPath(couchdb, id),
+          config = {
+            cache: cache,
+            transformResponse: (responseTransformers && responseTransformers[i])
+          };
+        return $http.get(path, config).error(function (data, status) {
+          SessionInfo.error('Error ' + status + ' ' + data.error + ' on ' + id + ': ' + data.reason);
+        }).then(function (value) {
+          return value.data;
+        });
+      });
+    }
+
     return {
-      find: function (id) {
+      load: load,
+      find: function (id, docPath, transformResponse) {
         SessionInfo.startLoading();
         var done = SessionInfo.doneLoading,
-          promise = $http.get('/' + couchdb.db + '/' + id).error(function (data, status) {
-            SessionInfo.error('Error ' + status + ' ' + data.error + ' on ' + id + ': ' + data.reason);
-          });
+          promise = load([id], [docPath], [transformResponse])[0];
         promise.then(done, done);
         return promise;
+      },
+      save: function (doc) {
+        SessionInfo.startLoading();
+        var done = SessionInfo.doneLoading,
+          url = docPath(couchdb, doc._id),
+          promise = $http.put(url, doc).error(function (data, status) {
+            SessionInfo.error('Error ' + status + ' ' + data.error + ' on ' + doc._id + ': ' + data.reason);
+          });
+        cache.put(url, doc);
+        promise.then(done, done);
+        return promise.then(function (value) {
+          doc._rev = value.data.rev;
+          return doc;
+        });
+      }
+    };
+  }]);
+
+  $provide.factory('MovimentoMagazzino', ['$http', 'couchdb', 'codici', 'Doc', 'SessionInfo', function ($http, couchdb, codici, Doc, SessionInfo) {
+    function nextId(codiceAzienda, data, gruppo) {
+      SessionInfo.startLoading();
+      var done = SessionInfo.doneLoading,
+        anno = parseInt(data.substring(0, 4), 10),
+        startkey = JSON.stringify([codiceAzienda, anno, gruppo, {}]),
+        endkey = JSON.stringify([codiceAzienda, anno, gruppo]),
+        promise = $http.get(viewPath(couchdb, 'contatori?limit=1&descending=true&startkey=' + startkey + '&endkey=' + endkey)).error(function (data, status) {
+          SessionInfo.error('Error ' + status + ' ' + data.error + ': ' + data.reason);
+        });
+      promise.then(done, done);
+      return promise.then(function (value) {
+        var rows = value.data.rows,
+          numero = rows.length ? rows[0].key[3] : 0;
+        return codici.idMovimentoMagazzino(codiceAzienda, anno, gruppo, numero + 1);
+      });
+    }
+
+    return {
+      pendenti: function () {
+        return Doc.load(['PENDENTI'], [viewPath(couchdb, 'movimentoMagazzinoPendente')])[0];
+      },
+      findByRiferimento: function (riferimento) {
+        return Doc.find(riferimento, viewPath(couchdb, 'riferimentiMovimentiMagazzino?key="' + riferimento + '"'));
+      },
+      nextId: nextId,
+      build: function (magazzino1, data, causale1, rows, magazzino2, riferimento) {
+        function newMovimentoMagazzino(id) {
+          var infoCausale = codici.infoCausale(causale1),
+            doc = {
+              _id: id,
+              data: data,
+              causale1: infoCausale.causale1,
+              columnNames: codici.COLUMN_NAMES.MovimentoMagazzino,
+              rows: rows || []
+            };
+          if (codici.hasExternalWarehouse(magazzino1)) {
+            doc.esterno1 = 1;
+          }
+          if (infoCausale.causale2) {
+            doc.causale2 = infoCausale.causale2;
+            if (magazzino2) {
+              if (codici.hasExternalWarehouse(magazzino2)) {
+                doc.esterno2 = 1;
+              }
+              doc.magazzino2 = codici.parseIdAzienda(magazzino2._id).codice;
+            }
+          }
+          if (riferimento) {
+            doc.riferimento = riferimento;
+          }
+          return doc;
+        }
+
+        SessionInfo.startLoading();
+        var done = SessionInfo.doneLoading,
+          codiceAzienda = codici.parseIdAzienda(magazzino1._id).codice,
+          promise = nextId(codiceAzienda, data, causale1.gruppo);
+        promise.then(done, done);
+        return promise.then(function (id) {
+          return newMovimentoMagazzino(id);
+        });
       }
     };
   }]);

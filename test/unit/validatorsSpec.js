@@ -37,7 +37,7 @@ describe('Validation', function () {
   function setupSession(userCtx) {
     return module('app.services', function ($provide) {
       $provide.value('session', {
-        success: function (callback) {
+        then: function (callback) {
           callback({ userCtx: userCtx });
         }
       });
