@@ -5,7 +5,7 @@
 <tr><td>Causale1: <b>{{model.causale1[0]}}</b>, Segno: <b>{{model.causale1[1]}}</b><td ng:show="model.magazzino2">Causale2: <b>{{model.causale2[0]}}</b>, Segno: <b>{{model.causale2[1]}}</b>
 <tr><td>Magazzino1: <b>{{nomeMagazzino1}}</b><td ng:show="model.magazzino2">Magazzino2: <b>{{nomeMagazzino2}}</b>
 </table>
-<table>
+<table class=details>
  <caption>Righe dettaglio</caption>
  <thead>
   <tr><th>#<th>Codice SMACT<th>Scalarino<th>Taglia<th>Descrizione<th>Costo<th>Quantità<th>ALTRO
@@ -26,7 +26,7 @@
  </table>
  <label><input type=checkbox ng:model="model.accodato" ng:true-value=1 ng:false-value=0>&nbsp;Accodato</label>
 <div class=control>
- <button ng:click="save()" ng:disabled="{{form.$invalid}}">Salva</button>
+ <input type=submit ng:click="save()" ng:disabled="{{form.$invalid}}" value=Salva>
  [&nbsp;<a href="#/MovimentoMagazzino_">Nuovo</a>&nbsp;]
 </div>
 </form>
