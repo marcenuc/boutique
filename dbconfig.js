@@ -7,8 +7,8 @@ define(function (require) {
   // Mock angular.module() implementation.
   angular.module = function () {
     return {
-      value: function (name, value) {
-        return value;
+      factory: function (name, factory) {
+        return factory();
       }
     };
   };

@@ -566,12 +566,15 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
   Ctrl.Azienda = function ($scope, $routeParams, SessionInfo, codici, validate, Azienda, Doc) {
     SessionInfo.resetFlash();
 
-    var id = null;
     if ($routeParams.codice) {
-      id = codici.idAzienda($routeParams.codice);
-      $scope.azienda = Doc.find(id);
+      Doc.find(codici.idAzienda($routeParams.codice)).then(function (azienda) {
+        $scope.azienda = azienda;
+      });
     }
-    $scope.aziende = Azienda.all();
+    Azienda.all().then(function (aziende) {
+      $scope.aziende = aziende;
+    });
+    $scope.azienda = {};
     $scope.tipiAzienda = codici.TIPI_AZIENDA;
 
     function getOldAziendaDocument(aziende, id) {
@@ -588,12 +591,10 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
       angular.copy(azienda, getOldAziendaDocument(aziende, azienda._id));
     }
 
-    function isIdChanged(azienda) {
-      return id !== azienda._id;
-    }
-
     function checkUpdate(aziende, azienda) {
-      return !SessionInfo.setFlash(validate(azienda, getOldAziendaDocument(aziende, azienda._id)));
+      var msgs = validate(azienda, getOldAziendaDocument(aziende, azienda._id));
+      SessionInfo.setFlash(msgs);
+      return !msgs.errors.length;
     }
 
     function createListinoAzienda(azienda) {
@@ -605,32 +606,24 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
           versioneBase: '1'
         };
       Doc.save(listino).then(function () {
-        SessionInfo.goTo('/' + azienda._id);
+        SessionInfo.goTo(azienda._id);
       });
     }
 
     //FIXME i contatti non vengono salvati.
     $scope.save = function () {
-      $scope.aziende.then(function (aziende) {
-        $scope.azienda.then(function (azienda) {
-          var isNew = isIdChanged(azienda);
+      // TODO use $validate event
+      if (checkUpdate($scope.aziende, $scope.azienda)) {
+        var isNew = !getOldAziendaDocument($scope.aziende, $scope.azienda._id);
+        Doc.save($scope.azienda).then(function (azienda) {
+          $scope.azienda = azienda;
+          aggiornaAzienda($scope.aziende, azienda);
+          SessionInfo.notice('Salvato');
           if (isNew) {
-            delete azienda._rev;
+            createListinoAzienda(azienda);
           }
-          // TODO use $validate event
-          if (checkUpdate(aziende, azienda)) {
-            Doc.save(azienda).then(function (azienda) {
-              SessionInfo.notice('Salvato');
-              if (isNew) {
-                createListinoAzienda(azienda);
-              } else {
-                aggiornaAzienda(aziende, azienda);
-              }
-            });
-          }
-          return azienda;
         });
-      });
+      }
     };
   };
   Ctrl.Azienda.$inject = ['$scope', '$routeParams', 'SessionInfo', 'codici', 'validate', 'Azienda', 'Doc'];

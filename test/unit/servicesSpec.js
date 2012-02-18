@@ -1,9 +1,7 @@
 /*global describe:false, beforeEach:false, afterEach:false, it:false, expect:false, module:false, inject:false, jasmine:false, spyOn:false, angular:false*/
 describe('Service', function () {
   'use strict';
-  beforeEach(module('app.services', 'app.shared', function ($provide) {
-    $provide.value('couchdb', { db: 'db', designDoc: 'ddoc' });
-  }));
+  beforeEach(module('app.config', 'app.services', 'app.shared'));
 
   afterEach(inject(function ($httpBackend) {
     $httpBackend.verifyNoOutstandingExpectation();
@@ -44,7 +42,7 @@ describe('Service', function () {
   });
 
   describe('Azienda', function () {
-    var path = '/db/_design/ddoc/_view/aziende?include_docs=true',
+    var aziendeView = 'aziende?include_docs=true',
       aziende = { rows: [
         { id: 'Azienda_099999', key: '099999', value: '099999_Mag1', doc: { _id: 'Azienda_099999', nome: 'Mag1', tipo: 'MAGAZZINO' } },
         { id: 'Azienda_010101', key: '010101', value: '010101 Neg1', doc: { _id: 'Azienda_010101', nome: 'Neg1', tipo: 'NEGOZIO' } },
@@ -56,8 +54,8 @@ describe('Service', function () {
         module(function ($provide) {
           $provide.value('SessionInfo', jasmine.createSpyObj('SessionInfo', ['startLoading', 'doneLoading']));
         });
-        inject(function ($httpBackend, Azienda, SessionInfo) {
-          $httpBackend.expectGET(path).respond(JSON.stringify(aziende));
+        inject(function ($httpBackend, Azienda, SessionInfo, couchdb) {
+          $httpBackend.expectGET(couchdb.viewPath(aziendeView)).respond(JSON.stringify(aziende));
           expect(SessionInfo.startLoading).not.toHaveBeenCalledWith();
           Azienda.all();
           expect(SessionInfo.startLoading).toHaveBeenCalledWith();
@@ -67,8 +65,8 @@ describe('Service', function () {
         });
       });
 
-      it('should return map of all aziende', inject(function ($httpBackend, Azienda) {
-        $httpBackend.expectGET(path).respond(JSON.stringify(aziende));
+      it('should return map of all aziende', inject(function ($httpBackend, Azienda, couchdb) {
+        $httpBackend.expectGET(couchdb.viewPath(aziendeView)).respond(JSON.stringify(aziende));
         var resp = Azienda.all(), callback = jasmine.createSpy();
         resp.then(callback);
         $httpBackend.flush();
@@ -81,8 +79,8 @@ describe('Service', function () {
     });
 
     describe('nome', function () {
-      it('should promise the name of azienda', inject(function ($httpBackend, Azienda) {
-        $httpBackend.expectGET(path).respond(JSON.stringify(aziende));
+      it('should promise the name of azienda', inject(function ($httpBackend, Azienda, couchdb) {
+        $httpBackend.expectGET(couchdb.viewPath(aziendeView)).respond(JSON.stringify(aziende));
         var resp = Azienda.nome('010101'), callback = jasmine.createSpy();
         resp.then(callback);
         $httpBackend.flush();
@@ -91,8 +89,8 @@ describe('Service', function () {
     });
 
     describe('nomi', function () {
-      it('should promise map of codiceAzienda to nome of azienda', inject(function ($httpBackend, Azienda) {
-        $httpBackend.expectGET(path).respond(JSON.stringify(aziende));
+      it('should promise map of codiceAzienda to nome of azienda', inject(function ($httpBackend, Azienda, couchdb) {
+        $httpBackend.expectGET(couchdb.viewPath(aziendeView)).respond(JSON.stringify(aziende));
         var resp = Azienda.nomi(), callback = jasmine.createSpy();
         resp.then(callback);
         $httpBackend.flush();
@@ -102,15 +100,15 @@ describe('Service', function () {
   });
 
   describe('Listino', function () {
-    var path = '/db/_design/ddoc/_view/listini?include_docs=true',
+    var listiniView = 'listini?include_docs=true',
       listini = { rows: [
         { id: 'Listino_1', key: '1', value: null, doc: { _id: 'Listino_1', columnNames: ['costo', 'prezzo1', 'prezzo2', 'offerta'], prezzi: { '112': { '60456': { '5000': [100, 300, 200, '*'] } } } } },
         { id: 'Listino_010101', key: '010101', value: null, doc: { _id: 'Listino_010101', columnNames: ['costo', 'prezzo1', 'prezzo2', 'offerta'], prezzi: {}, versioneBase: '1' } }
       ] };
 
     describe('load', function () {
-      it('should return map of all listini', inject(function ($httpBackend, Listino) {
-        $httpBackend.expectGET(path).respond(JSON.stringify(listini));
+      it('should return map of all listini', inject(function ($httpBackend, Listino, couchdb) {
+        $httpBackend.expectGET(couchdb.viewPath(listiniView)).respond(JSON.stringify(listini));
         var resp = Listino.load(), callback = jasmine.createSpy();
         resp.then(callback);
         $httpBackend.flush();
@@ -126,8 +124,8 @@ describe('Service', function () {
         module(function ($provide) {
           $provide.value('SessionInfo', jasmine.createSpyObj('SessionInfo', ['startLoading', 'doneLoading']));
         });
-        inject(function ($httpBackend, Listino, SessionInfo) {
-          $httpBackend.expectGET(path).respond(JSON.stringify(listini));
+        inject(function ($httpBackend, Listino, SessionInfo, couchdb) {
+          $httpBackend.expectGET(couchdb.viewPath(listiniView)).respond(JSON.stringify(listini));
           expect(SessionInfo.startLoading).not.toHaveBeenCalledWith();
           Listino.all();
           expect(SessionInfo.startLoading).toHaveBeenCalledWith();
@@ -137,8 +135,8 @@ describe('Service', function () {
         });
       });
 
-      it('should return map of all listini', inject(function ($httpBackend, Listino) {
-        $httpBackend.expectGET(path).respond(JSON.stringify(listini));
+      it('should return map of all listini', inject(function ($httpBackend, Listino, couchdb) {
+        $httpBackend.expectGET(couchdb.viewPath(listiniView)).respond(JSON.stringify(listini));
         var resp = Listino.all(), callback = jasmine.createSpy();
         resp.then(callback);
         $httpBackend.flush();
@@ -151,13 +149,55 @@ describe('Service', function () {
   });
 
   describe('cache', function () {
-    it('should be a cache object', inject(function (cache) {
-      expect(cache.info()).toEqual({ id: 'docs', size: 0 });
-      expect(typeof cache.put).toBe('function');
-      expect(typeof cache.get).toBe('function');
-      expect(typeof cache.remove).toBe('function');
-      expect(typeof cache.removeAll).toBe('function');
-    }));
+    describe('info', function () {
+      it('should return cache.info()', inject(function (cache) {
+        expect(cache.info()).toEqual({ id: 'docs', size: 0 });
+      }));
+    });
+    describe('put, get and remove', function () {
+      it('should add entries via put and retrieve via get', inject(function (cache) {
+        var id = 'anid', obj = { foo: 'bar' };
+        expect(cache.info().size).toBe(0);
+        expect(cache.get(id)).toBeUndefined();
+        cache.put(id, obj);
+        expect(cache.get(id)).toBe(obj);
+        expect(cache.info().size).toBe(1);
+      }));
+
+      it('should remove entries via remove', inject(function (cache) {
+        var id = 'anid', obj = { foo: 'bar' };
+        cache.put(id, obj);
+        expect(cache.get(id)).toBe(obj);
+        cache.remove(id);
+        expect(cache.get(id)).toBeUndefined();
+      }));
+    });
+
+    describe('removeAll', function () {
+      it('should blow away all data', inject(function (cache) {
+        cache.put('id1', 1);
+        cache.put('id2', 2);
+        cache.put('id3', 3);
+        expect(cache.info().size).toBe(3);
+
+        cache.removeAll();
+
+        expect(cache.info().size).toBe(0);
+        expect(cache.get('id1')).toBeUndefined();
+        expect(cache.get('id2')).toBeUndefined();
+        expect(cache.get('id3')).toBeUndefined();
+      }));
+    });
+
+    describe('put', function () {
+      it('should remove AZIENDE when key is "/db/Azienda_[0-9]{6}$"', inject(function (cache, couchdb) {
+        var az1 = { _id: 'Azienda_010101', nome: 'Az1', tipo: 'NEGOZIO' },
+          AZIENDE = couchdb.viewPath('aziende?include_docs=true');
+        cache.put(AZIENDE, { foo: 'bar' });
+        cache.put(couchdb.docPath('Azienda_010101'), az1);
+        expect(cache.get(AZIENDE)).toBeUndefined();
+      }));
+    });
   });
 
   describe('Doc', function () {
@@ -168,8 +208,8 @@ describe('Service', function () {
         module(function ($provide) {
           $provide.value('SessionInfo', jasmine.createSpyObj('SessionInfo', ['startLoading', 'doneLoading']));
         });
-        inject(function ($httpBackend, Doc, SessionInfo) {
-          $httpBackend.expectGET('/db/' + doc._id).respond(JSON.stringify(doc));
+        inject(function ($httpBackend, Doc, SessionInfo, couchdb) {
+          $httpBackend.expectGET(couchdb.docPath(doc._id)).respond(JSON.stringify(doc));
           expect(SessionInfo.startLoading).not.toHaveBeenCalledWith();
           Doc.find(doc._id);
           expect(SessionInfo.startLoading).toHaveBeenCalledWith();
@@ -179,8 +219,8 @@ describe('Service', function () {
         });
       });
 
-      it('should use cache', inject(function ($httpBackend, Doc, cache) {
-        $httpBackend.expectGET('/db/' + doc._id).respond(JSON.stringify(doc));
+      it('should use cache', inject(function ($httpBackend, Doc, cache, couchdb) {
+        $httpBackend.expectGET(couchdb.docPath(doc._id)).respond(JSON.stringify(doc));
         expect(cache.info().size).toBe(0);
         Doc.find(doc._id);
         expect(cache.info().size).toBe(1);
@@ -188,8 +228,8 @@ describe('Service', function () {
       }));
 
       describe('when ok', function () {
-        it('should promise document with given _id', inject(function ($httpBackend, Doc) {
-          $httpBackend.expectGET('/db/' + doc._id).respond(JSON.stringify(doc));
+        it('should promise document with given _id', inject(function ($httpBackend, Doc, couchdb) {
+          $httpBackend.expectGET(couchdb.docPath(doc._id)).respond(JSON.stringify(doc));
           var resp = Doc.find(doc._id), callback = jasmine.createSpy('callback');
           resp.then(callback);
           $httpBackend.flush();
@@ -206,13 +246,13 @@ describe('Service', function () {
           expect(callback.mostRecentCall.args[0]).toEqual(doc);
         }));
 
-        it('should apply transformation to response when given', inject(function ($httpBackend, Doc) {
+        it('should apply transformation to response when given', inject(function ($httpBackend, Doc, couchdb) {
           function transformer(json) {
             var doc = JSON.parse(json);
             doc.zzz = 'ZZZ';
             return doc;
           }
-          $httpBackend.expectGET('/db/' + doc._id).respond(JSON.stringify(doc));
+          $httpBackend.expectGET(couchdb.docPath(doc._id)).respond(JSON.stringify(doc));
           var resp = Doc.find(doc._id, null, transformer),
             callback = jasmine.createSpy('callback'),
             respDoc = angular.extend({}, doc, { zzz: 'ZZZ' });
@@ -228,8 +268,8 @@ describe('Service', function () {
           $provide.value('SessionInfo', jasmine.createSpyObj('SessionInfo', ['error', 'startLoading', 'doneLoading']));
         }));
 
-        it('should display errors to user', inject(function ($httpBackend, Doc, SessionInfo) {
-          $httpBackend.expectGET('/db/' + doc._id).respond(404, { error: 'not_found', reason: 'missing' });
+        it('should display errors to user', inject(function ($httpBackend, Doc, SessionInfo, couchdb) {
+          $httpBackend.expectGET(couchdb.docPath(doc._id)).respond(404, { error: 'not_found', reason: 'missing' });
           Doc.find(doc._id);
           expect(SessionInfo.startLoading).toHaveBeenCalledWith();
           expect(SessionInfo.doneLoading).not.toHaveBeenCalled();
@@ -248,9 +288,9 @@ describe('Service', function () {
         docIds = Object.keys(docs),
         docPaths = [null, '/altpath'];
 
-      beforeEach(inject(function ($httpBackend) {
+      beforeEach(inject(function ($httpBackend, couchdb) {
         docIds.forEach(function (docId, i) {
-          var url = docPaths[i] || ('/db/' + docId);
+          var url = docPaths[i] || couchdb.docPath(docId);
           $httpBackend.expectGET(url).respond(JSON.stringify(docs[docId]));
         });
       }));
@@ -284,8 +324,8 @@ describe('Service', function () {
         module(function ($provide) {
           $provide.value('SessionInfo', jasmine.createSpyObj('SessionInfo', ['startLoading', 'doneLoading']));
         });
-        inject(function ($httpBackend, Doc, SessionInfo) {
-          $httpBackend.expectPUT('/db/' + doc._id).respond(JSON.stringify(okResp));
+        inject(function ($httpBackend, Doc, SessionInfo, couchdb) {
+          $httpBackend.expectPUT(couchdb.docPath(doc._id)).respond(JSON.stringify(okResp));
           Doc.save(doc);
           expect(SessionInfo.startLoading).toHaveBeenCalledWith();
           expect(SessionInfo.doneLoading).not.toHaveBeenCalled();
@@ -294,8 +334,8 @@ describe('Service', function () {
         });
       });
 
-      it('should update cache', inject(function ($httpBackend, Doc, cache) {
-        var url = '/db/' + doc._id;
+      it('should update cache', inject(function ($httpBackend, Doc, cache, couchdb) {
+        var url = couchdb.docPath(doc._id);
         $httpBackend.expectPUT(url).respond(okResp);
         expect(cache.get(url)).toBeUndefined();
         expect(doc._rev).not.toEqual(okResp.rev);
@@ -306,10 +346,10 @@ describe('Service', function () {
       }));
 
       describe('when ok', function () {
-        it('should promise saved document with updated _rev', inject(function ($httpBackend, Doc) {
+        it('should promise saved document with updated _rev', inject(function ($httpBackend, Doc, couchdb) {
           var callback = jasmine.createSpy('callback'),
             savedDoc = { _id: 'someid', foo: 'bar', _rev: okResp.rev };
-          $httpBackend.expectPUT('/db/' + doc._id).respond(JSON.stringify(okResp));
+          $httpBackend.expectPUT(couchdb.docPath(doc._id)).respond(JSON.stringify(okResp));
           Doc.save(doc).then(callback);
           expect(callback).not.toHaveBeenCalled();
           $httpBackend.flush();
@@ -320,7 +360,7 @@ describe('Service', function () {
   });
 
   describe('MovimentoMagazzino', function () {
-    var cntUrl = '/db/_design/ddoc/_view/contatori?limit=1&descending=true&startkey=["010101",2012,"A",{}]&endkey=["010101",2012,"A"]';
+    var cntView = 'contatori?limit=1&descending=true&startkey=["010101",2012,"A",{}]&endkey=["010101",2012,"A"]';
 
     beforeEach(module(function ($provide) {
       $provide.value('SessionInfo', jasmine.createSpyObj('SessionInfo', ['startLoading', 'doneLoading']));
@@ -329,8 +369,8 @@ describe('Service', function () {
     describe('pendenti', function () {
       var pendenti = { rows: [] };
 
-      it('should promise all movimenti magazzino pendenti', inject(function ($httpBackend, MovimentoMagazzino) {
-        $httpBackend.expectGET('/db/_design/ddoc/_view/movimentoMagazzinoPendente').respond(JSON.stringify(pendenti));
+      it('should promise all movimenti magazzino pendenti', inject(function ($httpBackend, MovimentoMagazzino, couchdb) {
+        $httpBackend.expectGET(couchdb.viewPath('movimentoMagazzinoPendente')).respond(JSON.stringify(pendenti));
         var resp = MovimentoMagazzino.pendenti(), cb = jasmine.createSpy();
         resp.then(cb);
         $httpBackend.flush();
@@ -341,9 +381,9 @@ describe('Service', function () {
     describe('findByRiferimento', function () {
       var movimento = { rows: [] };
 
-      it('should promise movimento magazzino with given riferimento', inject(function ($httpBackend, MovimentoMagazzino, SessionInfo) {
+      it('should promise movimento magazzino with given riferimento', inject(function ($httpBackend, MovimentoMagazzino, SessionInfo, couchdb) {
         expect(SessionInfo.startLoading).not.toHaveBeenCalled();
-        $httpBackend.expectGET('/db/_design/ddoc/_view/riferimentiMovimentiMagazzino?key="RIF"').respond(JSON.stringify(movimento));
+        $httpBackend.expectGET(couchdb.viewPath('riferimentiMovimentiMagazzino?key="RIF"')).respond(JSON.stringify(movimento));
         var resp = MovimentoMagazzino.findByRiferimento('RIF'), cb = jasmine.createSpy();
         resp.then(cb);
         expect(SessionInfo.startLoading).toHaveBeenCalledWith();
@@ -359,9 +399,9 @@ describe('Service', function () {
       var movimento = { _id: 'MovimentoMagazzino_010101_2012_A_3' },
         contatori = { rows: [{ key: ['010101', 2012, 'A', 2] }] };
 
-      it('should promise new idMovimentoMagazzino', inject(function ($httpBackend, MovimentoMagazzino, SessionInfo) {
+      it('should promise new idMovimentoMagazzino', inject(function ($httpBackend, MovimentoMagazzino, SessionInfo, couchdb) {
         expect(SessionInfo.startLoading).not.toHaveBeenCalled();
-        $httpBackend.expectGET(cntUrl).respond(JSON.stringify(contatori));
+        $httpBackend.expectGET(couchdb.viewPath(cntView)).respond(JSON.stringify(contatori));
         var resp = MovimentoMagazzino.nextId('010101', '2012', 'A'), cb = jasmine.createSpy();
         resp.then(cb);
         expect(SessionInfo.startLoading).toHaveBeenCalledWith();
@@ -379,9 +419,9 @@ describe('Service', function () {
         magazzino2 = { _id: 'Azienda_020202', tipo: 'NEGOZIO', nome: 'Neg2' },
         contatori = { rows: [{ key: ['010101', 2012, 'A', 2] }] };
 
-      it('should promise new unsaved MovimentoMagazzino', inject(function ($httpBackend, MovimentoMagazzino, SessionInfo, codici) {
+      it('should promise new unsaved MovimentoMagazzino', inject(function ($httpBackend, MovimentoMagazzino, SessionInfo, codici, couchdb) {
         expect(SessionInfo.startLoading).not.toHaveBeenCalled();
-        $httpBackend.expectGET(cntUrl).respond(JSON.stringify(contatori));
+        $httpBackend.expectGET(couchdb.viewPath(cntView)).respond(JSON.stringify(contatori));
         var causale = codici.findCausaleMovimentoMagazzino('VENDITA'),
           rows = [],
           resp = MovimentoMagazzino.build(magazzino1, '20120101', causale, rows, magazzino2, 'RIF'),
