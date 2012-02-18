@@ -2,27 +2,6 @@
 angular.module('app.services', [], ['$provide', function ($provide) {
   'use strict';
 
-  $provide.factory('As400', ['$http', function ($http) {
-    return {
-      bolla: function (intestazioneBolla, success) {
-        var k, v, params = ['../as400/bolla'];
-        for (k in intestazioneBolla) {
-          if (intestazioneBolla.hasOwnProperty(k)) {
-            v = intestazioneBolla[k];
-            if (k === 'data' && v.length === 8) {
-              // as400 uses 6 digits dates
-              v = v.substring(2);
-            }
-            params.push(k + '=' + v);
-          }
-        }
-        // FIXME RETURN PROMISE
-        $http.get(params.join('/')).success(success);
-      }
-    };
-  }]);
-
-
   $provide.factory('SessionInfo', ['$location', function ($location) {
     var info = { loading: 0, flash: {} };
 
@@ -237,6 +216,25 @@ angular.module('app.services', [], ['$provide', function ($provide) {
       },
       load: function () {
         return Doc.load(['LISTINI'], [couchdb.viewPath('listini?include_docs=true')], [[viewToMapByKey, setCol]])[0];
+      }
+    };
+  }]);
+
+  $provide.factory('As400', ['$http', 'SessionInfo', function ($http, SessionInfo) {
+    return {
+      bolla: function (intestazioneBolla) {
+        var params = ['../as400/bolla'];
+        Object.keys(intestazioneBolla).forEach(function (k) {
+          var v = intestazioneBolla[k];
+          if (k === 'data' && v.length === 8) {
+            // as400 uses 6 digits dates
+            v = v.substring(2);
+          }
+          params.push(k + '=' + v);
+        });
+        return $http.get(params.join('/')).error(function (body, status) {
+          SessionInfo.error('ERRORE ' + status + ': ' + body);
+        });
       }
     };
   }]);

@@ -315,13 +315,12 @@ describe('Controller', function () {
 
   describe('RicercaBollaAs400', function () {
     beforeEach(module(function ($provide) {
-      $provide.value('As400', jasmine.createSpyObj('As400', ['bolla']));
       $provide.value('Doc', jasmine.createSpyObj('Doc', ['find', 'save', 'load']));
       $provide.value('Azienda', jasmine.createSpyObj('Azienda', ['all', 'nome', 'nomi']));
     }));
 
     it('should initialize $scope', inject(function ($q, $rootScope, $controller, controllers, As400, SessionInfo, MovimentoMagazzino, $location, codici, Azienda, Doc) {
-      var intestazione, dati, cbFind, $scope = $rootScope, aziende = getPromise($q, AZIENDE),
+      var intestazione, dati, cbFind, promiseBolla, $scope = $rootScope, aziende = getPromise($q, AZIENDE),
         movimento = jasmine.createSpyObj('movimento', ['then']),
         buildResp = jasmine.createSpyObj('buildMM', ['then']),
         saveResp = jasmine.createSpyObj('save', ['then']),
@@ -370,18 +369,19 @@ describe('Controller', function () {
       // it should redirect to found MovimentoMagazzino keeping notice
       expect(SessionInfo.goTo).toHaveBeenCalledWith('MovimentoMagazzino_010101_2011_A_1');
 
+      promiseBolla = jasmine.createSpyObj('promiseBolla', ['success']);
+      spyOn(As400, 'bolla').andReturn(promiseBolla);
       // when MovimentoMagazzino not found
       cbFind({ rows: [] });
-      // it should query as400 for with form's data
-      expect(As400.bolla).toHaveBeenCalled();
-      expect(As400.bolla.mostRecentCall.args[0]).toBe(intestazione);
+      // it should query as400 with form's data
+      expect(As400.bolla).toHaveBeenCalledWith(intestazione);
 
       // when bolla is found on as400
       dati = {
         columnNames: ['codiceCliente', 'tipoMagazzino', 'causale', 'codiceMagazzino', 'scalarino', 'stagione', 'modello', 'articolo', 'colore', 'qta1', 'qta2', 'qta3', 'qta4', 'qta5', 'qta6', 'qta7', 'qta8', 'qta9', 'qta10', 'qta11', 'qta12'],
         rows: [['010101', '2', '73', 'K', '2', '112', '60456', '5000', '5000', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']]
       };
-      As400.bolla.mostRecentCall.args[1](dati);
+      promiseBolla.success.mostRecentCall.args[0](dati);
       // it should put bolla in $scope
       expect($scope.bollaAs400).toBe(dati);
 

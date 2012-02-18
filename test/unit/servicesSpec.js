@@ -16,12 +16,29 @@ describe('Service', function () {
             numero: '40241',
             enteNumerazione: 'Y',
             codiceNumerazione: '10'
-          };
+          },
+          callSpy = jasmine.createSpy('callSpy');
         $httpBackend.expectGET('../as400/bolla/data=110704/numero=40241/enteNumerazione=Y/codiceNumerazione=10').respond(JSON.stringify(intestazioneBolla));
-        As400.bolla(intestazioneBolla, function (data) {
+        As400.bolla(intestazioneBolla).success(function (data) {
+          callSpy();
           expect(data).toEqual(intestazioneBolla);
         });
         $httpBackend.flush();
+        expect(callSpy.argsForCall.length).toBe(1);
+      }));
+
+      it('should notify errors to user', inject(function ($httpBackend, As400, SessionInfo) {
+        var intestazioneBolla = {
+            data: '110704',
+            numero: '40241',
+            enteNumerazione: 'Y',
+            codiceNumerazione: '10'
+          };
+        $httpBackend.expectGET('../as400/bolla/data=110704/numero=40241/enteNumerazione=Y/codiceNumerazione=10').respond(500, 'error');
+        spyOn(SessionInfo, 'error');
+        As400.bolla(intestazioneBolla);
+        $httpBackend.flush();
+        expect(SessionInfo.error).toHaveBeenCalledWith('ERRORE 500: error');
       }));
     });
   });

@@ -194,7 +194,7 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
     }
 
     function cercaBollaAs400() {
-      As400.bolla($scope.intestazione, function (dati) {
+      As400.bolla($scope.intestazione).success(function (dati) {
         $scope.bollaAs400 = dati;
         setMovimentoMagazzino();
       });
