@@ -276,11 +276,16 @@ describe('Controller', function () {
   });
 
   describe('MovimentoMagazzino', function () {
-    beforeEach(module(function ($provide) {
-      $provide.value('Azienda', jasmine.createSpyObj('Azienda', ['all', 'nome', 'nomi']));
-    }));
+    beforeEach(function () {
+      module(function ($provide) {
+        $provide.value('Azienda', jasmine.createSpyObj('Azienda', ['all', 'nome', 'nomi']));
+      });
+      inject(function ($httpBackend) {
+        $httpBackend.expectGET('../_session').respond({ userCtx: { name: '010101' } });
+      });
+    });
 
-    it('should initialize $scope', inject(function ($q, $rootScope, $controller, controllers, $location, codici, Azienda, MovimentoMagazzino) {
+    it('should initialize $scope', inject(function ($q, $rootScope, $controller, controllers, $location, codici, Azienda, MovimentoMagazzino, $httpBackend) {
       var form, $scope = $rootScope, aziende = getPromise($q, AZIENDE), nomi = {}, pendenti = { rows: [] };
 
       Azienda.all.andReturn(aziende);
@@ -296,11 +301,13 @@ describe('Controller', function () {
       // it should put causali in $scope
       expect($scope.causali).toBe(codici.CAUSALI_MOVIMENTO_MAGAZZINO);
       form = $scope.form;
-      // it should set current year as default value in $scope.form
+      // it should default to current year
       expect(form.anno).toBe(2011);
+      $httpBackend.flush();
+      // it should default to current user's azienda
+      expect(form.magazzino1).toBe('010101');
 
       // fill the form
-      form.magazzino1 = '010101';
       form.causale1 = codici.findCausaleMovimentoMagazzino('VENDITA');
       form.numero = 1;
 

@@ -153,13 +153,21 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
   };
   Ctrl.EditMovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$routeParams', 'Downloads', 'codici', 'Azienda', 'Doc', 'Listino'];
 
-  Ctrl.MovimentoMagazzino = function ($scope, SessionInfo, $location, codici, Azienda, MovimentoMagazzino) {
+  Ctrl.MovimentoMagazzino = function ($scope, SessionInfo, $location, codici, Azienda, MovimentoMagazzino, session) {
     SessionInfo.resetFlash();
 
     $scope.pendenti = MovimentoMagazzino.pendenti();
     $scope.aziende = Azienda.all();
     $scope.causali = codici.CAUSALI_MOVIMENTO_MAGAZZINO;
     $scope.form = { anno: parseInt(codici.newYyyyMmDdDate().substring(0, 4), 10) };
+    session.then(function (session) {
+      $scope.aziende.then(function (aziende) {
+        var username = session.userCtx.name;
+        if (aziende.hasOwnProperty(username)) {
+          $scope.form.magazzino1 = username;
+        }
+      });
+    });
 
     $scope.find = function () {
       var f = $scope.form;
@@ -168,7 +176,7 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
 
     $scope.nomeAzienda = Azienda.nomi();
   };
-  Ctrl.MovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$location', 'codici', 'Azienda', 'MovimentoMagazzino'];
+  Ctrl.MovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$location', 'codici', 'Azienda', 'MovimentoMagazzino', 'session'];
 
   Ctrl.RicercaBollaAs400 = function ($scope, As400, SessionInfo, MovimentoMagazzino, $location, codici, Azienda, Doc) {
     SessionInfo.resetFlash();
