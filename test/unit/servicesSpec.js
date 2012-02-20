@@ -1,4 +1,4 @@
-/*global describe:false, beforeEach:false, afterEach:false, it:false, expect:false, module:false, inject:false, jasmine:false, spyOn:false, angular:false*/
+/*global describe:false, beforeEach:false, afterEach:false, it:false, xit:false, expect:false, module:false, inject:false, jasmine:false, spyOn:false, angular:false*/
 describe('Service', function () {
   'use strict';
   beforeEach(module('app.config', 'app.services', 'app.shared'));
@@ -312,11 +312,14 @@ describe('Service', function () {
         });
       }));
 
-      it('should load documents with given ids into cache', inject(function (Doc, $httpBackend, cache) {
+      it('should load documents with given ids into cache', inject(function (Doc, $httpBackend, cache, couchdb) {
         expect(cache.info().size).toBe(0);
         Doc.load(docIds, docPaths);
         expect(cache.info().size).toBe(docIds.length);
         $httpBackend.flush();
+        docIds.forEach(function (docId, i) {
+          expect(JSON.parse(cache.get(docPaths[i] || couchdb.docPath(docId))[1])).toEqual(docs[docId]);
+        });
       }));
 
       it('should return array of promises of requested docs', inject(function (Doc, $httpBackend) {
@@ -351,7 +354,7 @@ describe('Service', function () {
         });
       });
 
-      it('should update cache', inject(function ($httpBackend, Doc, cache, couchdb) {
+      xit('should update cache', inject(function ($httpBackend, Doc, cache, couchdb) {
         var url = couchdb.docPath(doc._id);
         $httpBackend.expectPUT(url).respond(okResp);
         expect(cache.get(url)).toBeUndefined();
@@ -360,6 +363,16 @@ describe('Service', function () {
         $httpBackend.flush();
         expect(cache.get(url)).toBe(doc);
         expect(doc._rev).toBe(okResp.rev);
+      }));
+
+      it('should clear cache', inject(function ($httpBackend, Doc, cache, couchdb) {
+        var url = couchdb.docPath(doc._id);
+        $httpBackend.expectPUT(url).respond(okResp);
+        cache.put('someid', { some: 'obj' });
+        expect(cache.info(url).size).toBe(1);
+        Doc.save(doc);
+        $httpBackend.flush();
+        expect(cache.info(url).size).toBe(0);
       }));
 
       describe('when ok', function () {
