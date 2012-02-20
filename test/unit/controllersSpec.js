@@ -297,7 +297,7 @@ describe('Controller', function () {
       expect($scope.causali).toBe(codici.CAUSALI_MOVIMENTO_MAGAZZINO);
       form = $scope.form;
       // it should set current year as default value in $scope.form
-      expect(form.anno).toBe('2011');
+      expect(form.anno).toBe(2011);
 
       // fill the form
       form.magazzino1 = '010101';

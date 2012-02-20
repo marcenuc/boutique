@@ -159,7 +159,7 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
     $scope.pendenti = MovimentoMagazzino.pendenti();
     $scope.aziende = Azienda.all();
     $scope.causali = codici.CAUSALI_MOVIMENTO_MAGAZZINO;
-    $scope.form = { anno: codici.newYyyyMmDdDate().substring(0, 4) };
+    $scope.form = { anno: parseInt(codici.newYyyyMmDdDate().substring(0, 4), 10) };
 
     $scope.find = function () {
       var f = $scope.form;
