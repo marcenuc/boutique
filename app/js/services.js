@@ -309,6 +309,7 @@ angular.module('app.services', [], ['$provide', function ($provide) {
           promise = $http.put(url, doc).error(function (data, status) {
             SessionInfo.error('Error ' + status + ' ' + data.error + ' on ' + doc._id + ': ' + data.reason);
           });
+        //TODO remove only affected entries
         cache.removeAll();
         promise.then(done, done);
         return promise.then(function (value) {

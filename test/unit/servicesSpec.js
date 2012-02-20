@@ -354,17 +354,6 @@ describe('Service', function () {
         });
       });
 
-      xit('should update cache', inject(function ($httpBackend, Doc, cache, couchdb) {
-        var url = couchdb.docPath(doc._id);
-        $httpBackend.expectPUT(url).respond(okResp);
-        expect(cache.get(url)).toBeUndefined();
-        expect(doc._rev).not.toEqual(okResp.rev);
-        Doc.save(doc);
-        $httpBackend.flush();
-        expect(cache.get(url)).toBe(doc);
-        expect(doc._rev).toBe(okResp.rev);
-      }));
-
       it('should clear cache', inject(function ($httpBackend, Doc, cache, couchdb) {
         var url = couchdb.docPath(doc._id);
         $httpBackend.expectPUT(url).respond(okResp);

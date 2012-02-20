@@ -50,16 +50,47 @@ describe('Boutique', function () {
     });
   });
 
+  function saveMovimentoMagazzino() {
+    select('form.causale1').option('VENDITA A CLIENTI');
+    select('form.magazzino1').option('099994');
+    input('form.data').enter('20111213');
+    click('Crea');
+    expect(browser().location().path()).toBe('/MovimentoMagazzino_099994_2011_C_1');
+    // TODO expect(element('ul.notices li').text()).toMatch(/^Salvato\n\s*/);
+    expect(binding('model.data')).toBe('20111213');
+    expect(binding('codes.numero')).toBe('1');
+    expect(binding('codes.gruppo')).toBe('C');
+    expect(binding('model.causale1[0]')).toBe('VENDITA A CLIENTI');
+    expect(binding('model.causale1[1]')).toBe('-1');
+    expect(binding('nomeMagazzino1')).toBe('099994 Negozio 099994');
+    expect(binding('nomeMagazzino2')).toBe('');
+    var r = using('table.details').repeater('tbody tr', 'row in model.rows');
+    expect(r.count()).toBe(1);
+    expect(r.row(0)).toEqual([]);
+    input('newBarcode').enter('112 60456 5000 5000 66');
+    click('Salva');
+    expect(r.count()).toBe(2);
+    expect(r.row(0)).toEqual(['1', '112 60456 5000 5000 66', '2', 'SM', 'SMOKING', '0']);
+  }
+
   describe('/MovimentoMagazzino_', function () {
     beforeEach(function () {
       goTo('/MovimentoMagazzino_');
     });
 
-    it('should save new movimento magazzino', function () {
+    it('should save new movimento magazzino', saveMovimentoMagazzino);
+  });
+
+  describe('/MovimentoMagazzino', function () {
+    it('should find movimento magazzino', function () {
+      goTo('/MovimentoMagazzino_');
+      saveMovimentoMagazzino();
+      goTo('/MovimentoMagazzino');
       select('form.causale1').option('VENDITA A CLIENTI');
       select('form.magazzino1').option('099994');
-      input('form.data').enter('20111213');
-      click('Crea');
+      input('form.anno').enter('2011');
+      input('form.numero').enter('1');
+      click('Cerca');
       expect(browser().location().path()).toBe('/MovimentoMagazzino_099994_2011_C_1');
       expect(binding('model.data')).toBe('20111213');
       expect(binding('codes.numero')).toBe('1');
@@ -69,12 +100,30 @@ describe('Boutique', function () {
       expect(binding('nomeMagazzino1')).toBe('099994 Negozio 099994');
       expect(binding('nomeMagazzino2')).toBe('');
       var r = using('table.details').repeater('tbody tr', 'row in model.rows');
-      expect(r.count()).toBe(1);
-      expect(r.row(0)).toEqual([]);
-      input('newBarcode').enter('112 60456 5000 5000 66');
-      click('Salva');
       expect(r.count()).toBe(2);
       expect(r.row(0)).toEqual(['1', '112 60456 5000 5000 66', '2', 'SM', 'SMOKING', '0']);
+    });
+
+    it('should list movimento magazzino non accodato', function () {
+      var r, a;
+      goTo('/MovimentoMagazzino_');
+      saveMovimentoMagazzino();
+      goTo('/MovimentoMagazzino');
+      r = using('table.pendenti').repeater('tbody tr', 'row in pendenti.rows');
+      expect(r.count()).toBe(1);
+      expect(r.row(0)).toEqual(['1', '099994 Negozio 099994', '20111213', 'VENDITA A CLIENTI', 'C', '1']);
+      a = element('a[href="#/MovimentoMagazzino_099994_2011_C_1"]');
+      expect(a.text()).toBe('1');
+      a.click();
+      expect(browser().location().path()).toBe('/MovimentoMagazzino_099994_2011_C_1');
+      expect(element('input[ng-model="model.accodato"]').prop('checked')).toBeFalsy();
+      input('model.accodato').check();
+      click('Salva');
+      expect(element('ul.notices li').text()).toMatch(/^Salvato MovimentoMagazzino_099994_2011_C_1\n\s*/);
+      expect(element('input[ng-model="model.accodato"]').prop('checked')).toBeTruthy();
+      goTo('/MovimentoMagazzino');
+      r = using('table.pendenti').repeater('tbody tr', 'row in pendenti.rows');
+      expect(r.count()).toBe(0);
     });
   });
 });
