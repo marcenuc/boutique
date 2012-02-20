@@ -116,12 +116,17 @@ describe('Controller', function () {
   });
 
   describe('NewMovimentoMagazzino', function () {
-    beforeEach(module(function ($provide) {
-      $provide.value('Doc', jasmine.createSpyObj('Doc', ['find', 'save', 'load']));
-      $provide.value('Azienda', jasmine.createSpyObj('Azienda', ['all', 'nome', 'nomi']));
-    }));
+    beforeEach(function () {
+      module(function ($provide) {
+        $provide.value('Doc', jasmine.createSpyObj('Doc', ['find', 'save', 'load']));
+        $provide.value('Azienda', jasmine.createSpyObj('Azienda', ['all', 'nome', 'nomi']));
+      });
+      inject(function ($httpBackend) {
+        $httpBackend.expectGET('../_session').respond({ userCtx: { name: '010101', roles: ['azienda'] } });
+      });
+    });
 
-    it('should initialize $scope', inject(function ($q, $rootScope, $controller, controllers, $location, codici, Azienda, MovimentoMagazzino, Doc) {
+    it('should initialize $scope', inject(function ($q, $rootScope, $controller, controllers, $location, codici, Azienda, MovimentoMagazzino, Doc, $httpBackend) {
       var form, $scope = $rootScope,
         aziende = getPromise($q, AZIENDE),
         buildResp = jasmine.createSpyObj('buildMM', ['then']),
@@ -138,10 +143,16 @@ describe('Controller', function () {
       expect($scope.aziende).toBe(aziende);
       // it should put causali in $scope
       expect($scope.causali).toBe(codici.CAUSALI_MOVIMENTO_MAGAZZINO);
+      $httpBackend.flush();
 
       form = $scope.form;
-      // it should set today as default date in form
+      // it should default form.data to today
       expect(form.data).toBe('20111231');
+      // it should default magazzino1 to user's magazzino
+      expect(form.magazzino1).toBe('010101');
+      // it should default causale1 to "VENDITA A CLIENTI" if user's name is codice azienda
+      // TODO it should default causale1 to "VENDITA A CLIENTI" if user has role azienda
+      expect(form.causale1).toEqual({ descrizione: 'VENDITA A CLIENTI', segno: -1, gruppo: 'C' });
 
       // fill form
       form.magazzino1 = '010101';

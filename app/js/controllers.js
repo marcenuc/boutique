@@ -21,18 +21,31 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
     });
   }
 
-  Ctrl.NewMovimentoMagazzino = function ($scope, SessionInfo, $location, codici, Doc, Azienda, MovimentoMagazzino) {
+  function setDefaultMagazzino1($scope, session, codici) {
+    session.then(function (session) {
+      $scope.aziende.then(function (aziende) {
+        var username = session.userCtx.name;
+        if (aziende.hasOwnProperty(username)) {
+          $scope.form.magazzino1 = username;
+          $scope.form.causale1 = codici.findCausaleMovimentoMagazzino('VENDITA A CLIENTI', -1);
+        }
+      });
+    });
+  }
+
+  Ctrl.NewMovimentoMagazzino = function ($scope, SessionInfo, $location, codici, Doc, Azienda, MovimentoMagazzino, session) {
     SessionInfo.resetFlash();
 
     $scope.aziende = Azienda.all();
     $scope.causali = codici.CAUSALI_MOVIMENTO_MAGAZZINO;
     $scope.form = { data: codici.newYyyyMmDdDate() };
+    setDefaultMagazzino1($scope, session, codici);
 
     $scope.create = function () {
       createMovimentoMagazzino(Doc, MovimentoMagazzino, $location, $scope.aziende, $scope.form);
     };
   };
-  Ctrl.NewMovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$location', 'codici', 'Doc', 'Azienda', 'MovimentoMagazzino'];
+  Ctrl.NewMovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$location', 'codici', 'Doc', 'Azienda', 'MovimentoMagazzino', 'session'];
 
   //TODO DRY use codici.formatMoney()
   function formatPrezzo(prezzo) {
@@ -160,14 +173,7 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
     $scope.aziende = Azienda.all();
     $scope.causali = codici.CAUSALI_MOVIMENTO_MAGAZZINO;
     $scope.form = { anno: parseInt(codici.newYyyyMmDdDate().substring(0, 4), 10) };
-    session.then(function (session) {
-      $scope.aziende.then(function (aziende) {
-        var username = session.userCtx.name;
-        if (aziende.hasOwnProperty(username)) {
-          $scope.form.magazzino1 = username;
-        }
-      });
-    });
+    setDefaultMagazzino1($scope, session, codici);
 
     $scope.find = function () {
       var f = $scope.form;
