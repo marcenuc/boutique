@@ -169,8 +169,17 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
   Ctrl.MovimentoMagazzino = function ($scope, SessionInfo, $location, codici, Azienda, MovimentoMagazzino, session) {
     SessionInfo.resetFlash();
 
-    $scope.pendenti = MovimentoMagazzino.pendenti();
     $scope.aziende = Azienda.all();
+    session.then(function (session) {
+      $scope.aziende.then(function (aziende) {
+        var username = session.userCtx.name;
+        if (aziende.hasOwnProperty(username)) {
+          $scope.pendenti = MovimentoMagazzino.pendenti(username);
+        } else {
+          $scope.pendenti = MovimentoMagazzino.pendenti();
+        }
+      });
+    });
     $scope.causali = codici.CAUSALI_MOVIMENTO_MAGAZZINO;
     $scope.form = { anno: parseInt(codici.newYyyyMmDdDate().substring(0, 4), 10) };
     setDefaultMagazzino1($scope, session, codici);

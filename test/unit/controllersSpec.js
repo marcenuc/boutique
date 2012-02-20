@@ -305,8 +305,11 @@ describe('Controller', function () {
       spyOn(codici, 'newYyyyMmDdDate').andReturn('20111231');
       // ensure $scope is properly initialized
       $controller(controllers.MovimentoMagazzino, $scope);
+      $httpBackend.flush();
       // it should put movimenti pendenti in $scope.pendenti
       expect($scope.pendenti).toBe(pendenti);
+      // it should query for movimementi pendenti of the user.
+      expect(MovimentoMagazzino.pendenti).toHaveBeenCalledWith('010101');
       // it should put aziende in $scope
       expect($scope.aziende).toBe(aziende);
       // it should put causali in $scope
@@ -314,7 +317,6 @@ describe('Controller', function () {
       form = $scope.form;
       // it should default to current year
       expect(form.anno).toBe(2011);
-      $httpBackend.flush();
       // it should default to current user's azienda
       expect(form.magazzino1).toBe('010101');
 

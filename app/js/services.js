@@ -339,8 +339,12 @@ angular.module('app.services', [], ['$provide', function ($provide) {
     }
 
     return {
-      pendenti: function () {
-        return Doc.load(['PENDENTI'], [couchdb.viewPath('movimentoMagazzinoPendente')])[0];
+      pendenti: function (codiceAzienda) {
+        var path = couchdb.viewPath('movimentoMagazzinoPendente');
+        if (codiceAzienda) {
+          path += '?startkey=["' + codiceAzienda + '"]&endkey=["' + codiceAzienda + '",{}]';
+        }
+        return Doc.load(['PENDENTI'], [path])[0];
       },
       findByRiferimento: function (riferimento) {
         return Doc.find(riferimento, couchdb.viewPath('riferimentiMovimentiMagazzino?key="' + riferimento + '"'));

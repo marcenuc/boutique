@@ -395,6 +395,15 @@ describe('Service', function () {
         $httpBackend.flush();
         expect(cb).toHaveBeenCalledWith(pendenti);
       }));
+
+      it('should promise movimenti magazzino pendenti aziende', inject(function ($httpBackend, MovimentoMagazzino, couchdb) {
+        $httpBackend.expectGET(couchdb.viewPath('movimentoMagazzinoPendente?startkey=["010101"]&endkey=["010101",{}]')).respond(JSON.stringify(pendenti));
+        var resp = MovimentoMagazzino.pendenti('010101'), cb = jasmine.createSpy();
+        resp.then(cb);
+        $httpBackend.flush();
+        expect(cb).toHaveBeenCalledWith(pendenti);
+      }));
+
     });
 
     describe('findByRiferimento', function () {
