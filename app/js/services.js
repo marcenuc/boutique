@@ -358,7 +358,7 @@ angular.module('app.services', [], ['$provide', function ($provide) {
           });
         } else if (options.magazzino1 && options.smact) {
           key = options.magazzino1 + '","' + options.smact;
-          return Doc.find('SEARCH', couchdb.viewPath('movimentiArticolo?descending=true&endkey=["' + key + '"]&startkey=["' + key + '\ufff0"]')).then(function (res) {
+          return Doc.find('SEARCH', couchdb.viewPath('movimentiArticolo?startkey=["' + key + '"]&endkey=["' + key + '\ufff0"]')).then(function (res) {
             var rows = [], docs = {};
             res.rows.forEach(function (row) {
               if (!docs[row.id]) {

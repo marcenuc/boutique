@@ -408,10 +408,9 @@ describe('Service', function () {
     describe('search', function () {
       var movimentiArticolo = { rows: [] };
 
-      it('should promise all movimenti magazzino matching given criteria', inject(function ($httpBackend, MovimentoMagazzino, couchdb, codici) {
-        $httpBackend.expectGET(couchdb.viewPath('movimentiArticolo?descending=true&endkey=["010101","11260456"]&startkey=["010101","11260456\ufff0"]')).respond(JSON.stringify(movimentiArticolo));
-        var causaleVendita = codici.findCausaleMovimentoMagazzino('VENDITA', -1),
-          cb = jasmine.createSpy(),
+      it('should promise all movimenti magazzino matching given criteria', inject(function ($httpBackend, MovimentoMagazzino, couchdb) {
+        $httpBackend.expectGET(couchdb.viewPath('movimentiArticolo?startkey=["010101","11260456"]&endkey=["010101","11260456\ufff0"]')).respond(JSON.stringify(movimentiArticolo));
+        var cb = jasmine.createSpy(),
           resp = MovimentoMagazzino.search({ magazzino1: '010101', anno: 2011, smact: '11260456' });
         resp.then(cb);
         $httpBackend.flush();
