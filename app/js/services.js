@@ -369,7 +369,10 @@ angular.module('app.services', [], ['$provide', function ($provide) {
                 }
               }
             });
-            return { rows: rows };
+            return { rows: rows.sort(function (a, b) {
+              var x = a.key[1], y = b.key[1];
+              return x < y ? -1 : (x > y ? 1 : 0);
+            }) };
           });
         } else {
           SessionInfo.error('ATTENZIONE: RICERCA NON VALIDA (QUESTA FUNZIONALITÀ È ANCORA INCOMPLETA) PER ORA È NECESSARIO SPECIFICARE: o causale1, magazzino1, anno, e numero; o magazzino1, e parte iniziale del codice SMACT (facoltativamente anche l\'anno).');
