@@ -63,6 +63,24 @@ define(function (require) {
       }
     },
 
+    movimentiArticolo: function mapMovimentiArticolo(doc) {
+      if (doc.rows && doc.causale1 && doc.data) {
+        var colBarcode, emitted, codici = require('views/lib/codici'),
+          codes = codici.parseIdMovimentoMagazzino(doc._id);
+        if (codes) {
+          colBarcode = codici.colNamesToColIndexes(doc.columnNames).barcode;
+          emitted = {};
+          doc.rows.forEach(function (row) {
+            var smact = row[colBarcode];
+            if (!emitted[smact]) {
+              emit([codes.magazzino1, row[colBarcode], doc.data], doc.causale1[0]);
+              emitted[smact] = 1;
+            }
+          });
+        }
+      }
+    },
+
     contatori: function mapContatori(doc) {
       var codici = require('views/lib/codici'),
         codes = codici.parseIdMovimentoMagazzino(doc._id);

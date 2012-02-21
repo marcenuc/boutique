@@ -28,6 +28,21 @@ angular.module('app.filters', [], ['$filterProvider', function ($filterProvider)
     });
   });
 
+  angular.inputType('incompleteSmact', function (element, widget) {
+    var rexp = /^\d(\d(\d ?(\d(\d(\d(\d(\d ?(\d(\d(\d(\d ?(\d(\d(\d(\d ?(\d\d?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?$/;
+    widget.$parseView = function () {
+      this.$modelValue = this.$viewValue.replace(' ', '', 'g');
+    };
+    widget.$parseModel = function () {
+      this.$viewValue = this.$modelValue;
+    };
+    widget.$on('$validate', function () {
+      var value = widget.$viewValue;
+      // TODO use codici
+      widget.$emit(!value || rexp.test(value) ? '$valid' : '$invalid', 'BARCODE');
+    });
+  });
+
   angular.inputType('codiceAzienda', function (element, widget) {
     widget.$parseView = function () {
       this.$modelValue = codici.idAzienda(this.$viewValue);

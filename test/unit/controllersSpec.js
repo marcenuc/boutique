@@ -83,7 +83,7 @@ describe('Controller', function () {
   }
 
   beforeEach(module('app.config', 'app.services', 'app.shared', 'app.validators', 'app.controllers', function ($provide) {
-    var MovimentoMagazzino = jasmine.createSpyObj('MovimentoMagazzino', ['pendenti', 'build', 'findByRiferimento']),
+    var MovimentoMagazzino = jasmine.createSpyObj('MovimentoMagazzino', ['pendenti', 'build', 'findByRiferimento', 'search']),
       Downloads = jasmine.createSpyObj('Downloads', ['prepare']),
       SessionInfo = jasmine.createSpyObj('SessionInfo', ['setFlash', 'resetFlash', 'error', 'notice', 'startLoading', 'doneLoading', 'goTo']),
       $location = jasmine.createSpyObj('$location', ['path']);
@@ -219,8 +219,6 @@ describe('Controller', function () {
       Doc.save.andReturn(savePromise);
       // ensure $scope is properly initialized
       $controller(controllers.EditMovimentoMagazzino, $scope);
-      // it should put barcode pattern in $scope
-      expect($scope.rexpBarcode.toString()).toBe('/^\\d{3} ?\\d{5} ?\\d{4} ?\\d{4} ?\\d{2}$/');
       // it should parse $routeParams.codice
       //TODO test what happens if $routeParams.codice is not valid.
       expect($scope.codes).toEqual({ magazzino1: '010101', anno: '2012', gruppo: 'A', numero: 1 });
@@ -296,8 +294,8 @@ describe('Controller', function () {
       });
     });
 
-    it('should initialize $scope', inject(function ($q, $rootScope, $controller, controllers, $location, codici, Azienda, MovimentoMagazzino, $httpBackend) {
-      var form, $scope = $rootScope, aziende = getPromise($q, AZIENDE), nomi = {}, pendenti = { rows: [] };
+    it('should initialize $scope', inject(function ($q, $rootScope, $controller, controllers, codici, Azienda, MovimentoMagazzino, $httpBackend) {
+      var form, results, $scope = $rootScope, aziende = getPromise($q, AZIENDE), nomi = {}, pendenti = { rows: [] };
 
       Azienda.all.andReturn(aziende);
       Azienda.nomi.andReturn(nomi);
@@ -314,22 +312,25 @@ describe('Controller', function () {
       expect($scope.aziende).toBe(aziende);
       // it should put causali in $scope
       expect($scope.causali).toBe(codici.CAUSALI_MOVIMENTO_MAGAZZINO);
+      // it should put nomeAzienda in $scope
+      expect($scope.nomeAzienda).toBe(nomi);
+
       form = $scope.form;
       // it should default to current year
       expect(form.anno).toBe(2011);
-      // it should default to current user's azienda
+      // it should default magazzino1 to current user's azienda
       expect(form.magazzino1).toBe('010101');
 
       // fill the form
       form.causale1 = codici.findCausaleMovimentoMagazzino('VENDITA');
       form.numero = 1;
-
+      results = { some: 'results' };
+      MovimentoMagazzino.search.andReturn(results);
       $scope.find();
-      // it should redirect to selected MovimentoMagazzino
-      expect($location.path).toHaveBeenCalledWith('MovimentoMagazzino_010101_2011_A_1');
-
-      // it should promise Azienda.nomi
-      expect($scope.nomeAzienda).toBe(nomi);
+      // it should search movimenti magazzino with given parameters
+      expect(MovimentoMagazzino.search).toHaveBeenCalledWith(form);
+      // it should put results in $scope
+      expect($scope.results).toBe(results);
     }));
   });
 

@@ -1,4 +1,4 @@
-/*global describe:false, xdescribe:false, beforeEach:false, browser:false, it:false, expect:false, element:false, using:false, repeater:false, binding:false, input:false, select:false*/
+/*global describe:false, xdescribe:false, beforeEach:false, browser:false, it:false, xit:false, expect:false, element:false, using:false, repeater:false, binding:false, input:false, select:false*/
 describe('Boutique', function () {
   'use strict';
 
@@ -82,7 +82,8 @@ describe('Boutique', function () {
   });
 
   describe('/MovimentoMagazzino', function () {
-    it('should find movimento magazzino', function () {
+    it('should find movimento magazzino by id', function () {
+      var a, r;
       goTo('/MovimentoMagazzino_');
       saveMovimentoMagazzino();
       goTo('/MovimentoMagazzino');
@@ -91,6 +92,9 @@ describe('Boutique', function () {
       input('form.anno').enter('2011');
       input('form.numero').enter('1');
       click('Cerca');
+      a = element('table.results a[href="#/MovimentoMagazzino_099994_2011_C_1"]');
+      expect(a.text()).toBe('1');
+      a.click();
       expect(browser().location().path()).toBe('/MovimentoMagazzino_099994_2011_C_1');
       expect(binding('model.data')).toBe('20111213');
       expect(binding('codes.numero')).toBe('1');
@@ -99,9 +103,22 @@ describe('Boutique', function () {
       expect(binding('model.causale1[1]')).toBe('-1');
       expect(binding('nomeMagazzino1')).toBe('099994 Negozio 099994');
       expect(binding('nomeMagazzino2')).toBe('');
-      var r = using('table.details').repeater('tbody tr', 'row in model.rows');
+      r = using('table.details').repeater('tbody tr', 'row in model.rows');
       expect(r.count()).toBe(2);
       expect(r.row(0)).toEqual(['1', '112 60456 5000 5000 66', '2', 'SM', 'SMOKING', '0']);
+    });
+
+    it('should list movimenti magazzino by barcode', function () {
+      goTo('/MovimentoMagazzino_');
+      saveMovimentoMagazzino();
+      goTo('/MovimentoMagazzino');
+      input('form.anno').enter('');
+      input('form.smact').enter('112 60456');
+      select('form.magazzino1').option('099994');
+      click('Cerca');
+      var r = using('table.results').repeater('tbody tr', 'row in results.rows');
+      expect(r.count()).toBe(1);
+      expect(r.row(0)).toEqual(['1', '099994 Negozio 099994', '20111213', 'VENDITA A CLIENTI', 'C', '1']);
     });
 
     it('should list movimento magazzino non accodato', function () {
@@ -112,7 +129,7 @@ describe('Boutique', function () {
       r = using('table.pendenti').repeater('tbody tr', 'row in pendenti.rows');
       expect(r.count()).toBe(1);
       expect(r.row(0)).toEqual(['1', '099994 Negozio 099994', '20111213', 'VENDITA A CLIENTI', 'C', '1']);
-      a = element('a[href="#/MovimentoMagazzino_099994_2011_C_1"]');
+      a = element('table.pendenti a[href="#/MovimentoMagazzino_099994_2011_C_1"]');
       expect(a.text()).toBe('1');
       a.click();
       expect(browser().location().path()).toBe('/MovimentoMagazzino_099994_2011_C_1');

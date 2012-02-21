@@ -79,6 +79,26 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
     });
   });
 
+  describe('movimentiArticolo', function () {
+    var map = views.movimentiArticolo;
+
+    describe('MovimentoMagazzino', function () {
+      it('should emit barcodes in movimenti magazzino', function () {
+        var mm = codici.newMovimentoMagazzino('010101', '20111230', 1, codici.findCausaleMovimentoMagazzino('VENDITA A CLIENTI', -1));
+        mm.rows = [
+          ['112604565000800066', 2, 'XL', 'SMOKING', 100, 1],
+          ['112604565000500066', 2, 'XL', 'SMOKING', 100, 2],
+          ['112604565000800066', 2, 'XL', 'SMOKING', 100, 2]
+        ];
+        map(mm);
+        expect(views._rows()).toEqual([
+          [['010101', '112604565000800066', '20111230'], 'VENDITA A CLIENTI'],
+          [['010101', '112604565000500066', '20111230'], 'VENDITA A CLIENTI']
+        ]);
+      });
+    });
+  });
+
   describe('contatori map', function () {
     var map = views.contatori;
 

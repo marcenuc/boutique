@@ -339,6 +339,39 @@ angular.module('app.services', [], ['$provide', function ($provide) {
     }
 
     return {
+      search: function (options) {
+        var id, key;
+        if (options.magazzino1 && options.causale1 && options.anno && options.numero) {
+          id = codici.idMovimentoMagazzino(options.magazzino1, options.anno, options.causale1.gruppo, options.numero);
+          return Doc.find(id).then(function (doc) {
+            var col, notFound;
+            if (options.smact) {
+              col = codici.colNamesToColIndexes(doc.columnNames);
+              notFound = doc.rows.every(function (row) {
+                return row[col.barcode].substring(0, options.smact.length) !== options.smact;
+              });
+              if (notFound) {
+                return { rows: [] };
+              }
+            }
+            return { rows: [{ key: [options.magazzino1, doc.data, doc.causale1[0], options.causale1.gruppo, options.numero], id: doc._id }] };
+          });
+        } else if (options.magazzino1 && options.smact) {
+          key = options.magazzino1 + '","' + options.smact;
+          return Doc.find('SEARCH', couchdb.viewPath('movimentiArticolo?descending=true&endkey=["' + key + '"]&startkey=["' + key + '\ufff0"]')).then(function (res) {
+            var rows = [];
+            res.rows.forEach(function (row) {
+              var codes = codici.parseIdMovimentoMagazzino(row.id);
+              if (!options.anno || parseInt(codes.anno, 10) === options.anno) {
+                rows.push({ key: [row.key[0], row.key[2], row.value, codes.gruppo, codes.numero], id: row.id });
+              }
+            });
+            return { rows: rows };
+          });
+        } else {
+          SessionInfo.error('ATTENZIONE: RICERCA NON VALIDA (QUESTA FUNZIONALITÀ È ANCORA INCOMPLETA) PER ORA È NECESSARIO SPECIFICARE: o causale1, magazzino1, anno, e numero; o magazzino1, e parte iniziale del codice SMACT (facoltativamente anche l\'anno).');
+        }
+      },
       pendenti: function (codiceAzienda) {
         var path = couchdb.viewPath('movimentoMagazzinoPendente');
         if (codiceAzienda) {
