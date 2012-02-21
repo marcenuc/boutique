@@ -359,11 +359,14 @@ angular.module('app.services', [], ['$provide', function ($provide) {
         } else if (options.magazzino1 && options.smact) {
           key = options.magazzino1 + '","' + options.smact;
           return Doc.find('SEARCH', couchdb.viewPath('movimentiArticolo?descending=true&endkey=["' + key + '"]&startkey=["' + key + '\ufff0"]')).then(function (res) {
-            var rows = [];
+            var rows = [], docs = {};
             res.rows.forEach(function (row) {
-              var codes = codici.parseIdMovimentoMagazzino(row.id);
-              if (!options.anno || parseInt(codes.anno, 10) === options.anno) {
-                rows.push({ key: [row.key[0], row.key[2], row.value, codes.gruppo, codes.numero], id: row.id });
+              if (!docs[row.id]) {
+                docs[row.id] = 1;
+                var codes = codici.parseIdMovimentoMagazzino(row.id);
+                if (!options.anno || parseInt(codes.anno, 10) === options.anno) {
+                  rows.push({ key: [row.key[0], row.key[2], row.value, codes.gruppo, codes.numero], id: row.id });
+                }
               }
             });
             return { rows: rows };
