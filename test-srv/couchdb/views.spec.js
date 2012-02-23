@@ -121,6 +121,16 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
     });
   });
 
+  describe('old_id map', function () {
+    var map = views.old_id;
+
+    it('should emit old_id of doc', function () {
+      var mm = { _id: 'adocid', old_id: 'a doc id'};
+      map(mm);
+      expect(views._rows()).toEqual([['a doc id', undefined]]);
+    });
+  });
+
   describe('giacenzeNegative map Giacenze', function () {
     var map = views.giacenzeNegative,
       columnNames = codici.COLUMN_NAMES.Giacenze,
