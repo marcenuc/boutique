@@ -200,6 +200,9 @@ requirejs(['q', 'nano', 'lib/servers', 'views/lib/codici', 'dbconfig'], function
       return getDst('ModelliEScalarini').then(function (bh) {
         var listaModelli = bh[0].lista;
         Object.keys(aziende).forEach(function (codiceAzienda) {
+          if (codici.hasExternalWarehouse(aziende[codiceAzienda].doc)) {
+            return;
+          }
           migrateInventario(aziende, descrizioniTaglie, listaModelli, codiceAzienda).then(function (v) {
             console.log(v);
             return migrateMovimenti(aziende, descrizioniTaglie, listaModelli, codiceAzienda);
