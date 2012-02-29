@@ -430,7 +430,7 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
           colonnaTaglia, colonneTaglie = taglieScalarini.colonneTaglie,
           descrizioniTaglia, descrizioniTaglie = taglieScalarini.descrizioniTaglie,
           accoda, filtroSmacAz = getFiltroSmacAz(), filtroTaglia = getFiltroTaglia(),
-          totaleRiga, totaleRighe = 0, totaliColonna = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+          totaleRiga, prezzoRiga, totaleRighe = 0, prezzoTotale = 0, totaliColonna = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
         for (i = 0, ii = rows.length; i < ii && count < maxCount; i += 1) {
           r = rows[i];
@@ -468,12 +468,19 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
               if (prezzi) {
                 versioneListino = prezzi[2];
                 colPrezzi = prezzi[0];
+                prezzoRiga = prezzi[1][colPrezzi.prezzo2] * totaleRiga;
                 riga.push(versioneListino,
                     codici.formatMoney(prezzi[1][colPrezzi.prezzo2]) + (prezzi[1][colPrezzi.offerta] || ''),
-                    codici.formatMoney(prezzi[1][colPrezzi.prezzo2] * totaleRiga));
+                    codici.formatMoney(prezzoRiga));
               } else {
                 versioneListino = listini[r[4]].versioneBase || r[4];
-                riga.push(versioneListino, '###', '###');
+                prezzoRiga = '###';
+                riga.push(versioneListino, '###', prezzoRiga);
+              }
+              if (typeof prezzoRiga === 'number' && typeof prezzoTotale === 'number') {
+                prezzoTotale += prezzoRiga;
+              } else {
+                prezzoTotale = '###';
               }
               totaleRighe += totaleRiga;
               count = filtrate.push(riga);
@@ -492,7 +499,10 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
             }
           }
         }
-        totaliColonna.push(totaleRighe);
+        if (typeof prezzoTotale === 'number') {
+          prezzoTotale = codici.formatMoney(prezzoTotale);
+        }
+        totaliColonna.push(totaleRighe, '', '', prezzoTotale);
 
         $scope.filtrate = filtrate;
         $scope.scalarino = scalarino;

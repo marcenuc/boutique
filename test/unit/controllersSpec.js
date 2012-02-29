@@ -558,7 +558,7 @@ describe('Controller', function () {
       // it should put first descrizioniTaglie in $scope
       expect($scope.taglie).toEqual(['SM', '--', '--', '--', '--', '--', '--', '--', '--', '--', '--', '--']);
       // it should put totaliColonna in $scope
-      expect($scope.totaliColonna).toEqual([3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3]);
+      expect($scope.totaliColonna).toEqual([3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, '', '', '6']);
     }));
   });
 
