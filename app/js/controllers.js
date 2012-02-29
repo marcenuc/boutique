@@ -446,7 +446,7 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
             } else {
               scalarino = desscal[1];
               descrizioniTaglia = descrizioniTaglie[scalarino];
-              riga = [azienda, desscal[0], r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PRODUZIONE' : 'PRONTO'), scalarino, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+              riga = [azienda, desscal[0], r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PROD.' : 'PRONTO'), scalarino, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
               giacenzeRiga = r[7];
               for (taglia in giacenzeRiga) {
                 if (giacenzeRiga.hasOwnProperty(taglia)) {
@@ -468,7 +468,9 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
               if (prezzi) {
                 versioneListino = prezzi[2];
                 colPrezzi = prezzi[0];
-                riga.push(versioneListino, codici.formatMoney(prezzi[1][colPrezzi.prezzo2]) + (prezzi[1][colPrezzi.offerta] || ''));
+                riga.push(versioneListino,
+                    codici.formatMoney(prezzi[1][colPrezzi.prezzo2]) + (prezzi[1][colPrezzi.offerta] || ''),
+                    codici.formatMoney(prezzi[1][colPrezzi.prezzo2] * totaleRiga));
               } else {
                 versioneListino = listini[r[4]].versioneBase || r[4];
                 riga.push(versioneListino, '###');

@@ -551,7 +551,7 @@ describe('Controller', function () {
       $httpBackend.flush();
       // it should find up to limiteRisultati rows
       expect($scope.filtrate).toEqual([
-        ['010101 Negozio1', 'SMOKING', '112', '60456', '5000', '5000', 3, 'PRONTO', 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, '1', '2*']
+        ['010101 Negozio1', 'SMOKING', '112', '60456', '5000', '5000', 3, 'PRONTO', 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, '1', '2*', '6']
       ]);
       // it should put first scalarino in $scope
       expect($scope.scalarino).toBe(2);
