@@ -437,7 +437,7 @@ angular.module('app.shared', []).factory('codici', function () {
   };
 
   codici.formatMoney = function (v) {
-    return typeof v === 'undefined' ? '' : (isNaN(v) ? '##' : String(v / 100).replace('.', ','));
+    return typeof v === 'undefined' ? '' : String(v / 100).replace('.', ',');
   };
 
   codici.parseQta = function (value) {

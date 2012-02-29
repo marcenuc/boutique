@@ -473,7 +473,7 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
                     codici.formatMoney(prezzi[1][colPrezzi.prezzo2] * totaleRiga));
               } else {
                 versioneListino = listini[r[4]].versioneBase || r[4];
-                riga.push(versioneListino, '###');
+                riga.push(versioneListino, '###', '###');
               }
               totaleRighe += totaleRiga;
               count = filtrate.push(riga);
