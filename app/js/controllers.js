@@ -141,6 +141,7 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
           newRow[col.scalarino] = descs[1].scalarino;
           newRow[col.descrizioneTaglia] = descs[1].descrizioneTaglia;
           newRow[col.descrizione] = descs[1].descrizione;
+          // FIXME inserire costo.
           newRow[col.costo] = 0;
           newRow[col.qta] = $scope.newQta;
           $scope.model.rows.push(newRow);
