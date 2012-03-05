@@ -14,8 +14,7 @@ angular.module('app.widgets', [], ['$compileProvider', function ($compileProvide
       function resize() {
         var rect = el.getBoundingClientRect();
         //TODO DRY 25 is height of header in .fixed-table-container
-        //FIXME document.documentElement.clientHeight is wrong in Chrome
-        el.style.height = ($document[0].documentElement.clientHeight - rect.top - $window.pageYOffset - 25) + "px";
+        el.style.height = ($document[0].documentElement.clientHeight - rect.top - $window.pageYOffset - 25) + 'px';
       }
       $window.onresize = resize;
       resize();
