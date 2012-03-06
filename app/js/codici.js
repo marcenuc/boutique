@@ -34,10 +34,7 @@ angular.module('app.shared', []).factory('codici', function () {
   codici.COLUMN_NAMES = {
     MovimentoMagazzino: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
     Listino: ['costo', 'prezzo1', 'prezzo2', 'offerta'],
-    Giacenze: ['stagione', 'modello', 'articolo', 'colore', 'codiceAzienda', 'inProduzione', 'tipoMagazzino', 'giacenze'],
-    // TODO remove after upgrade
-    Inventario: ['modello', 'articolo', 'colore', 'stagione', 'da', 'inProduzione', 'tipoMagazzino',
-                 'scalarino', 'taglia', 'descrizioneTaglia', 'descrizione', 'qta']
+    Giacenze: ['stagione', 'modello', 'articolo', 'colore', 'codiceAzienda', 'inProduzione', 'tipoMagazzino', 'giacenze']
   };
 
   codici.splitId = function (id) {
@@ -264,18 +261,6 @@ angular.module('app.shared', []).factory('codici', function () {
       if (prezziBase) {
         return [listinoBase.col, prezziBase, versioneBase];
       }
-    }
-  };
-
-  // TODO remove after upgrade
-  codici.parseIdInventario = function (id) {
-    // TODO DRY '\d{6}' è il codice azienda, '[123]' il tipoMagazzino
-    var m = /^Inventario_(\d{6})_([123])$/.exec(id);
-    if (m) {
-      return {
-        codiceAzienda: m[1],
-        tipoMagazzino: parseInt(m[2], 10)
-      };
     }
   };
 
