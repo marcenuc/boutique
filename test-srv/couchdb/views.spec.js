@@ -299,4 +299,152 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
       });
     });
   });
+
+  describe('giacenzeAnno', function () {
+    describe('map', function () {
+      var map = views.giacenzeAnno.map;
+      describe('MovimentoMagazzino', function () {
+        it('should NOT emit ([anno, macsAzStTm, scalarino, taglia, descrizioneTaglia, descrizione], qta) if not accodato', function () {
+          var mm = {
+            _id: idMM,
+            columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
+            causale1: ['VENDITA A CLIENTI', -1],
+            rows: [
+              ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
+              ['105982901344800002', 6, '11', 'CALZE', 100, 1]
+            ]
+          };
+          map(mm);
+          expect(views._rows()).toEqual([]);
+        });
+
+        it('should emit ([anno, macsAzStTm, scalarino, taglia, descrizioneTaglia, descrizione], qta) if accodato', function () {
+          var mm = {
+            _id: idMM,
+            columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
+            causale1: ['VENDITA A CLIENTI', -1],
+            accodato: 1,
+            rows: [
+              ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
+              ['105982901344800002', 6, '11', 'CALZE', 100, 1]
+            ]
+          };
+          map(mm);
+          expect(views._rows()).toEqual([
+            [['2011', '40912', '4053', '1000', '922', '010101', 0, 3, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], -2],
+            [['2011', '98290', '1344', '8000', '105', '010101', 0, 3, 6, '02', '11', 'CALZE', 100], -1]
+          ]);
+        });
+
+        it('should NOT emit ([anno, macsAzStTm, scalarino, taglia, descrizioneTaglia, descrizione], qta) if esterno1', function () {
+          var mm = {
+            _id: idMM,
+            columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
+            causale1: ['VENDITA A CLIENTI', -1],
+            esterno1: 1,
+            rows: [
+              ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
+              ['105982901344800002', 6, '11', 'CALZE', 100, 1]
+            ]
+          };
+          map(mm);
+          expect(views._rows()).toEqual([]);
+        });
+
+        it('should use inProduzione if present', function () {
+          var mm = {
+            _id: idMM,
+            columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
+            tipoMagazzino: 1,
+            inProduzione: 1,
+            causale1: ['RETTIFICA INVENTARIO +', 1],
+            accodato: 1,
+            rows: [
+              ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
+              ['105982901344800002', 6, '11', 'CALZE', 100, 1]
+            ]
+          };
+          map(mm);
+          expect(views._rows()).toEqual([
+            [['2011', '40912', '4053', '1000', '922', '010101', 1, 1, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], 2],
+            [['2011', '98290', '1344', '8000', '105', '010101', 1, 1, 6, '02', '11', 'CALZE', 100], 1]
+          ]);
+        });
+
+        it('should emit rows for causale2 if accodato', function () {
+          var mm = {
+            _id: idMM,
+            columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
+            causale1: ['SCARICO PER CAMBIO MAGAZZINO', -1],
+            causale2: ['CARICO PER CAMBIO MAGAZZINO', 1],
+            magazzino2: '020202',
+            accodato: 1,
+            rows: [
+              ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
+              ['105982901344800002', 6, '11', 'CALZE', 100, 1]
+            ]
+          };
+          map(mm);
+          expect(views._rows()).toEqual([
+            [['2011', '40912', '4053', '1000', '922', '010101', 0, 3, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], -2],
+            [['2011', '40912', '4053', '1000', '922', '020202', 0, 3, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], 2],
+            [['2011', '98290', '1344', '8000', '105', '010101', 0, 3, 6, '02', '11', 'CALZE', 100], -1],
+            [['2011', '98290', '1344', '8000', '105', '020202', 0, 3, 6, '02', '11', 'CALZE', 100], 1]
+          ]);
+        });
+
+        it('should NOT emit rows for causale2 if accodato and esterno2', function () {
+          var mm = {
+            _id: idMM,
+            columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
+            causale1: ['SCARICO PER CAMBIO MAGAZZINO', -1],
+            causale2: ['CARICO PER CAMBIO MAGAZZINO', 1],
+            magazzino2: '020202',
+            esterno2: 1,
+            accodato: 1,
+            rows: [
+              ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
+              ['105982901344800002', 6, '11', 'CALZE', 100, 1]
+            ]
+          };
+          map(mm);
+          expect(views._rows()).toEqual([
+            [['2011', '40912', '4053', '1000', '922', '010101', 0, 3, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], -2],
+            [['2011', '98290', '1344', '8000', '105', '010101', 0, 3, 6, '02', '11', 'CALZE', 100], -1]
+          ]);
+        });
+
+        it('should use tipoMagazzino and tipoMagazzinoA if present', function () {
+          var mm = {
+            _id: idMM,
+            columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
+            tipoMagazzino: 1,
+            tipoMagazzinoA: 2,
+            causale1: ['SCARICO PER CAMBIO MAGAZZINO', -1],
+            causale2: ['CARICO PER CAMBIO MAGAZZINO', 1],
+            magazzino2: '020202',
+            accodato: 1,
+            rows: [
+              ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
+              ['105982901344800002', 6, '11', 'CALZE', 100, 1]
+            ]
+          };
+          map(mm);
+          expect(views._rows()).toEqual([
+            [['2011', '40912', '4053', '1000', '922', '010101', 0, 1, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], -2],
+            [['2011', '40912', '4053', '1000', '922', '020202', 0, 2, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], 2],
+            [['2011', '98290', '1344', '8000', '105', '010101', 0, 1, 6, '02', '11', 'CALZE', 100], -1],
+            [['2011', '98290', '1344', '8000', '105', '020202', 0, 2, 6, '02', '11', 'CALZE', 100], 1]
+          ]);
+        });
+      });
+    });
+    describe('reduce', function () {
+      var reduce = views.giacenzeAnno.reduce;
+
+      it('should sum values', function () {
+        expect(reduce).toBe('_sum');
+      });
+    });
+  });
 });

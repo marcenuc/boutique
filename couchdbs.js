@@ -1,5 +1,5 @@
 /*global define:false*/
-define(['fs', 'uglify-js', 'views', 'validateDocUpdate', 'dbconfig'], function (fs, uglifyJs, views, validateDocUpdate, dbconfig) {
+define(['fs', 'uglify-js', 'views', 'lists', 'validateDocUpdate', 'dbconfig'], function (fs, uglifyJs, views, lists, validateDocUpdate, dbconfig) {
   'use strict';
   function minify(src) {
     var pro = uglifyJs.uglify;
@@ -16,6 +16,7 @@ define(['fs', 'uglify-js', 'views', 'validateDocUpdate', 'dbconfig'], function (
   }
 
   var couchdbs = {},
+    parsedLists = {},
     parsedViews = { lib: { codici: minifyFile('app/js/codici.js', 'codici') } };
 
   Object.keys(views).forEach(function (viewName) {
@@ -29,9 +30,20 @@ define(['fs', 'uglify-js', 'views', 'validateDocUpdate', 'dbconfig'], function (
         view.map = minifyFunction(src.map.toString());
         view.reduce = typeof src.reduce === 'string' ? src.reduce : minifyFunction(src.reduce.toString());
       } else {
-        throw new Error('Invalid views');
+        throw new Error('Invalid view: ' + viewName);
       }
       parsedViews[viewName] = view;
+    }
+  });
+
+  Object.keys(lists).forEach(function (listName) {
+    if (listName[0] !== '_') {
+      var src = lists[listName];
+      if (typeof src === 'function') {
+        parsedLists[listName] = minifyFunction(src.toString());
+      } else {
+        throw new Error('Invalid list function: ' + listName);
+      }
     }
   });
 
@@ -44,7 +56,8 @@ define(['fs', 'uglify-js', 'views', 'validateDocUpdate', 'dbconfig'], function (
   };
   couchdbs[dbconfig.db]['_design/' + dbconfig.designDoc] = {
     validate_doc_update: minifyFunction(validateDocUpdate.toString()),
-    views: parsedViews
+    views: parsedViews,
+    lists: parsedLists
   };
   return couchdbs;
 });

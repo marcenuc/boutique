@@ -152,6 +152,40 @@ define(function (require) {
         }
       },
       reduce: '_sum'
+    },
+
+    giacenzeAnno: {
+      map: function mapGiacenze(doc) {
+        if (doc.accodato) {
+          var smact, inProduzione, tipoMagazzino, tipoMagazzinoA, segno1, segno2,
+            col, r, i, ii, rows = doc.rows,
+            codici = require('views/lib/codici'),
+            codes = codici.parseIdMovimentoMagazzino(doc._id);
+          if (codes && rows) {
+            col = codici.colNamesToColIndexes(doc.columnNames);
+            inProduzione = doc.inProduzione || 0;
+            tipoMagazzino = doc.tipoMagazzino || codici.TIPO_MAGAZZINO_NEGOZIO;
+            segno1 = doc.causale1[1];
+            if (doc.magazzino2 && !doc.esterno2) {
+              segno2 = doc.causale2[1];
+              tipoMagazzinoA = doc.tipoMagazzinoA || codici.TIPO_MAGAZZINO_NEGOZIO;
+            }
+            for (i = 0, ii = rows.length; i < ii; i += 1) {
+              r = rows[i];
+              smact = codici.parseBarcodeAs400(r[col.barcode]);
+              if (!doc.esterno1) {
+                emit([codes.anno, smact.modello, smact.articolo, smact.colore, smact.stagione, codes.magazzino1, inProduzione, tipoMagazzino,
+                      r[col.scalarino], smact.taglia, r[col.descrizioneTaglia], r[col.descrizione], r[col.costo]], segno1 * r[col.qta]);
+              }
+              if (doc.magazzino2 && !doc.esterno2) {
+                emit([codes.anno, smact.modello, smact.articolo, smact.colore, smact.stagione, doc.magazzino2, inProduzione, tipoMagazzinoA,
+                      r[col.scalarino], smact.taglia, r[col.descrizioneTaglia], r[col.descrizione], r[col.costo]], segno2 * r[col.qta]);
+              }
+            }
+          }
+        }
+      },
+      reduce: '_sum'
     }
   };
 });
