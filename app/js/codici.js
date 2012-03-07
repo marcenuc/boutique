@@ -316,13 +316,13 @@ angular.module('app.shared', []).factory('codici', function () {
         rows: []
       };
     if (magazzino1[6] === '_') {
-      doc.esterno1 = 1;
+      doc.esterno1 = true;
     }
     if (infoCausale.causale2) {
       doc.causale2 = infoCausale.causale2;
       if (magazzino2) {
         if (magazzino2[6] === '_') {
-          doc.esterno2 = 1;
+          doc.esterno2 = true;
         }
         doc.magazzino2 = magazzino2.substring(0, 6);
       }

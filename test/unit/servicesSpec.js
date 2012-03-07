@@ -477,7 +477,7 @@ describe('Service', function () {
           _id: idMovimento,
           rows: rows,
           columnNames: codici.COLUMN_NAMES.MovimentoMagazzino,
-          esterno1: 1,
+          esterno1: true,
           magazzino2: '020202',
           data: '20120101',
           riferimento: 'RIF',

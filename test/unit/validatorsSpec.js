@@ -486,7 +486,7 @@ describe('Validation', function () {
 
       describe('row', function () {
         beforeEach(function () {
-          doc.rows = [['101', '60547', '8000', '5000', '099999', 0, 3, { '01': 1 }]];
+          doc.rows = [['101', '60547', '8000', '5000', '099999', false, 3, { '01': 1 }]];
         });
 
         describe('column 0', function () {
@@ -538,8 +538,8 @@ describe('Validation', function () {
           var msg = 'Invalid inProduzione[0]: "';
           it('should be valid stagione', inject(function (validate) {
             expect(validate(doc)).not.toMatchError(msg);
-            doc.rows[0][5] = '2';
-            expect(validate(doc)).toHaveError(msg + '2"');
+            doc.rows[0][5] = 1;
+            expect(validate(doc)).toHaveError(msg + '1"');
           }));
         });
 
@@ -592,22 +592,55 @@ describe('Validation', function () {
         expect(validate(doc, oldDoc)).toHaveError('Invalid accodato');
       }));
 
-      it('should accept esterno1=1', inject(function (validate, codici) {
+      it('should require accodato to be a flag', inject(function (validate, codici) {
+        var msg = 'Invalid accodato', doc = newDoc(codici);
+        expect(validate(doc)).not.toHaveError(msg);
+        doc.accodato = 1;
+        expect(validate(doc)).toHaveError(msg);
+        doc.accodato = true;
+        expect(validate(doc)).not.toHaveError(msg);
+        doc.accodato = 0;
+        expect(validate(doc)).toHaveError(msg);
+        doc.accodato = false;
+        expect(validate(doc)).not.toHaveError(msg);
+        doc.accodato = '1';
+        expect(validate(doc)).toHaveError(msg);
+        delete doc.accodato;
+        expect(validate(doc)).not.toHaveError(msg);
+      }));
+
+      it('should require esterno1 to be a flag', inject(function (validate, codici) {
         var msg = 'Invalid esterno1/2', doc = newDoc(codici);
         expect(validate(doc)).not.toHaveError(msg);
         doc.esterno1 = 1;
+        expect(validate(doc)).toHaveError(msg);
+        doc.esterno1 = true;
         expect(validate(doc)).not.toHaveError(msg);
         doc.esterno1 = 0;
         expect(validate(doc)).toHaveError(msg);
+        doc.esterno1 = false;
+        expect(validate(doc)).not.toHaveError(msg);
+        doc.esterno1 = '1';
+        expect(validate(doc)).toHaveError(msg);
+        delete doc.esterno1;
+        expect(validate(doc)).not.toHaveError(msg);
       }));
 
-      it('should accept esterno2=1', inject(function (validate, codici) {
+      it('should require esterno2 to be a flag', inject(function (validate, codici) {
         var msg = 'Invalid esterno1/2', doc = newDoc(codici);
         expect(validate(doc)).not.toHaveError(msg);
         doc.esterno2 = 1;
+        expect(validate(doc)).toHaveError(msg);
+        doc.esterno2 = true;
         expect(validate(doc)).not.toHaveError(msg);
         doc.esterno2 = 0;
         expect(validate(doc)).toHaveError(msg);
+        doc.esterno2 = false;
+        expect(validate(doc)).not.toHaveError(msg);
+        doc.esterno2 = '1';
+        expect(validate(doc)).toHaveError(msg);
+        delete doc.esterno2;
+        expect(validate(doc)).not.toHaveError(msg);
       }));
 
       describe('data', function () {
@@ -729,13 +762,21 @@ describe('Validation', function () {
         }));
       });
 
-      it('should accept inProduzione=1', inject(function (validate, codici) {
+      it('should require inProduzione to be a flag', inject(function (validate, codici) {
         var msg = 'Invalid inProduzione', doc = newDoc(codici);
         expect(validate(doc)).not.toHaveError(msg);
         doc.inProduzione = 1;
+        expect(validate(doc)).toHaveError(msg);
+        doc.inProduzione = true;
         expect(validate(doc)).not.toHaveError(msg);
         doc.inProduzione = 0;
         expect(validate(doc)).toHaveError(msg);
+        doc.inProduzione = false;
+        expect(validate(doc)).not.toHaveError(msg);
+        doc.inProduzione = '1';
+        expect(validate(doc)).toHaveError(msg);
+        delete doc.inProduzione;
+        expect(validate(doc)).not.toHaveError(msg);
       }));
 
       describe('rows', function () {

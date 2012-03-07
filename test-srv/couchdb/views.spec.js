@@ -48,13 +48,13 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
         var mm = { _id: idMM };
         map(mm);
         expect(views._rows()).toEqual([]);
-        mm.accodato = 1;
+        mm.accodato = true;
         map(mm);
         expect(views._rows()).toEqual([[['010101', 2011, 'A', 1234], 1]]);
       });
 
       it('should emit one row for a only if defined', function () {
-        var mm = { _id: idMM, magazzino2: '020202', causale2: ['ACQUISTO', 1], accodato: 1 };
+        var mm = { _id: idMM, magazzino2: '020202', causale2: ['ACQUISTO', 1], accodato: true };
         map(mm);
         expect(views._rows()).toEqual([
           [['010101', 2011, 'A', 1234], 1],
@@ -69,7 +69,7 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
 
     describe('MovimentoMagazzino', function () {
       it('should emit split id only if not accodato', function () {
-        var mm = { _id: idMM, data: '20111230', causale1: ['VENDITA A CLIENTI', -1], accodato: 1 };
+        var mm = { _id: idMM, data: '20111230', causale1: ['VENDITA A CLIENTI', -1], accodato: true };
         map(mm);
         expect(views._rows()).toEqual([]);
         delete mm.accodato;
@@ -121,13 +121,43 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
     });
   });
 
-  describe('old_id map', function () {
-    var map = views.old_id;
+  describe('oldDoc map', function () {
+    var map = views.oldDoc;
 
-    it('should emit old_id of doc', function () {
-      var mm = { _id: 'adocid', old_id: 'a doc id'};
+    it('should emit MovimentoMagazzino if invalid accodato', function () {
+      var mm = { _id: idMM, rows: [], accodato: true };
       map(mm);
-      expect(views._rows()).toEqual([['a doc id', undefined]]);
+      expect(views._rows()).toEqual([]);
+      mm.accodato = 1;
+      map(mm);
+      expect(views._rows()).toEqual([[idMM, 1]]);
+    });
+
+    it('should emit MovimentoMagazzino if invalid esterno1', function () {
+      var mm = { _id: idMM, rows: [], esterno1: true };
+      map(mm);
+      expect(views._rows()).toEqual([]);
+      mm.esterno1 = 1;
+      map(mm);
+      expect(views._rows()).toEqual([[idMM, 1]]);
+    });
+
+    it('should emit MovimentoMagazzino if invalid esterno2', function () {
+      var mm = { _id: idMM, rows: [], esterno2: true };
+      map(mm);
+      expect(views._rows()).toEqual([]);
+      mm.esterno2 = 1;
+      map(mm);
+      expect(views._rows()).toEqual([[idMM, 1]]);
+    });
+
+    it('should emit MovimentoMagazzino if invalid inProduzione', function () {
+      var mm = { _id: idMM, rows: [], inProduzione: true };
+      map(mm);
+      expect(views._rows()).toEqual([]);
+      mm.inProduzione = 1;
+      map(mm);
+      expect(views._rows()).toEqual([[idMM, 1]]);
     });
   });
 
@@ -144,7 +174,7 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
       or[col.articolo] = '4982';
       or[col.colore] = '5000';
       or[col.codiceAzienda] = '010101';
-      or[col.inProduzione] = 0;
+      or[col.inProduzione] = true;
       or[col.tipoMagazzino] = 3;
       or[col.giacenze] = { '01': 2, '02': -2 };
       map(giacenze);
@@ -175,7 +205,7 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
             _id: idMM,
             columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
             causale1: ['VENDITA A CLIENTI', -1],
-            accodato: 1,
+            accodato: true,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
               ['105982901344800002', 6, '11', 'CALZE', 100, 1]
@@ -183,8 +213,8 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
           };
           map(mm);
           expect(views._rows()).toEqual([
-            [['40912', '4053', '1000', '922', '010101', 0, 3, 1, '41', '41', 'CAMICIA COLLO MODA'], -2],
-            [['98290', '1344', '8000', '105', '010101', 0, 3, 6, '02', '11', 'CALZE'], -1]
+            [['40912', '4053', '1000', '922', '010101', false, 3, 1, '41', '41', 'CAMICIA COLLO MODA'], -2],
+            [['98290', '1344', '8000', '105', '010101', false, 3, 6, '02', '11', 'CALZE'], -1]
           ]);
         });
 
@@ -193,7 +223,7 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
             _id: idMM,
             columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
             causale1: ['VENDITA A CLIENTI', -1],
-            esterno1: 1,
+            esterno1: true,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
               ['105982901344800002', 6, '11', 'CALZE', 100, 1]
@@ -208,9 +238,9 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
             _id: idMM,
             columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
             tipoMagazzino: 1,
-            inProduzione: 1,
+            inProduzione: true,
             causale1: ['RETTIFICA INVENTARIO +', 1],
-            accodato: 1,
+            accodato: true,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
               ['105982901344800002', 6, '11', 'CALZE', 100, 1]
@@ -218,8 +248,8 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
           };
           map(mm);
           expect(views._rows()).toEqual([
-            [['40912', '4053', '1000', '922', '010101', 1, 1, 1, '41', '41', 'CAMICIA COLLO MODA'], 2],
-            [['98290', '1344', '8000', '105', '010101', 1, 1, 6, '02', '11', 'CALZE'], 1]
+            [['40912', '4053', '1000', '922', '010101', true, 1, 1, '41', '41', 'CAMICIA COLLO MODA'], 2],
+            [['98290', '1344', '8000', '105', '010101', true, 1, 6, '02', '11', 'CALZE'], 1]
           ]);
         });
 
@@ -230,7 +260,7 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
             causale1: ['SCARICO PER CAMBIO MAGAZZINO', -1],
             causale2: ['CARICO PER CAMBIO MAGAZZINO', 1],
             magazzino2: '020202',
-            accodato: 1,
+            accodato: true,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
               ['105982901344800002', 6, '11', 'CALZE', 100, 1]
@@ -238,10 +268,10 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
           };
           map(mm);
           expect(views._rows()).toEqual([
-            [['40912', '4053', '1000', '922', '010101', 0, 3, 1, '41', '41', 'CAMICIA COLLO MODA'], -2],
-            [['40912', '4053', '1000', '922', '020202', 0, 3, 1, '41', '41', 'CAMICIA COLLO MODA'], 2],
-            [['98290', '1344', '8000', '105', '010101', 0, 3, 6, '02', '11', 'CALZE'], -1],
-            [['98290', '1344', '8000', '105', '020202', 0, 3, 6, '02', '11', 'CALZE'], 1]
+            [['40912', '4053', '1000', '922', '010101', false, 3, 1, '41', '41', 'CAMICIA COLLO MODA'], -2],
+            [['40912', '4053', '1000', '922', '020202', false, 3, 1, '41', '41', 'CAMICIA COLLO MODA'], 2],
+            [['98290', '1344', '8000', '105', '010101', false, 3, 6, '02', '11', 'CALZE'], -1],
+            [['98290', '1344', '8000', '105', '020202', false, 3, 6, '02', '11', 'CALZE'], 1]
           ]);
         });
 
@@ -252,8 +282,8 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
             causale1: ['SCARICO PER CAMBIO MAGAZZINO', -1],
             causale2: ['CARICO PER CAMBIO MAGAZZINO', 1],
             magazzino2: '020202',
-            esterno2: 1,
-            accodato: 1,
+            esterno2: true,
+            accodato: true,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
               ['105982901344800002', 6, '11', 'CALZE', 100, 1]
@@ -261,8 +291,8 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
           };
           map(mm);
           expect(views._rows()).toEqual([
-            [['40912', '4053', '1000', '922', '010101', 0, 3, 1, '41', '41', 'CAMICIA COLLO MODA'], -2],
-            [['98290', '1344', '8000', '105', '010101', 0, 3, 6, '02', '11', 'CALZE'], -1]
+            [['40912', '4053', '1000', '922', '010101', false, 3, 1, '41', '41', 'CAMICIA COLLO MODA'], -2],
+            [['98290', '1344', '8000', '105', '010101', false, 3, 6, '02', '11', 'CALZE'], -1]
           ]);
         });
 
@@ -275,7 +305,7 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
             causale1: ['SCARICO PER CAMBIO MAGAZZINO', -1],
             causale2: ['CARICO PER CAMBIO MAGAZZINO', 1],
             magazzino2: '020202',
-            accodato: 1,
+            accodato: true,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
               ['105982901344800002', 6, '11', 'CALZE', 100, 1]
@@ -283,10 +313,10 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
           };
           map(mm);
           expect(views._rows()).toEqual([
-            [['40912', '4053', '1000', '922', '010101', 0, 1, 1, '41', '41', 'CAMICIA COLLO MODA'], -2],
-            [['40912', '4053', '1000', '922', '020202', 0, 2, 1, '41', '41', 'CAMICIA COLLO MODA'], 2],
-            [['98290', '1344', '8000', '105', '010101', 0, 1, 6, '02', '11', 'CALZE'], -1],
-            [['98290', '1344', '8000', '105', '020202', 0, 2, 6, '02', '11', 'CALZE'], 1]
+            [['40912', '4053', '1000', '922', '010101', false, 1, 1, '41', '41', 'CAMICIA COLLO MODA'], -2],
+            [['40912', '4053', '1000', '922', '020202', false, 2, 1, '41', '41', 'CAMICIA COLLO MODA'], 2],
+            [['98290', '1344', '8000', '105', '010101', false, 1, 6, '02', '11', 'CALZE'], -1],
+            [['98290', '1344', '8000', '105', '020202', false, 2, 6, '02', '11', 'CALZE'], 1]
           ]);
         });
       });
@@ -323,7 +353,7 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
             _id: idMM,
             columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
             causale1: ['VENDITA A CLIENTI', -1],
-            accodato: 1,
+            accodato: true,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
               ['105982901344800002', 6, '11', 'CALZE', 100, 1]
@@ -331,8 +361,8 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
           };
           map(mm);
           expect(views._rows()).toEqual([
-            [['2011', '40912', '4053', '1000', '922', '010101', 0, 3, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], -2],
-            [['2011', '98290', '1344', '8000', '105', '010101', 0, 3, 6, '02', '11', 'CALZE', 100], -1]
+            [['2011', '40912', '4053', '1000', '922', '010101', false, 3, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], -2],
+            [['2011', '98290', '1344', '8000', '105', '010101', false, 3, 6, '02', '11', 'CALZE', 100], -1]
           ]);
         });
 
@@ -341,7 +371,7 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
             _id: idMM,
             columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
             causale1: ['VENDITA A CLIENTI', -1],
-            esterno1: 1,
+            esterno1: true,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
               ['105982901344800002', 6, '11', 'CALZE', 100, 1]
@@ -356,9 +386,9 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
             _id: idMM,
             columnNames: ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'],
             tipoMagazzino: 1,
-            inProduzione: 1,
+            inProduzione: true,
             causale1: ['RETTIFICA INVENTARIO +', 1],
-            accodato: 1,
+            accodato: true,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
               ['105982901344800002', 6, '11', 'CALZE', 100, 1]
@@ -366,8 +396,8 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
           };
           map(mm);
           expect(views._rows()).toEqual([
-            [['2011', '40912', '4053', '1000', '922', '010101', 1, 1, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], 2],
-            [['2011', '98290', '1344', '8000', '105', '010101', 1, 1, 6, '02', '11', 'CALZE', 100], 1]
+            [['2011', '40912', '4053', '1000', '922', '010101', true, 1, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], 2],
+            [['2011', '98290', '1344', '8000', '105', '010101', true, 1, 6, '02', '11', 'CALZE', 100], 1]
           ]);
         });
 
@@ -378,7 +408,7 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
             causale1: ['SCARICO PER CAMBIO MAGAZZINO', -1],
             causale2: ['CARICO PER CAMBIO MAGAZZINO', 1],
             magazzino2: '020202',
-            accodato: 1,
+            accodato: true,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
               ['105982901344800002', 6, '11', 'CALZE', 100, 1]
@@ -386,10 +416,10 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
           };
           map(mm);
           expect(views._rows()).toEqual([
-            [['2011', '40912', '4053', '1000', '922', '010101', 0, 3, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], -2],
-            [['2011', '40912', '4053', '1000', '922', '020202', 0, 3, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], 2],
-            [['2011', '98290', '1344', '8000', '105', '010101', 0, 3, 6, '02', '11', 'CALZE', 100], -1],
-            [['2011', '98290', '1344', '8000', '105', '020202', 0, 3, 6, '02', '11', 'CALZE', 100], 1]
+            [['2011', '40912', '4053', '1000', '922', '010101', false, 3, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], -2],
+            [['2011', '40912', '4053', '1000', '922', '020202', false, 3, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], 2],
+            [['2011', '98290', '1344', '8000', '105', '010101', false, 3, 6, '02', '11', 'CALZE', 100], -1],
+            [['2011', '98290', '1344', '8000', '105', '020202', false, 3, 6, '02', '11', 'CALZE', 100], 1]
           ]);
         });
 
@@ -400,8 +430,8 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
             causale1: ['SCARICO PER CAMBIO MAGAZZINO', -1],
             causale2: ['CARICO PER CAMBIO MAGAZZINO', 1],
             magazzino2: '020202',
-            esterno2: 1,
-            accodato: 1,
+            esterno2: true,
+            accodato: true,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
               ['105982901344800002', 6, '11', 'CALZE', 100, 1]
@@ -409,8 +439,8 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
           };
           map(mm);
           expect(views._rows()).toEqual([
-            [['2011', '40912', '4053', '1000', '922', '010101', 0, 3, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], -2],
-            [['2011', '98290', '1344', '8000', '105', '010101', 0, 3, 6, '02', '11', 'CALZE', 100], -1]
+            [['2011', '40912', '4053', '1000', '922', '010101', false, 3, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], -2],
+            [['2011', '98290', '1344', '8000', '105', '010101', false, 3, 6, '02', '11', 'CALZE', 100], -1]
           ]);
         });
 
@@ -423,7 +453,7 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
             causale1: ['SCARICO PER CAMBIO MAGAZZINO', -1],
             causale2: ['CARICO PER CAMBIO MAGAZZINO', 1],
             magazzino2: '020202',
-            accodato: 1,
+            accodato: true,
             rows: [
               ['922409124053100041', 1, '41', 'CAMICIA COLLO MODA', 2000, 2],
               ['105982901344800002', 6, '11', 'CALZE', 100, 1]
@@ -431,10 +461,10 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
           };
           map(mm);
           expect(views._rows()).toEqual([
-            [['2011', '40912', '4053', '1000', '922', '010101', 0, 1, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], -2],
-            [['2011', '40912', '4053', '1000', '922', '020202', 0, 2, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], 2],
-            [['2011', '98290', '1344', '8000', '105', '010101', 0, 1, 6, '02', '11', 'CALZE', 100], -1],
-            [['2011', '98290', '1344', '8000', '105', '020202', 0, 2, 6, '02', '11', 'CALZE', 100], 1]
+            [['2011', '40912', '4053', '1000', '922', '010101', false, 1, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], -2],
+            [['2011', '40912', '4053', '1000', '922', '020202', false, 2, 1, '41', '41', 'CAMICIA COLLO MODA', 2000], 2],
+            [['2011', '98290', '1344', '8000', '105', '010101', false, 1, 6, '02', '11', 'CALZE', 100], -1],
+            [['2011', '98290', '1344', '8000', '105', '020202', false, 2, 6, '02', '11', 'CALZE', 100], 1]
           ]);
         });
       });

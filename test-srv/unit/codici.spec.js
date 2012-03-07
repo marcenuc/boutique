@@ -380,7 +380,7 @@ requirejs(['views/lib/codici'], function (codici) {
     it('should set esterno1', function () {
       expect(u('123456_Azienda esempio', '20111224', 1, codici.CAUSALI_MOVIMENTO_MAGAZZINO[0], '010203')).toEqual({
         _id: codici.idMovimentoMagazzino('123456', '2011', 'A', 1),
-        esterno1: 1,
+        esterno1: true,
         data: '20111224',
         causale1: ['VENDITA', -1],
         magazzino2: '010203',
@@ -392,7 +392,7 @@ requirejs(['views/lib/codici'], function (codici) {
     it('should set esterno2', function () {
       expect(u('123456', '20111224', 1, codici.CAUSALI_MOVIMENTO_MAGAZZINO[0], '010203_Azienda esempio')).toEqual({
         _id: codici.idMovimentoMagazzino('123456', '2011', 'A', 1),
-        esterno2: 1,
+        esterno2: true,
         data: '20111224',
         causale1: ['VENDITA', -1],
         magazzino2: '010203',

@@ -134,7 +134,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
         if (!codici.isCodiceAzienda(row[4])) {
           error('Invalid codiceAzienda[' + idx + ']: "' + row[4] + '"');
         }
-        if (row[5] !== 0 && row[5] !== 1) {
+        if (row[5] !== false && row[5] !== true) {
           error('Invalid inProduzione[' + idx + ']: "' + row[5] + '"');
         }
         if (!codici.isTipoMagazzino(row[6])) {
@@ -271,6 +271,10 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
       return typeOf(doc.causale1) === 'array' && doc.causale1[0] === desc;
     }
 
+    function isFlag(field) {
+      return !doc.hasOwnProperty(field) || [true, false].indexOf(doc[field]) >= 0;
+    }
+
     if (oldDoc && oldDoc._id !== doc._id) {
       error('Cannot change _id');
     }
@@ -338,7 +342,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
       if ((oldDoc && oldDoc.accodato) || !doc.causale1 || (doc.accodato && !hasCausale1('VENDITA A CLIENTI'))) {
         mustBeAdmin();
       }
-      if (oldDoc && oldDoc.accodato && !doc.accodato) {
+      if (!isFlag('accodato') || (oldDoc && oldDoc.accodato && !doc.accodato)) {
         error('Invalid accodato');
       }
       // TODO l'utente negozio può scaricare solo dal suo magazzino di tipo 3.
@@ -352,8 +356,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
       } else if (!codici.isNumero(codes[3])) {
         error('Invalid numero');
       }
-      if ((doc.hasOwnProperty('esterno1') && doc.esterno1 !== 1) ||
-          (doc.hasOwnProperty('esterno2') && doc.esterno2 !== 1)) {
+      if (!isFlag('esterno1') || !isFlag('esterno2')) {
         error('Invalid esterno1/2');
       }
       if (!codici.isYyyyMmDdDate(doc.data, codes[1])) {
@@ -388,7 +391,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
       if (doc.hasOwnProperty('tipoMagazzinoA') && !codici.isTipoMagazzino(doc.tipoMagazzinoA)) {
         error('Invalid tipoMagazzinoA');
       }
-      if (doc.hasOwnProperty('inProduzione') && doc.inProduzione !== 1) {
+      if (!isFlag('inProduzione')) {
         error('Invalid inProduzione');
       }
       hasMovimenti(doc.rows);

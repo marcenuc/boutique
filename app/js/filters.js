@@ -14,6 +14,10 @@ angular.module('app.filters', [], ['$filterProvider', function ($filterProvider)
     return formatBarcodeAs400;
   });
 
+  $filterProvider.register('money', function () {
+    return codici.formatMoney;
+  });
+
   angular.inputType('barcodeAs400', function (element, widget) {
     widget.$parseView = function () {
       this.$modelValue = this.$viewValue.split(' ').join('');

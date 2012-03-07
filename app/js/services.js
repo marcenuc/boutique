@@ -400,13 +400,13 @@ angular.module('app.services', [], ['$provide', function ($provide) {
               rows: rows || []
             };
           if (codici.hasExternalWarehouse(magazzino1)) {
-            doc.esterno1 = 1;
+            doc.esterno1 = true;
           }
           if (infoCausale.causale2) {
             doc.causale2 = infoCausale.causale2;
             if (magazzino2) {
               if (codici.hasExternalWarehouse(magazzino2)) {
-                doc.esterno2 = 1;
+                doc.esterno2 = true;
               }
               doc.magazzino2 = codici.parseIdAzienda(magazzino2._id).codice;
             }

@@ -97,9 +97,25 @@ define(function (require) {
       }
     },
 
-    old_id: function mapOld_id(doc) {
-      if (doc.old_id) {
-        emit(doc.old_id);
+    oldDoc: function mapOldDoc(doc) {
+      var colCosto, codici = require('views/lib/codici'),
+        ids = codici.splitId(doc._id);
+
+      function isFlag(field) {
+        return !doc.hasOwnProperty(field) || [true, false].indexOf(doc[field]) >= 0;
+      }
+
+      if (codici.isMovimentoMagazzino(ids)) {
+        if (!isFlag('accodato') || !isFlag('esterno1') || !isFlag('esterno2') || !isFlag('inProduzione')) {
+          emit(doc._id, 1);
+        } else if (doc.rows.length) {
+          colCosto = codici.colNamesToColIndexes(doc.columnNames).costo;
+          if (doc.rows.every(function (row) {
+              return row[colCosto] === 0;
+            })) {
+            emit(doc._id, 1);
+          }
+        }
       }
     },
 
@@ -129,7 +145,7 @@ define(function (require) {
             codes = codici.parseIdMovimentoMagazzino(doc._id);
           if (codes && rows) {
             col = codici.colNamesToColIndexes(doc.columnNames);
-            inProduzione = doc.inProduzione || 0;
+            inProduzione = !!doc.inProduzione;
             tipoMagazzino = doc.tipoMagazzino || codici.TIPO_MAGAZZINO_NEGOZIO;
             segno1 = doc.causale1[1];
             if (doc.magazzino2 && !doc.esterno2) {
@@ -163,7 +179,7 @@ define(function (require) {
             codes = codici.parseIdMovimentoMagazzino(doc._id);
           if (codes && rows) {
             col = codici.colNamesToColIndexes(doc.columnNames);
-            inProduzione = doc.inProduzione || 0;
+            inProduzione = !!doc.inProduzione;
             tipoMagazzino = doc.tipoMagazzino || codici.TIPO_MAGAZZINO_NEGOZIO;
             segno1 = doc.causale1[1];
             if (doc.magazzino2 && !doc.esterno2) {

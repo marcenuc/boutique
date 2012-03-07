@@ -442,7 +442,7 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
             desscal = ms[r[0] + r[1]];
             if (!desscal) {
               accoda = true;
-              riga = [azienda, '## NON IN ANAGRAFE ##', r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PRODUZIONE' : 'PRONTO'), '##', -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
+              riga = [azienda, '## NON IN ANAGRAFE ##', r[0], r[1], r[2], r[3], r[6], (r[5] ? 'IN PROD.' : 'PRONTO'), '##', -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
               totaleRiga = 0;
             } else {
               scalarino = desscal[1];
