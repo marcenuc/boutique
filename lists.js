@@ -55,7 +55,9 @@ define(function () {
         send('ANNO\tMODELLO\tARTICOLO\tCOLORE\tSTAGIONE\tMAGAZZINO\tIN_PRODUZIONE\tTIPO_MAGAZZINO\tSCALARINO\tTAGLIA\tDESCRIZIONE_TAGLIA\tDESCRIZIONE\tCOSTO\tGIACENZA\r\n');
       }
       while (row) {
-        send([row.key.join('\t'), '\t', row.value, '\r\n'].join(''));
+        if (row.value !== 0) {
+          send([row.key.join('\t'), '\t', row.value, '\r\n'].join(''));
+        }
         row = getRow();
       }
     }
