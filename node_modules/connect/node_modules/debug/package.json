@@ -1,0 +1,32 @@
+{
+  "name": "debug",
+  "version": "0.5.0",
+  "description": "small debugging utility",
+  "keywords": [
+    "debug",
+    "log",
+    "debugger"
+  ],
+  "author": {
+    "name": "TJ Holowaychuk",
+    "email": "tj@vision-media.ca"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "mocha": "*"
+  },
+  "main": "index",
+  "engines": {
+    "node": "*"
+  },
+  "_id": "debug@0.5.0",
+  "optionalDependencies": {},
+  "_engineSupported": true,
+  "_npmVersion": "1.1.4",
+  "_nodeVersion": "v0.6.12-pre",
+  "_defaultsLoaded": true,
+  "dist": {
+    "shasum": "2a41a3678c5a78d6d94789b459116d88931b822d"
+  },
+  "_from": "debug@*"
+}

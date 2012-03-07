@@ -28,7 +28,7 @@ requirejs(['path', 'connect', 'connect-exec', 'lib/sendFoto', 'lib/servers'], fu
 
   server.use('/_session', function (req, res) {
     res.setHeader('Content-Type', 'application/json;charset=utf-8');
-    res.end(JSON.stringify({ userCtx: { name: req.remoteUser } }));
+    res.end(JSON.stringify({ userCtx: { name: req.user } }));
   })
     .use('/tessuto', connect['static'](path.join(images.rootFolder, images.output, 'tessuti')))
     .use('/foto', sendFoto(path.join(images.rootFolder, images.output, 'foto'), { '11': '12', '10': '12', '92': '12' }))
