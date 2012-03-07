@@ -52,7 +52,7 @@ define(function () {
       start({ headers: { 'Content-Type': 'application/excel' } });
       row = getRow();
       if (row) {
-        send('MODELLO\tARTICOLO\tCOLORE\tSTAGIONE\tMAGAZZINO\tIN_PRODUZIONE\tTIPO_MAGAZZINO\tSCALARINO\tTAGLIA\tDESCRIZIONE_TAGLIA\tDESCRIZIONE\tCOSTO\tGIACENZA\r\n');
+        send('ANNO\tMODELLO\tARTICOLO\tCOLORE\tSTAGIONE\tMAGAZZINO\tIN_PRODUZIONE\tTIPO_MAGAZZINO\tSCALARINO\tTAGLIA\tDESCRIZIONE_TAGLIA\tDESCRIZIONE\tCOSTO\tGIACENZA\r\n');
       }
       while (row) {
         send([row.key.join('\t'), '\t', row.value, '\r\n'].join(''));
