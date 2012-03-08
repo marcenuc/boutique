@@ -182,7 +182,7 @@ describe('Controller', function () {
 
   describe('EditMovimentoMagazzino', function () {
     beforeEach(module(function ($provide) {
-      var Listino = jasmine.createSpyObj('Listino', ['all']);
+      var Listino = jasmine.createSpyObj('Listino', ['all', 'load']);
       $provide.value('Listino', Listino);
       Listino.all.andReturn(jasmine.createSpyObj('listini', ['then']));
       $provide.value('$routeParams', { codice: '010101_2012_A_1' });
@@ -217,8 +217,11 @@ describe('Controller', function () {
       });
       Azienda.nome.andReturn('PIPPO');
       Doc.save.andReturn(savePromise);
-      // ensure $scope is properly initialized
       $controller(controllers.EditMovimentoMagazzino, $scope);
+      // it preloads dependencies
+      expect(Doc.load).toHaveBeenCalledWith(['TaglieScalarini', 'ModelliEScalarini']);
+      // it preloads listini
+      expect(Listino.load).toHaveBeenCalledWith();
       // it should parse $routeParams.codice
       //TODO test what happens if $routeParams.codice is not valid.
       expect($scope.codes).toEqual({ magazzino1: '010101', anno: '2012', gruppo: 'A', numero: 1 });
@@ -260,6 +263,9 @@ describe('Controller', function () {
       // it should fetch ModelliEScalarini
       expect(find.ModelliEScalarini.then).toHaveBeenCalled();
       find.ModelliEScalarini.then.mostRecentCall.args[0](getDocument('ModelliEScalarini'));
+      // it should fetch listini
+      expect(listini.then).toHaveBeenCalled();
+      listini.then.mostRecentCall.args[0](LISTINI);
       // it should save the document in $scope.model
       expect(Doc.save).toHaveBeenCalledWith($scope.model);
       expect(savePromise.then).toHaveBeenCalled();
@@ -270,7 +276,7 @@ describe('Controller', function () {
       // it should append row with form's data to model.rows
       expect($scope.model.rows).toEqual([
         ['112604565000500066', 2, 'SM', 'SMOKING', 100, 2],
-        ['112604565000800066', 2, 'SM', 'SMOKING', 0, 3]
+        ['112604565000800066', 2, 'SM', 'SMOKING', 100, 3]
       ]);
       // TODO this is brittle, how can be improved?
       saveCb({ _id: $scope.model._id, _rev: 'arev' });

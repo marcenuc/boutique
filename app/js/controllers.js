@@ -56,8 +56,11 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
   Ctrl.EditMovimentoMagazzino = function ($scope, SessionInfo, $routeParams, Downloads, codici, Azienda, Doc, Listino) {
     SessionInfo.resetFlash();
 
+    Doc.load(['TaglieScalarini', 'ModelliEScalarini']);
+    Listino.load();
+
     // TODO put _id in $routeParams.codice
-    var id = 'MovimentoMagazzino_' + $routeParams.codice;
+    var codiceAzienda, id = 'MovimentoMagazzino_' + $routeParams.codice;
 
     $scope.codes = codici.parseIdMovimentoMagazzino(id);
     if (!$scope.codes) {
@@ -70,14 +73,15 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
 
     Doc.find(id).then(function (model) {
       $scope.model = model;
+      codiceAzienda = codici.parseIdMovimentoMagazzino($scope.model._id).magazzino1;
       if (model.magazzino2) {
         $scope.nomeMagazzino2 = Azienda.nome(model.magazzino2);
       }
     });
 
     function toLabels(listini) {
+      //FIXME ensure model is loaded
       var prezziArticolo, label, labels = [], colListino, col = $scope.col,
-        codiceAzienda = codici.parseIdMovimentoMagazzino($scope.model._id).magazzino1,
         rows = $scope.model.rows, r, i, ii, j, jj;
       for (i = 0, ii = rows.length; i < ii; i += 1) {
         r = rows[i];
@@ -107,6 +111,7 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
     }
 
     $scope.prepareDownloads = function () {
+      //FIXME ensure model is loaded
       Listino.all().then(function (listini) {
         Downloads.prepare(toLabels(listini), $scope.model._id);
       });
@@ -120,6 +125,7 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
     }
 
     $scope.save = function () {
+      //FIXME ensure model is loaded
       if (!$scope.newBarcode) {
         return save();
       }
@@ -129,26 +135,32 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
       }
       Doc.find('TaglieScalarini').then(function (taglieScalarini) {
         Doc.find('ModelliEScalarini').then(function (modelliEScalarini) {
-          var newRow, col = $scope.col,
-            descrizioniTaglie = taglieScalarini.descrizioniTaglie,
-            listaModelli = modelliEScalarini.lista,
-            descs = codici.descrizioniModello(codes.stagione, codes.modello, codes.taglia, descrizioniTaglie, listaModelli);
-          if (descs[0]) {
-            return SessionInfo.error(descs[0] + ': "' + $scope.newBarcode + '"');
-          }
-          newRow = [];
-          newRow[col.barcode] = $scope.newBarcode;
-          newRow[col.scalarino] = descs[1].scalarino;
-          newRow[col.descrizioneTaglia] = descs[1].descrizioneTaglia;
-          newRow[col.descrizione] = descs[1].descrizione;
-          // FIXME inserire costo.
-          newRow[col.costo] = 0;
-          newRow[col.qta] = $scope.newQta;
-          $scope.model.rows.push(newRow);
-          save();
+          Listino.all().then(function (listini) {
+            var prezziArticolo, newRow, col = $scope.col,
+              descrizioniTaglie = taglieScalarini.descrizioniTaglie,
+              listaModelli = modelliEScalarini.lista,
+              descs = codici.descrizioniModello(codes.stagione, codes.modello, codes.taglia, descrizioniTaglie, listaModelli);
+            if (descs[0]) {
+              return SessionInfo.error(descs[0] + ': "' + $scope.newBarcode + '"');
+            }
+            newRow = [];
+            newRow[col.barcode] = $scope.newBarcode;
+            newRow[col.scalarino] = descs[1].scalarino;
+            newRow[col.descrizioneTaglia] = descs[1].descrizioneTaglia;
+            newRow[col.descrizione] = descs[1].descrizione;
+            prezziArticolo = codici.readListino(listini, codiceAzienda, codes.stagione, codes.modello, codes.articolo);
+            if (prezziArticolo) {
+              newRow[col.costo] = prezziArticolo[1][prezziArticolo[0].costo];
+            } else {
+              newRow[col.costo] = 0;
+            }
+            newRow[col.qta] = $scope.newQta;
+            $scope.model.rows.push(newRow);
+            save();
 
-          $scope.newBarcode = '';
-          $scope.newQta = 1;
+            $scope.newBarcode = '';
+            $scope.newQta = 1;
+          });
         });
       });
     };

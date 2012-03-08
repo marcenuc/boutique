@@ -70,7 +70,7 @@ describe('Boutique', function () {
     input('newBarcode').enter('112 60456 5000 5000 66');
     click('Salva');
     expect(r.count()).toBe(2);
-    expect(r.row(0)).toEqual(['1', '112 60456 5000 5000 66', '2', 'SM', 'SMOKING', '0']);
+    expect(r.row(0)).toEqual(['1', '112 60456 5000 5000 66', '2', 'SM', 'SMOKING', '1,23']);
   }
 
   describe('/MovimentoMagazzino_', function () {
@@ -105,7 +105,7 @@ describe('Boutique', function () {
       expect(binding('nomeMagazzino2')).toBe('');
       r = using('table.details').repeater('tbody tr', 'row in model.rows');
       expect(r.count()).toBe(2);
-      expect(r.row(0)).toEqual(['1', '112 60456 5000 5000 66', '2', 'SM', 'SMOKING', '0']);
+      expect(r.row(0)).toEqual(['1', '112 60456 5000 5000 66', '2', 'SM', 'SMOKING', '1,23']);
     });
 
     it('should list movimenti magazzino by barcode', function () {
