@@ -223,19 +223,19 @@ requirejs(['views/lib/codici'], function (codici) {
 
   describe('parseMoney', function () {
     it('should add cents to integer values', function () {
-      expect(codici.parseMoney('12')).toEqual([null, 1200]);
+      expect(codici.parseMoney('12')).toBe(1200);
     });
 
     it('should add cents to float values with one digit after dot', function () {
-      expect(codici.parseMoney('12.3')).toEqual([null, 1230]);
+      expect(codici.parseMoney('12.3')).toBe(1230);
     });
 
     it('should convert to cents integer value', function () {
-      expect(codici.parseMoney('12.34')).toEqual([null, 1234]);
+      expect(codici.parseMoney('12.34')).toBe(1234);
     });
 
     it('should return error for more than two digits after dot', function () {
-      expect(codici.parseMoney('12.345')).toEqual(['Invalid amount for money: 12.345']);
+      expect(codici.parseMoney('12.345')).toBeUndefined();
     });
   });
 

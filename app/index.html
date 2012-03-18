@@ -1,12 +1,12 @@
 <!doctype html>
-<html xmlns:ng="http://angularjs.org/" ng:app=app>
+<html xmlns:ng="http://angularjs.org/" ng-app=app>
 <meta charset="utf-8">
 <!-- BEGIN CSS -->
 <link rel="stylesheet/less" type="text/css" href="main.less">
 <script src="less.js" type="text/javascript"></script>
 <!-- END CSS -->
 <title>Boutique</title>
-<div class=header ng:controller=HeaderCtrl>
+<div class=header ng-controller="Ctrl.Header">
 <div class=menu>
 <ul>
 <li><a href="#/ricerca-giacenza">Ricerca giacenza</a>
@@ -17,20 +17,20 @@
 </ul>
 <span>Utente: <b>{{session.userCtx.name}}</b></span>
 </div>
-<div id=loading ng:show="SessionInfo.loading">Loading<span ng:cloak> ({{SessionInfo.loading}})</span>...</div>
+<div id=loading ng-show="SessionInfo.loading">Loading<span ng-cloak> ({{SessionInfo.loading}})</span>...</div>
 <div class=flash>
-  <ul ng:repeat="(class, messages) in SessionInfo.flash" ng:class=class>
-    <li ng:repeat="message in messages">{{message.message}}
+  <ul ng-repeat="(class, messages) in SessionInfo.flash" ng-class=class>
+    <li ng-repeat="message in messages">{{message.message}}
   </ul>
 </div>
 </div>
-<ng:view>Loading...</ng:view>
+<ng-view>Loading...</ng-view>
 <!-- BEGIN JS -->
 <script src="js/angular.js"></script>
 <script src="js/app.js"></script>
 <script src="js/services.js"></script>
 <script src="js/controllers.js"></script>
-<script src="js/filters.js"></script>
+<script src="js/directives.js"></script>
 <script src="js/widgets.js"></script>
 <script src="js/config.js"></script>
 <script src="js/codici.js"></script>

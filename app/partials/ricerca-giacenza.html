@@ -1,6 +1,5 @@
 <form ng-submit="filtraGiacenza()" name=ricercaArticoli>
 <fieldset><legend>Usa il '.' come carattere jolly.</legend>
-<div>
 <table><tr>
 <td><label>Aziende: <select ng-model=aziendeSelezionate multiple ng-options="c as r.value for (c, r) in aziende"></select></label>
 <td class=n><label>Tipo azienda: <select ng-model="quickSearch.tipo" ng-options="t for t in tipiAzienda"><option></select></label>
@@ -9,19 +8,19 @@
 <br><label>Nazione: <select ng-model="quickSearch.nazione" ng-options="n for n in nazioni"><option></select></label>
 <tr><td colspan=3>Aziende selezionate: {{aziendeSelezionate.join(', ')}}
 </table>
-  <label>Modello: <input ng-model=modello size=5 maxlength=5 pattern="^[.\d]{0,5}$"></label>
-  <label>Articolo: <input ng-model=articolo size=4 maxlength=4 pattern="^[.\d]{0,4}$"></label>
-  <label>Colore: <input ng-model=colore size=4 maxlength=4 pattern="^[.\d]{0,4}$"></label>
-  <label>Descrizione taglia: <input ng-model=descrizioneTaglia size=3 maxlength=3 pattern="^.{0,3}$"></label>
-  <label>Stagione: <input ng-model=stagione size=3 maxlength=3 pattern="^[.\d]{0,3}$"></label>
+  <label>Modello: <input ng-model-instant my-focus ng-model=modello size=5 maxlength=5 pattern="^[.\d]{0,5}$"></label>
+  <label>Articolo: <input ng-model-instant ng-model=articolo size=4 maxlength=4 pattern="^[.\d]{0,4}$"></label>
+  <label>Colore: <input ng-model-instant ng-model=colore size=4 maxlength=4 pattern="^[.\d]{0,4}$"></label>
+  <label>Descrizione taglia: <input ng-model-instant ng-model=descrizioneTaglia size=3 maxlength=3 pattern="^.{0,3}$"></label>
+  <label>Stagione: <input ng-model-instant ng-model=stagione size=3 maxlength=3 pattern="^[.\d]{0,3}$"></label>
   <hr>
-  <label>LIMITE RISULTATI: <input ng-model=limiteRisultati size=3 pattern="^\d*$"></label>
+  <label>LIMITE RISULTATI: <input ng-model-instant ng-model=limiteRisultati size=3 pattern="^\d*$"></label>
   <input type=submit value=Cerca>
   &nbsp;&nbsp;<a ng-click="prepareDownloads()">Prepara etichette</a>
   <object id=downloads type="application/x-shockwave-flash" data="save.swf"><param name=allowScriptAccess value=always /><param name=wmode value=opaque /></object>
-</div>
 </fieldset>
 </form>
+<div>{{quickSearch | json}}</div>
 <div class="fixed-table-container" my-grow="">
 <div class="header-background"> </div>
 <div class="fixed-table-container-inner">
@@ -39,7 +38,7 @@
 <li><a ng-click="hidePhoto()">Nascondi</a>
 </ul></div>
 <table>
-<tr><th>Descrizione<th>Stagione<th>Modello<th>Articolo<th>Colore 
+<tr><th>Descrizione<th>Stagione<th>Modello<th>Articolo<th>Colore
 <tr><td>{{photo.descrizione}}<td>{{photo.stagione}}<td>{{photo.modello}}<td>{{photo.articolo}}<td>{{photo.colore}}
 </table>
 <div>{{photoType}} <a ng-click="togglePhotoType()">[&nbsp;Mostra foto/tessuto&nbsp;]</a></div>

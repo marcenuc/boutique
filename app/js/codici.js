@@ -414,11 +414,10 @@ angular.module('app.shared', []).factory('codici', function () {
   }
 
   codici.parseMoney = function (value) {
-    var mp = /^([0-9]+)(?:\.([0-9]{1,2}))?$/.exec(value);
+    var mp = /^([0-9]+)(?:[\.,]([0-9]{1,2}))?$/.exec(value);
     if (mp) {
-      return [null, parseInt(mp[1] + padCents(mp[2]), 10)];
+      return parseInt(mp[1] + padCents(mp[2]), 10);
     }
-    return ['Invalid amount for money: ' + value];
   };
 
   codici.formatMoney = function (v) {

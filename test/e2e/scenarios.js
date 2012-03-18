@@ -40,9 +40,32 @@ describe('Boutique', function () {
       goTo('/ricerca-giacenza');
     });
 
-    it('should find given article if on stock', function () {
+    it('should find all articles in stock by default', function () {
       click('Cerca');
       var rows = repeater('tbody.giacenze tr', 'row in filtrate');
+      expect(rows.count()).toBe(3);
+      expect(rows.row(0)).toEqual(["1", "099999 Negozio 099999", "SMOKING", "112", "60456", "5000", "5000", "3", "PRONTO", "2", "3", "", "", "", "", "", "", "", "", "", "", "", "3", "1", "2", "6"]);
+      expect(rows.row(1)).toEqual(["2", "099999 Negozio 099999", "SMOKING", "112", "60456", "5000", "8000", "3", "PRONTO", "2", "3", "", "", "", "", "", "", "", "", "", "", "", "3", "1", "2", "6"]);
+      expect(rows.row(2)).toEqual(["3", "099999 Negozio 099999", "SMOKING", "112", "60456", "8000", "5000", "3", "PRONTO", "2", "3", "", "", "", "", "", "", "", "", "", "", "", "3", "1", "2*", "6"]);
+    });
+
+    it('should find given article if on stock', function () {
+      input('articolo').enter('50');
+      click('Cerca');
+      var rows = repeater('tbody.giacenze tr', 'row in filtrate');
+      expect(rows.count()).toBe(2);
+      expect(rows.row(0)).toEqual(["1", "099999 Negozio 099999", "SMOKING", "112", "60456", "5000", "5000", "3", "PRONTO", "2", "3", "", "", "", "", "", "", "", "", "", "", "", "3", "1", "2", "6"]);
+      expect(rows.row(1)).toEqual(["2", "099999 Negozio 099999", "SMOKING", "112", "60456", "5000", "8000", "3", "PRONTO", "2", "3", "", "", "", "", "", "", "", "", "", "", "", "3", "1", "2", "6"]);
+    });
+
+    it('should find by tipo azienda', function () {
+      select('quickSearch.tipo').option('MAGAZZINO');
+      click('Cerca');
+      var rows = repeater('tbody.giacenze tr', 'row in filtrate');
+      expect(rows.count()).toBe(0);
+      select('quickSearch.tipo').option('NEGOZIO');
+      click('Cerca');
+      rows = repeater('tbody.giacenze tr', 'row in filtrate');
       expect(rows.count()).toBe(3);
       expect(rows.row(0)).toEqual(["1", "099999 Negozio 099999", "SMOKING", "112", "60456", "5000", "5000", "3", "PRONTO", "2", "3", "", "", "", "", "", "", "", "", "", "", "", "3", "1", "2", "6"]);
       expect(rows.row(1)).toEqual(["2", "099999 Negozio 099999", "SMOKING", "112", "60456", "5000", "8000", "3", "PRONTO", "2", "3", "", "", "", "", "", "", "", "", "", "", "", "3", "1", "2", "6"]);

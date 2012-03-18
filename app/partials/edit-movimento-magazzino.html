@@ -13,18 +13,18 @@
    <tr ng-repeat="row in model.rows">
     <td>{{$index + 1}}
     <td>{{row[col.barcode] | barcodeAs400}}<td>{{row[col.scalarino]}}<td>{{row[col.descrizioneTaglia]}}<td>{{row[col.descrizione]}}<td class=n>{{row[col.costo] | money}}
-    <td><input ng-model="row[col.qta]" size=3 type=integer min=1>
+    <td><input ng-model-instant ng-model="row[col.qta]" size=3 type=number min=1>
     <td>[&nbsp;<a href="" ng-click="$parent.model.rows.splice($index, 1)" title="Elimina riga">X</a>&nbsp;]
    <tr>
     <th>Nuovo:
-    <td><input type=barcodeAs400 my-focus ng-model=newBarcode size=26>
+    <td><input ng-model-instant bq-barcode-as400 my-focus ng-model=newBarcode size=26>
     <td colspan=4>&nbsp;
-    <td><input ng-model=newQta size=3 type=integer min=1>
+    <td><input ng-model-instant ng-model=newQta size=3 type=number min=1>
     <td>&nbsp;
   <tfoot>
    <tr><th colspan=6 style="text-align:right">Quantità totale:<th>{{qtaTotale()}}<th>&nbsp;
  </table>
- <label><input type=checkbox ng-model="model.accodato">&nbsp;Accodato</label>
+ <label><input ng-model-instant type=checkbox ng-model="model.accodato">&nbsp;Accodato</label>
 <div class=control>
  <input type=submit ng-click="save()" ng-disabled="{{form.$invalid}}" value=Salva>
  [&nbsp;<a href="#/MovimentoMagazzino_">Nuovo</a>&nbsp;]

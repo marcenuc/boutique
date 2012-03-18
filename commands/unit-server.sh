@@ -1,10 +1,6 @@
-port=9876
+port=8080
 
 ( sleep 2
-  chromium-browser --incognito "http://localhost:${port}/capture?strict" )&
+  chromium-browser --incognito "http://localhost:${port}/" )&
 
-exec java -jar test/lib/jstestdriver/JsTestDriver.jar \
-  --basePath "$PWD" \
-  --config config/jsTestDriver.conf \
-  --port "$port" \
-  --browserTimeout 20000
+exec testacular test/unit/testacular.conf

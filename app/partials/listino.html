@@ -1,6 +1,6 @@
-<form ng:submit="fetch()" name=ricercaListino>
+<form ng-submit="fetch()" name=ricercaListino>
 <fieldset><legend>Scelta listino da consultare/modificare</legend>
-<label>Versione: <input ng:model=versione size=8 maxlength=6 type=versioneListino required></label>
-<input type=submit value=Cerca ng:disabled="{{ricercaListino.$invalid}}">
+<label>Versione: <input ng-model-instant ng-model=versione size=8 maxlength=6 my-focus bq-versione-listino required></label>
+<input type=submit value=Cerca ng-disabled="{{ricercaListino.$invalid}}">
 </fieldset>
 </form>

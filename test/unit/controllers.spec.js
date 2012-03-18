@@ -107,7 +107,7 @@ describe('Controller', function () {
       // FAKE CALL for afterEach: this is the only exception...
       SessionInfo.resetFlash();
       // ensure $scope is properly initialized
-      $controller(controllers.Header, $scope);
+      $controller(controllers.Header, { '$scope': $scope });
       // it should put SessionInfo in $scope
       expect($scope.SessionInfo).toBe(SessionInfo);
       // it should put session in $scope
@@ -138,7 +138,7 @@ describe('Controller', function () {
       MovimentoMagazzino.build.andReturn(buildResp);
       Doc.save.andReturn(saveResp);
       // ensure $scope is properly initialized
-      $controller(controllers.NewMovimentoMagazzino, $scope);
+      $controller(controllers.NewMovimentoMagazzino, { '$scope': $scope });
       // it should put aziende in $scope
       expect($scope.aziende).toBe(aziende);
       // it should put causali in $scope
@@ -217,7 +217,7 @@ describe('Controller', function () {
       });
       Azienda.nome.andReturn('PIPPO');
       Doc.save.andReturn(savePromise);
-      $controller(controllers.EditMovimentoMagazzino, $scope);
+      $controller(controllers.EditMovimentoMagazzino, { '$scope': $scope });
       // it preloads dependencies
       expect(Doc.load).toHaveBeenCalledWith(['TaglieScalarini', 'ModelliEScalarini']);
       // it preloads listini
@@ -308,7 +308,7 @@ describe('Controller', function () {
       MovimentoMagazzino.pendenti.andReturn(pendenti);
       spyOn(codici, 'newYyyyMmDdDate').andReturn('20111231');
       // ensure $scope is properly initialized
-      $controller(controllers.MovimentoMagazzino, $scope);
+      $controller(controllers.MovimentoMagazzino, { '$scope': $scope });
       $httpBackend.flush();
       // it should put movimenti pendenti in $scope.pendenti
       expect($scope.pendenti).toBe(pendenti);
@@ -366,7 +366,7 @@ describe('Controller', function () {
       MovimentoMagazzino.build.andReturn(buildResp);
       Doc.save.andReturn(saveResp);
       // ensure $scope is properly initialized
-      $controller(controllers.RicercaBollaAs400, $scope);
+      $controller(controllers.RicercaBollaAs400, { '$scope': $scope });
       // it should preload needed docs
       expect(Doc.load).toHaveBeenCalledWith(['TaglieScalarini', 'ModelliEScalarini']);
       // it should put aziende in $scope
@@ -461,7 +461,7 @@ describe('Controller', function () {
       var $scope = $rootScope;
       spyOn(Doc, 'load');
       spyOn(Listino, 'load');
-      $controller(controllers.RicercaArticoli, $scope);
+      $controller(controllers.RicercaArticoli, { '$scope': $scope });
       // it preloads giacenze and related docs
       expect(Doc.load).toHaveBeenCalledWith(['TaglieScalarini', 'ModelliEScalarini', 'Giacenze']);
       // it preloads listini
@@ -577,7 +577,7 @@ describe('Controller', function () {
       it('should initialize $scope', inject(function ($rootScope, $controller, controllers, codici, $httpBackend, SessionInfo, couchdb) {
         var $scope = $rootScope;
         $httpBackend.expectGET(couchdb.viewPath('aziende?include_docs=true')).respond(JSON.stringify(VIEW_AZIENDE));
-        $controller(controllers.Azienda, $scope);
+        $controller(controllers.Azienda, { '$scope': $scope });
         $httpBackend.flush();
         // it should not put azienda in $scope
         expect($scope.azienda).toEqual({});
@@ -620,7 +620,7 @@ describe('Controller', function () {
         var $scope = $rootScope;
         $httpBackend.expectGET(couchdb.docPath('Azienda_010101')).respond(JSON.stringify(AZIENDE['010101'].doc));
         $httpBackend.expectGET(couchdb.viewPath('aziende?include_docs=true')).respond(JSON.stringify(VIEW_AZIENDE));
-        $controller(controllers.Azienda, $scope);
+        $controller(controllers.Azienda, { '$scope': $scope });
         $httpBackend.flush();
         $scope.$digest();
         // it should put azienda in $scope
@@ -656,7 +656,7 @@ describe('Controller', function () {
       var $scope = $rootScope;
       $httpBackend.expectGET(couchdb.docPath('Listino_1')).respond(JSON.stringify(LISTINI['1']));
       spyOn(Doc, 'load');
-      $controller(controllers.Listino, $scope);
+      $controller(controllers.Listino, { '$scope': $scope });
       // it should preload listino
       expect(Doc.load).toHaveBeenCalledWith(['Listino_1']);
 

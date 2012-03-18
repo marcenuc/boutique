@@ -1,28 +1,28 @@
-<form ng:submit="fetch()" name=ricercaBollaAs400>
+<form ng-submit="fetch()" name=ricercaBollaAs400>
 <fieldset><legend>Ricerca bolla AS/400</legend>
-<label>Data (AAAAMMGG):<input ng:model="intestazione.data" size=8 maxlength=8 type=data required></label>
-<label>Numero:<input ng:model="intestazione.numero" size=8 type=integer min=1 required></label>
-<label>Ente numerazione:<input ng:model="intestazione.enteNumerazione" size=2 required></label>
-<label>Codice numerazione:<input ng:model="intestazione.codiceNumerazione" size=2 required></label>
-<input type=submit value=Cerca ng:disabled="{{ricercaBollaAs400.$invalid}}">
+<label>Data (AAAAMMGG):<input ng-model-instant ng-model="intestazione.data" size=8 maxlength=8 bq-data required></label>
+<label>Numero:<input ng-model-instant ng-model="intestazione.numero" size=8 type=number min=1 required></label>
+<label>Ente numerazione:<input ng-model-instant ng-model="intestazione.enteNumerazione" size=2 required></label>
+<label>Codice numerazione:<input ng-model-instant ng-model="intestazione.codiceNumerazione" size=2 required></label>
+<input type=submit value=Cerca ng-disabled="{{ricercaBollaAs400.$invalid}}">
 </fieldset>
 </form>
 
-<form ng:show="bollaAs400" ng:submit="save()" name=caricamentoMovimentoMagazzino>
+<form ng-show="bollaAs400" ng-submit="save()" name=caricamentoMovimentoMagazzino>
 <fieldset><legend>Dati bolla da AS/400</legend>
 <table>
-<thead><tr><th ng:repeat="col in bollaAs400.columnNames">{{col}}
-<tbody><tr ng:repeat="row in bollaAs400.rows"><td ng:repeat="v in row">{{v}}
+<thead><tr><th ng-repeat="col in bollaAs400.columnNames">{{col}}
+<tbody><tr ng-repeat="row in bollaAs400.rows"><td ng-repeat="v in row">{{v}}
 </table>
 </fieldset>
 <fieldset><legend>Nuovo movimento magazzino</legend>
- <label>Causale1: <select ng:model="movimentoMagazzino.causale1" ng:options="causale.descrizione for causale in causali" required></select></label><br>
-   <span ng:show="movimentoMagazzino.causale1">Segno: <b>{{movimentoMagazzino.causale1.segno}}</b>,
-   Gruppo: <b>{{movimentoMagazzino.causale1.gruppo}}</b></span><span ng:show="movimentoMagazzino.causale1.causale2">,
+ <label>Causale1: <select ng-model="movimentoMagazzino.causale1" ng-options="causale.descrizione for causale in causali" required></select></label><br>
+   <span ng-show="movimentoMagazzino.causale1">Segno: <b>{{movimentoMagazzino.causale1.segno}}</b>,
+   Gruppo: <b>{{movimentoMagazzino.causale1.gruppo}}</b></span><span ng-show="movimentoMagazzino.causale1.causale2">,
    Causale2: <b>{{causali[movimentoMagazzino.causale1.causale2].descrizione}}</b></span><p>
- <label>Magazzino1: <select ng:model="movimentoMagazzino.magazzino1" ng:options="c as r.value for (c, r) in aziende" required><option></select></label>
- <label>Magazzino2: <select ng:model="movimentoMagazzino.magazzino2" ng:options="c as r.value for (c, r) in aziende" ng:required="{{movimentoMagazzino.causale1.causale2}}"><option></select></label><p>
- <label>Data (AAAAMMGG): <input ng:model="movimentoMagazzino.data" size=8 maxlength=8 type=data required></label><p>
- <input type=submit value="Carica come movimento magazzino" ng:disabled="{{caricamentoMovimentoMagazzino.$invalid}}">
+ <label>Magazzino1: <select ng-model="movimentoMagazzino.magazzino1" ng-options="c as r.value for (c, r) in aziende" required><option></select></label>
+ <label>Magazzino2: <select ng-model="movimentoMagazzino.magazzino2" ng-options="c as r.value for (c, r) in aziende" ng-required="{{movimentoMagazzino.causale1.causale2}}"><option></select></label><p>
+ <label>Data (AAAAMMGG): <input ng-model-instant ng-model="movimentoMagazzino.data" size=8 maxlength=8 bq-data required></label><p>
+ <input type=submit value="Carica come movimento magazzino" ng-disabled="{{caricamentoMovimentoMagazzino.$invalid}}">
 </fieldset>
 </form>

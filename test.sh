@@ -6,7 +6,6 @@ do
   case $f in
   s)  suite="$OPTARG";;
   t)  tests="$OPTARG";;
-  r)  reset="--reset";;
   \?) echo "$USAGE"; exit 1;;
   esac
 done
@@ -27,11 +26,7 @@ e2e)
     --reset
   ;;
 unit)
-  exec java -jar test/lib/jstestdriver/JsTestDriver.jar \
-    --basePath "$PWD" \
-    --config config/jsTestDriver.conf \
-    --tests "$tests" \
-    "$reset"
+  exec testacular-run
   ;;
 couchdb)
   exec ./node_modules/.bin/jasmine-node --test-dir "$PWD/test-srv/couchdb" "$@"

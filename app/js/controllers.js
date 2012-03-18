@@ -1,7 +1,7 @@
 /*global angular:false*/
-angular.module('app.controllers', [], ['$provide', function ($provide) {
+var Ctrl = {};
+(function() {
   'use strict';
-  var Ctrl = {};
 
   Ctrl.Header = function ($scope, session, SessionInfo) {
     $scope.session = session;
@@ -359,7 +359,7 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
               });
             });
           }
-        });
+        }, true);
       });
     });
     $scope.filtrate = [];
@@ -733,6 +733,9 @@ angular.module('app.controllers', [], ['$provide', function ($provide) {
     };
   };
   Ctrl.Listino.$inject = ['$scope', '$routeParams', 'SessionInfo', '$location', 'codici', 'Doc'];
+}());
 
+//TODO used only for testing
+angular.module('app.controllers', [], ['$provide', function ($provide) {
   $provide.value('controllers', Ctrl);
 }]);
