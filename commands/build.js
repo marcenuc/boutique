@@ -2,7 +2,7 @@
 var requirejs = require('requirejs');
 requirejs.config({ baseUrl: process.cwd(), nodeRequire: require });
 
-requirejs(['assert', 'child_process', 'fs', 'path', 'uglify-js', 'less', 'q'], function (assert, child_process, fs, path, uglifyJs, less, Q) {
+requirejs(['assert', 'child_process', 'fs', 'path', 'uglify-js', 'less', 'q'], function(assert, child_process, fs, path, uglifyJs, less, Q) {
   'use strict';
   var readFile = Q.node(fs.readFile, fs),
     writeFile = Q.node(fs.writeFile, fs),
@@ -20,22 +20,17 @@ requirejs(['assert', 'child_process', 'fs', 'path', 'uglify-js', 'less', 'q'], f
   }
 
   function concatFiles(fileNames) {
-    return Q.all(fileNames.map(function (fileName) {
+    return Q.all(fileNames.map(function(fileName) {
       return readFile(fileName, 'utf8');
-    })).then(function (contents) {
-      return Q.call(function () {
-        return contents.join('');
-      });
+    })).then(function(contents) {
+      return contents.join('');
     });
   }
 
   function minifyJsFilesTo(jsFiles, destination) {
     concatFiles(jsFiles)
-      .then(function (bigJs) {
-        return Q.call(minifyJs, null, bigJs);
-      })
-      .then(function (minifiedJs) {
-        return writeFile(destination, minifiedJs, 'utf8');
+      .then(function(bigJs) {
+        return writeFile(destination, minifyJs(bigJs), 'utf8');
       })
       .end();
   }
@@ -47,10 +42,10 @@ requirejs(['assert', 'child_process', 'fs', 'path', 'uglify-js', 'less', 'q'], f
     });
 
     readFile(lessFile, 'utf8')
-      .then(function (lessSrc) {
+      .then(function(lessSrc) {
         return Q.ncall(parser.parse, parser, lessSrc);
       })
-      .then(function (tree) {
+      .then(function(tree) {
         return writeFile(cssFile, tree.toCSS({ compress: true }), 'utf8');
       })
       .end();
@@ -59,50 +54,48 @@ requirejs(['assert', 'child_process', 'fs', 'path', 'uglify-js', 'less', 'q'], f
   function spawn(cmd) {
     process.stdout.write("'" + cmd.join("' '") + "'\n");
     var child = child_process.spawn(cmd[0], cmd.slice(1), { cwd: process.cwd() });
-    child.stdout.on('data', function (data) {
+    child.stdout.on('data', function(data) {
       process.stdout.write(data);
     });
-    child.stderr.on('data', function (data) {
+    child.stderr.on('data', function(data) {
       process.stderr.write(data);
     });
-    child.on('exit', function (code) {
+    child.on('exit', function(code) {
       if (code !== 0) {
         throw new Error('Build failed');
       }
     });
   }
 
-  function compileSection(txt, sectionName, compiler) {
+  function compileSection(txt, sectionName, compile) {
     var pattern = ['^([\\s\\S]*)<!-- BEGIN ', sectionName, ' -->([\\s\\S]*)<!-- END ', sectionName, ' -->([\\s\\S]*)$'];
-    return txt.replace(new RegExp(pattern.join('')), function (str, before, section, after) {
+    return txt.replace(new RegExp(pattern.join('')), function(str, before, section, after) {
       assert.equal(str, txt);
-      return [before, compiler(section), after].join('');
+      return [before, compile(section), after].join('');
     });
   }
 
   function copyFile(src, dst) {
-    return readFile(src).then(function (data) {
+    return readFile(src).then(function(data) {
       return writeFile(dst, data);
     });
   }
 
   function copyDirectory(src, dst) {
     var copyFiles = Q.ncall(fs.readdir, fs, src)
-      .then(function (files) {
-        return Q.all(files.map(function (file) {
+      .then(function(files) {
+        return Q.all(files.map(function(file) {
           return copyFile(path.join(src, file), path.join(dst, file));
         }));
       });
     return Q.ncall(fs.stat, fs, dst)
-      .then(function (stats) {
-        if (stats.isDirectory()) {
-          return copyFiles;
-        }
-        return Q.call(function () {
+      .then(function(stats) {
+        if (!stats.isDirectory()) {
           throw new Error(dst + ' is not a directory');
-        });
-      }, function () {
-        return Q.ncall(fs.mkdir, fs, dst, '0755').then(function () {
+        }
+        return copyFiles;
+      }, function() {
+        return Q.ncall(fs.mkdir, fs, dst, '0755').then(function() {
           return copyFiles;
         });
       });
@@ -110,8 +103,8 @@ requirejs(['assert', 'child_process', 'fs', 'path', 'uglify-js', 'less', 'q'], f
 
   function buildApp() {
     readFile(path.join(appFolder, 'index.html'), 'utf8')
-      .then(function (indexHtml) {
-        var compiledHtml = compileSection(indexHtml, 'JS', function (section) {
+      .then(function(indexHtml) {
+        var compiledHtml = compileSection(indexHtml, 'JS', function(section) {
           var targetJs = 'app.js',
             files = [],
             rexp = / src="(js\/[a-z]+\.js)"/g,
@@ -123,7 +116,7 @@ requirejs(['assert', 'child_process', 'fs', 'path', 'uglify-js', 'less', 'q'], f
           minifyJsFilesTo(files, path.join(buildFolder, targetJs));
           return '<script src="' + targetJs + '"></script>';
         });
-        compiledHtml = compileSection(compiledHtml, 'CSS', function (section) {
+        compiledHtml = compileSection(compiledHtml, 'CSS', function(section) {
           var targetCss = 'app.css',
             rexp = /<link[a-z="\/ ]* href="([a-z]+\.less)"/,
             m = rexp.exec(section);
@@ -136,10 +129,10 @@ requirejs(['assert', 'child_process', 'fs', 'path', 'uglify-js', 'less', 'q'], f
       })
       .end();
 
-    Q.all(['spinner.gif', 'save.swf', 'partials', 'templates'].map(function (baseName) {
+    Q.all(['spinner.gif', 'save.swf', 'partials', 'templates'].map(function(baseName) {
       var src = path.join(appFolder, baseName);
       return Q.ncall(fs.stat, fs, src)
-        .then(function (stats) {
+        .then(function(stats) {
           var copy = stats.isDirectory() ? copyDirectory : copyFile;
           return copy(src, path.join(buildFolder, baseName));
         });
