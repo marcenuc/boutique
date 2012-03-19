@@ -366,6 +366,47 @@ describe('Validation', function () {
         }));
       });
     });
+
+    describe('on CostoArticoli', function () {
+      var doc = { _id: 'CostoArticoli_121' },
+        docDeleted = { _id: 'CostoArticoli_121', _deleted: true };
+
+      describe('for anonymous user', function () {
+        beforeEach(setupSession(anonymous));
+
+        it('should not be authorized', inject(function (validate) {
+          expect(validate(doc)).not.toBeAuthorized();
+          expect(validate(docDeleted)).not.toBeAuthorized();
+        }));
+      });
+
+      describe('for other user', function () {
+        beforeEach(setupSession(other));
+
+        it('should not be authorized', inject(function (validate) {
+          expect(validate(doc)).not.toBeAuthorized();
+          expect(validate(docDeleted)).not.toBeAuthorized();
+        }));
+      });
+
+      describe('for owner user', function () {
+        beforeEach(setupSession(owner));
+
+        it('should not be authorized', inject(function (validate) {
+          expect(validate(doc)).not.toBeAuthorized();
+          expect(validate(docDeleted)).not.toBeAuthorized();
+        }));
+      });
+
+      describe('for admin user', function () {
+        beforeEach(setupSession(admin));
+
+        it('should be authorized', inject(function (validate) {
+          expect(validate(doc)).toBeAuthorized();
+          expect(validate(docDeleted)).toBeAuthorized();
+        }));
+      });
+    });
   });
 
   describe('of type', function () {
@@ -969,6 +1010,43 @@ describe('Validation', function () {
             expect(validate(doc)).not.toMatchError(msg);
           }));
         });
+      });
+    });
+
+    describe('CostoArticoli', function () {
+      function newDoc() {
+        return {
+          _id: 'CostoArticoli_121',
+          costi: {}
+        };
+      }
+
+      describe('stagione', function () {
+        it('should be in _id', inject(function (validate) {
+          var msg = 'Invalid stagione';
+          expect(validate({ _id: 'CostoArticoli_123456' })).toHaveError(msg);
+          expect(validate({ _id: 'CostoArticoli_123' })).not.toMatchError(msg);
+        }));
+      });
+
+      describe('costi', function () {
+        it('should require modello, articolo as keys', inject(function (validate) {
+          var msg = 'Invalid articolo', doc = newDoc();
+          expect(validate(doc)).not.toMatchError(msg);
+          doc.costi['12345'] = { '1234': 100 };
+          expect(validate(doc)).not.toMatchError(msg);
+          doc.costi['12345']['123'] = 100;
+          expect(validate(doc)).toMatchError(msg);
+        }));
+
+        it('should require costo as values', inject(function (validate) {
+          var msg = 'Invalid costo', doc = newDoc();
+          expect(validate(doc)).not.toMatchError(msg);
+          doc.costi['12345'] = { '1234': 100 };
+          expect(validate(doc)).not.toMatchError(msg);
+          doc.costi['12345'] = { '1234': 0 };
+          expect(validate(doc)).toMatchError(msg);
+        }));
       });
     });
   });

@@ -257,6 +257,27 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
       }
     }
 
+    function hasValidCosti(costi) {
+      if (typeOf(costi) !== 'object') {
+        return error('Invalid costi');
+      }
+      Object.keys(costi).forEach(function (modello) {
+        if (!/^\d{5}$/.test(modello)) {
+          return error('Invalid modello: ' + modello);
+        }
+        var costiModello = costi[modello];
+        Object.keys(costiModello).forEach(function (articolo) {
+          if (!/^\d{4}$/.test(articolo)) {
+            return error('Invalid articolo: ' + articolo);
+          }
+          var costo = costiModello[articolo];
+          if (!codici.isInt(costo) || costo <= 0) {
+            error('Invalid costo for ' + [modello, articolo].join(' ') + ': ' + costo);
+          }
+        });
+      });
+    }
+
     function hasColumnNames(columnNames) {
       if (!doc.columnNames ||
           columnNames.length !== doc.columnNames.length ||
@@ -415,6 +436,14 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
       }
       hasColumnNames(['costo', 'prezzo1', 'prezzo2', 'offerta']);
       hasValidListino(doc.prezzi, doc.versioneBase);
+      break;
+    case 'CostoArticoli':
+      mustBeAdmin();
+      if (!codes || !codici.isCode(codes[0], codici.LEN_STAGIONE)) {
+        error('Invalid stagione');
+      } else {
+        hasValidCosti(doc.costi);
+      }
       break;
     default:
       mustBeAdmin();

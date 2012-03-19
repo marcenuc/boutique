@@ -30,7 +30,11 @@ requirejs(['util', 'nano', 'lib/servers', 'lib/as400', 'dbconfig'], function (ut
             updateReporter(err3, warnsAndDoc3, res3, function () {
               as400.updateAziendeAs400(db, function (err4, warnsAndDoc4, res4) {
                 updateReporter(err4, warnsAndDoc4, res4, function () {
-                  as400.updateGiacenze(db, updateReporter);
+                  as400.updateGiacenze(db, function (err5, warnsAndDoc5, res5) {
+                    updateReporter(err5, warnsAndDoc5, res5, function () {
+                      as400.updateCostoArticoliAs400(db, updateReporter);
+                    });
+                  });
                 });
               });
             });

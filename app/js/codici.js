@@ -69,7 +69,7 @@ angular.module('app.shared', []).factory('codici', function () {
     for (i = 1, ii = arguments.length - 1; i < ii; i += 1) {
       arg = arguments[i];
       if (!o.hasOwnProperty(arg)) {
-        return;
+        return undefined;
       }
       o = o[arg];
     }

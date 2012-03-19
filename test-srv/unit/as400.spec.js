@@ -2,7 +2,7 @@
 var requirejs = require('requirejs');
 requirejs.config({ baseUrl: process.cwd(), nodeRequire: require });
 
-requirejs(['underscore', 'lib/as400', 'views/lib/codici'], function (_, as400, codici) {
+requirejs(['underscore', 'lib/as400'], function (_, as400) {
   'use strict';
 
   beforeEach(function () {
@@ -34,6 +34,23 @@ requirejs(['underscore', 'lib/as400', 'views/lib/codici'], function (_, as400, c
           ['102', '1234', 'ABC', '1'],
           ['102', '12345', '', '1'],
           ['102', '12345', 'ABC', '']
+        ]
+      },
+      analis01 = {
+        columnNames: ['stagione', 'modello', 'articolo', 'costo'],
+        rows: [
+          ['102', '60456', '5000', '123.33'],
+          ['102', '60457', '5000', '124.44'],
+          ['102', '60457', '8000', '125.55'],
+          ['112', '60456', '5000', '126.66'],
+          ['112', '60457', '5000', '127.77'],
+          ['112', '60457', '8000', '128.88'],
+          ['122', '60457', '8000', '129.99'],
+          ['102', '12345', '1234', '123.02'],
+          ['', '12345', '1234', '123.02'],
+          ['102', '', '1234', '123.02'],
+          ['102', '12345', '', '123.02'],
+          ['102', '12345', '1234', '0']
         ]
       },
       aziendaAs400 = {
@@ -71,184 +88,39 @@ requirejs(['underscore', 'lib/as400', 'views/lib/codici'], function (_, as400, c
       });
     });
 
-    // TODO do porting to lib/inventario.js:update()
-    xdescribe('updateGiacenzeWithInventarioAndMovimentiMagazzino', function () {
-      var inProduzione = 0, codiceAzienda = '099999', tipoMagazzino = codici.TIPO_MAGAZZINO_NEGOZIO,
-        idInventario = codici.idInventario(codiceAzienda, tipoMagazzino),
-        idMm1 = codici.idMovimentoMagazzino(codiceAzienda, 2011, 'A', 1),
-        idMm2 = codici.idMovimentoMagazzino(codiceAzienda, 2011, 'A', 2),
-        warns = null, giacenze = null, inventario = null, movimenti = null;
-
-      beforeEach(function () {
-        warns = [];
-        giacenze = {};
-        inventario = {
-          _id: idInventario,
-          columnNames: ['barcode', 'giacenza', 'costo'],
-          rows: []
+    describe('buildCostoArticoli', function () {
+      it('should use analis01 and listino1', function () {
+        var costi = {
+          '102': { '60456': { '5000': 0 }, '60457': { '5000': 0 } },
+          '112': { '60456': { '5000': 0 }, '60457': { '5000': 0 } }
         };
-        movimenti = { rows: [] };
-      });
-
-      function doUpdateGiacenze() {
-        as400.updateGiacenzeWithInventarioAndMovimentiMagazzino(warns, giacenze, inventario, movimenti);
-      }
-
-      describe('empty giacenze', function () {
-        it('should append inventario to giacenze', function () {
-          inventario.rows = [['123123451234123401', 12]];
-          doUpdateGiacenze();
-          expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 12 }]]);
-        });
-
-        it('should update inventario with movimenti magazzino +', function () {
-          inventario.rows = [['123123451234123401', 12]];
-          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', 3]] } }];
-          doUpdateGiacenze();
-          expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 15 }]]);
-        });
-
-        it('should update inventario with movimenti magazzino -', function () {
-          inventario.rows = [['123123451234123401', 12]];
-          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', -1, 0], rows: [['123123451234123401', 3]] } }];
-          doUpdateGiacenze();
-          expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 9 }]]);
-        });
-
-        it('should remove from inventario when movimenti magazzino - greater than inventario and issue warning', function () {
-          inventario.rows = [['123123451234123401', 2]];
-          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', -1, 0], rows: [['123123451234123401', 3]] } }];
-          doUpdateGiacenze();
-          expect(giacenze).toHaveSortedRows([]);
-          expect(warns).toEqual(['Giacenza negativa (-1) per "123123451234123401" di "' + codiceAzienda + '"']);
-        });
-
-        it('should remove from inventario when movimenti magazzino - equal to inventario', function () {
-          inventario.rows = [['123123451234123401', 2], ['123123451234123402', 2]];
-          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', -1, 0], rows: [['123123451234123402', 2]] } }];
-          doUpdateGiacenze();
-          expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 2 }]]);
-          expect(warns).toEqual([]);
-        });
-
-        it('should ignore movimenti that results to 0', function () {
-          movimenti.rows = [
-            { doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', 4]] } },
-            { doc: { _id: idMm2, causale: ['c', -1, 0], rows: [['123123451234123401', 4]] } }
-          ];
-          doUpdateGiacenze();
-          expect(giacenze).toHaveSortedRows([]);
-          expect(warns).toEqual([]);
-        });
-
-        it('should append movimenti magazzino to giacenze', function () {
-          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', 4]] } }];
-          doUpdateGiacenze();
-          expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 4 }]]);
-        });
-
-        it('should warn on negative values', function () {
-          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', -4]] } }];
-          doUpdateGiacenze();
-          expect(giacenze).toHaveSortedRows([]);
-          expect(warns).toEqual(['Giacenza negativa (-4) per "123123451234123401" di "' + codiceAzienda + '"']);
-        });
-
-        describe('when an article has multiple entries in inventario', function () {
-          it('should merge data when different costo', function () {
-            inventario.rows = [['123123451234123401', 2, 100], ['123123451234123401', 3, 200]];
-            movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', 4]] } }];
-            doUpdateGiacenze();
-            expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 9 }]]);
-          });
-
-          it('should merge data when different taglia', function () {
-            inventario.rows = [['123123451234123401', 2, 100], ['123123451234123402', 3, 200]];
-            movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', 4], ['123123451234123403', 5]] } }];
-            doUpdateGiacenze();
-            expect(giacenze).toHaveSortedRows([['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 6, '02': 3, '03': 5 }]]);
-          });
-        });
-      });
-
-      describe('NOT empty giacenze', function () {
-        function setGiacenza(r) {
-          var macsAzStTm = [r[1], r[2], r[3], r[0], r[4], r[5], r[6]].join('');
-          giacenze[macsAzStTm] = r;
-        }
-
-        it('should append inventario to giacenze', function () {
-          var otherAzienda = '010101';
-          setGiacenza(['123', '12345', '1234', '1234', otherAzienda, inProduzione, tipoMagazzino, { '01': 12 }]);
-          inventario.rows = [['123123451234123401', 12]];
-          doUpdateGiacenze();
-          expect(giacenze).toHaveSortedRows([
-            ['123', '12345', '1234', '1234', otherAzienda, inProduzione, tipoMagazzino, { '01': 12 }],
-            ['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 12 }]
-          ]);
-        });
-
-        it('should update giacenze with inventario', function () {
-          setGiacenza(['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 12 }]);
-          inventario.rows = [['123123451234123401', 12]];
-          doUpdateGiacenze();
-          expect(giacenze).toHaveSortedRows([
-            ['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 24 }]
-          ]);
-        });
-
-        it('should update giacenze with movimenti magazzino', function () {
-          setGiacenza(['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 12 }]);
-          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', 3]] } }];
-          doUpdateGiacenze();
-          expect(giacenze).toHaveSortedRows([
-            ['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 15 }]
-          ]);
-        });
-
-        describe('when an article has multiple entries in inventario', function () {
-          it('should merge data when different costo', function () {
-            setGiacenza(['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 12 }]);
-            inventario.rows = [['123123451234123401', 2, 100], ['123123451234123401', 3, 200]];
-            movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', 4]] } }];
-            doUpdateGiacenze();
-            expect(giacenze).toHaveSortedRows([
-              ['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 21 }]
-            ]);
-          });
-
-          it('should merge data when different taglia', function () {
-            setGiacenza(['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 12 }]);
-            inventario.rows = [['123123451234123401', 2, 100], ['123123451234123402', 3, 200]];
-            movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], rows: [['123123451234123401', 4], ['123123451234123403', 5]] } }];
-            doUpdateGiacenze();
-            expect(giacenze).toHaveSortedRows([
-              ['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 18, '02': 3, '03': 5 }]
-            ]);
-          });
-        });
-      });
-
-      describe('destinazione with causale[2] === 0', function () {
-        it('should NOT update giacenza destinazione', function () {
-          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', 1, 0], destinazione: '010101', rows: [['123123451234123401', 4]] } }];
-          doUpdateGiacenze();
-          expect(giacenze).toHaveSortedRows([
-            ['123', '12345', '1234', '1234', codiceAzienda, inProduzione, tipoMagazzino, { '01': 4 }]
-          ]);
-        });
-      });
-
-      describe('destinazione with causale[2] !== 0', function () {
-        it('should update giacenza destinazione', function () {
-          var codiceDestinazione = '010101';
-          inventario._id = codici.idInventario(codiceDestinazione, tipoMagazzino);
-          movimenti.rows = [{ doc: { _id: idMm1, causale: ['c', -1, 1], destinazione: codiceDestinazione, rows: [['123123451234123401', 4]] } }];
-          doUpdateGiacenze();
-          expect(giacenze).toHaveSortedRows([
-            ['123', '12345', '1234', '1234', codiceDestinazione, inProduzione, tipoMagazzino, { '01': 4 }]
-          ]);
-        });
+        var listini = { '1': { columnNames: ['costo', 'prezzo1', 'prezzo2', 'offerta'], prezzi: {
+          '122': { '60457': { '7000': [1234, 2145, 2000, '*'] } }
+        }}};
+        expect(as400.buildCostoArticoli(11, costi, [analis01], listini)).toEqual([
+          [
+            'Riga non valida: "" "12345" "1234" "123.02"',
+            'Riga non valida: "102" "" "1234" "123.02"',
+            'Riga non valida: "102" "12345" "" "123.02"',
+            'Riga non valida: "102" "12345" "1234" "0"'
+          ], [
+            // it should purge old years
+            // it should save only in-stock items for old years
+            {
+              _id: 'CostoArticoli_102',
+              costi: { '60456': { '5000': 12333 }, '60457': { '5000': 12444 } }
+            },
+            // it should save all items for current years
+            {
+              _id: 'CostoArticoli_112',
+              costi: { '60456': { '5000': 12666 }, '60457': { '5000': 12777, '8000': 12888 } }
+            },
+            {
+              _id: 'CostoArticoli_122',
+              costi: { '60457': { '8000': 12999 } }
+            }
+          ]
+        ]);
       });
     });
 
