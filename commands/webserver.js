@@ -20,6 +20,7 @@ requirejs(['path', 'connect', 'http', 'connect-exec', 'lib/sendFoto', 'lib/serve
         res.end(JSON.stringify({ userCtx: { name: req.user } }));
       })
       .use('/tessuto', connect['static'](path.join(images.rootFolder, images.output, 'tessuti')))
+      .use('/catalogo', connect['static'](path.join(images.rootFolder, images.output, 'catalogo')))
       .use('/foto', sendFoto(path.join(images.rootFolder, images.output, 'foto'), { '11': '12', '10': '12', '92': '12' }))
       .use('/as400', cmdExec({ 'Content-Type': 'application/json;charset=utf-8' }, process.cwd(), 'java', ['-jar', 'as400-querier.jar']))
       .use('/OLD_APP/app', connect['static'](path.join(process.cwd(), 'OLD_APP/app')));
