@@ -9298,7 +9298,7 @@ jQuery.each([ "Height", "Width" ], function( i, name ) {
 // Expose jQuery to the global object
 window.jQuery = window.$ = jQuery;
 })( window );/**
- * @license AngularJS v1.0.0rc2-78a62916
+ * @license AngularJS v1.0.0rc2-1cc0e417
  * (c) 2010-2011 AngularJS http://angularjs.org
  * License: MIT
  */
@@ -9367,7 +9367,7 @@ var $boolean          = 'boolean',
     $undefined        = 'undefined',
     Error             = window.Error,
     /** holds major version number for IE or NaN for real browsers */
-    msie              = parseInt((/msie (\d+)/.exec(lowercase(navigator.userAgent)) || [])[1], 10),
+    msie              = int((/msie (\d+)/.exec(lowercase(navigator.userAgent)) || [])[1]),
     jqLite,           // delay binding since jQuery could be loaded after us.
     jQuery,           // delay binding
     slice             = [].slice,
@@ -9379,8 +9379,7 @@ var $boolean          = 'boolean',
     angularModule,
     /** @name angular.module.ng */
     nodeName_,
-    uid               = ['0', '0', '0'],
-    DATE_ISOSTRING_LN = 24;
+    uid               = ['0', '0', '0'];
 
 /**
  * @ngdoc function
@@ -9510,6 +9509,10 @@ function extend(dst) {
     }
   });
   return dst;
+}
+
+function int(str) {
+  return parseInt(str, 10);
 }
 
 
@@ -10234,6 +10237,7 @@ function bindJQuery() {
     jqLite = jQuery;
     extend(jQuery.fn, {
       scope: JQLitePrototype.scope,
+      controller: JQLitePrototype.controller,
       injector: JQLitePrototype.injector,
       inheritedData: JQLitePrototype.inheritedData
     });
@@ -10241,7 +10245,7 @@ function bindJQuery() {
     JQLitePatchJQueryRemove('empty');
     JQLitePatchJQueryRemove('html');
   } else {
-    jqLite = jqLiteWrap;
+    jqLite = JQLite;
   }
   angular.element = jqLite;
 }
@@ -10517,7 +10521,7 @@ function setupModuleLoader(window) {
  * - `codeName` – `{string}` – Code name of the release, such as "jiggling-armfat".
  */
 var version = {
-  full: '1.0.0rc2-78a62916',    // all of these placeholder strings will be replaced by rake's
+  full: '1.0.0rc2-1cc0e417',    // all of these placeholder strings will be replaced by rake's
   major: "NG_VERSION_MAJOR",    // compile task
   minor: "NG_VERSION_MINOR",
   dot: "NG_VERSION_DOT",
@@ -10687,7 +10691,7 @@ function fromJson(json, useNative) {
   // TODO make forEach optionally recursive and remove this function
   // TODO(misko): remove this once the $http service is checked in.
   function transformDates(obj) {
-    if (isString(obj) && obj.length === DATE_ISOSTRING_LN) {
+    if (isString(obj) && 15 <= obj.length && obj.length <= 24) {
       return jsonStringToDate(obj);
     } else if (isArray(obj) || isObject(obj)) {
       forEach(obj, function(val, name) {
@@ -10698,13 +10702,19 @@ function fromJson(json, useNative) {
   }
 }
 
-var R_ISO8061_STR = /^(\d{4})-(\d\d)-(\d\d)(?:T(\d\d)(?:\:(\d\d)(?:\:(\d\d)(?:\.(\d{3}))?)?)?Z)?$/;
+var R_ISO8061_STR = /^(\d{4})-?(\d\d)-?(\d\d)(?:T(\d\d)(?:\:?(\d\d)(?:\:?(\d\d)(?:\.(\d{3}))?)?)?(Z|([+-])(\d\d):?(\d\d)))?$/;
 function jsonStringToDate(string){
   var match;
-  if (isString(string) && (match = string.match(R_ISO8061_STR))){
-    var date = new Date(0);
-    date.setUTCFullYear(match[1], match[2] - 1, match[3]);
-    date.setUTCHours(match[4]||0, match[5]||0, match[6]||0, match[7]||0);
+  if (match = string.match(R_ISO8061_STR)) {
+    var date = new Date(0),
+        tzHour = 0,
+        tzMin  = 0;
+    if (match[9]) {
+      tzHour = int(match[9] + match[10]);
+      tzMin = int(match[9] + match[11]);
+    }
+    date.setUTCFullYear(int(match[1]), int(match[2]) - 1, int(match[3]));
+    date.setUTCHours(int(match[4]||0) - tzHour, int(match[5]||0) - tzMin, int(match[6]||0), int(match[7]||0));
     return date;
   }
   return string;
@@ -11580,9 +11590,13 @@ ResourceFactory.prototype = {
  *
  * ## In addtion to the above, Angular privides an additional method to both jQuery and jQuery lite:
  *
- * - `scope()` - retrieves the current Angular scope of the element.
- * - `injector()` - retrieves the Angular injector associated with application that the element is
- *   part of.
+ * - `controller(name)` - retrieves the controller of the current element or its parent. By default
+ *   retrieves controller associated with the `ng-controller` directive. If `name` is provided as
+ *   camelCase directive name, then the controller for this directive will be retrieved (e.g.
+ *   `'ngModel'`).
+ * - `injector()` - retrieves the injector of the current element or its parent.
+ * - `scope()` - retrieves the {@link api/angular.module.ng.$rootScope.Scope scope} of the current
+ *   element or its parent.
  * - `inheritedData()` - same as `data()`, but walks up the DOM until a value is found or the top
  *   parent element is reached.
  *
@@ -11684,17 +11698,18 @@ function JQLitePatchJQueryRemove(name, dispatchThis) {
 }
 
 /////////////////////////////////////////////
-function jqLiteWrap(element) {
-  if (isString(element) && element.charAt(0) != '<') {
-    throw new Error('selectors not implemented');
-  }
-  return new JQLite(element);
-}
-
 function JQLite(element) {
   if (element instanceof JQLite) {
     return element;
-  } else if (isString(element)) {
+  }
+  if (!(this instanceof JQLite)) {
+    if (isString(element) && element.charAt(0) != '<') {
+      throw Error('selectors not implemented');
+    }
+    return new JQLite(element);
+  }
+
+  if (isString(element)) {
     var div = document.createElement('div');
     // Read about the NoScope elements here:
     // http://msdn.microsoft.com/en-us/library/ms533897(VS.85).aspx
@@ -11788,6 +11803,18 @@ function JQLiteAddNodes(root, elements) {
   }
 }
 
+function JQLiteController(element, name) {
+  return JQLiteInheritedData(element, '$' + (name || 'ngController' ) + 'Controller');
+}
+
+function JQLiteInheritedData(element, name, value) {
+  element = jqLite(element);
+  while (element.length) {
+    if (value = element.data(name)) return value;
+    element = element.parent();
+  }
+}
+
 //////////////////////////////////////////
 // Functions which are declared directly.
 //////////////////////////////////////////
@@ -11803,7 +11830,7 @@ var JQLitePrototype = JQLite.prototype = {
 
     this.bind('DOMContentLoaded', trigger); // works for modern browsers and IE9
     // we can not use jqLite since we are not done loading and jQuery could be loaded later.
-    jqLiteWrap(window).bind('load', trigger); // fallback to window.onload for others
+    JQLite(window).bind('load', trigger); // fallback to window.onload for others
   },
   toString: function() {
     var value = [];
@@ -11831,7 +11858,7 @@ forEach('multiple,selected,checked,disabled,readOnly,required'.split(','), funct
   BOOLEAN_ATTR[lowercase(value)] = value;
 });
 var BOOLEAN_ELEMENTS = {};
-forEach('input,select,option,textarea,button'.split(','), function(value) {
+forEach('input,select,option,textarea,button,form'.split(','), function(value) {
   BOOLEAN_ELEMENTS[uppercase(value)] = true;
 });
 
@@ -11841,20 +11868,16 @@ function isBooleanAttr(element, name) {
 
 forEach({
   data: JQLiteData,
-  inheritedData: function(element, name, value) {
-    element = jqLite(element);
-    while (element.length) {
-      if (value = element.data(name)) return value;
-      element = element.parent();
-    }
-  },
+  inheritedData: JQLiteInheritedData,
 
   scope: function(element) {
-    return jqLite(element).inheritedData('$scope');
+    return JQLiteInheritedData(element, '$scope');
   },
 
+  controller: JQLiteController ,
+
   injector: function(element) {
-      return jqLite(element).inheritedData('$injector');
+    return JQLiteInheritedData(element, '$injector');
   },
 
   removeAttr: function(element,name) {
@@ -11901,8 +11924,7 @@ forEach({
         }
       } else {
         return (element[name] ||
-                 element.getAttribute(name) !== null &&
-                 (msie < 9 ? element.getAttribute(name) !== '' : true))
+                 (element.attributes.getNamedItem(name)|| noop).specified)
                ? lowercasedName
                : undefined;
       }
@@ -11969,7 +11991,7 @@ forEach({
 
     // JQLiteHasClass has only two arguments, but is a getter-only fn, so we need to special-case it
     // in a way that survives minification.
-    if (((fn.length == 2 && fn !== JQLiteHasClass) ? arg1 : arg2) === undefined) {
+    if (((fn.length == 2 && (fn !== JQLiteHasClass && fn !== JQLiteController)) ? arg1 : arg2) === undefined) {
       if (isObject(arg1)) {
         // we are a write, but the object properties are the key/values
         for(i=0; i < this.length; i++) {
@@ -13198,7 +13220,10 @@ function $CompileProvider($provide) {
     //================================
 
     function compile(templateElement, transcludeFn, maxPriority) {
-      templateElement = jqLite(templateElement);
+      if (!(templateElement instanceof jqLite)) {
+        // jquery always rewraps, where as we need to preserve the original selector so that we can modify it.
+        templateElement = jqLite(templateElement);
+      }
       // We can not compile top level text elements since text nodes can be merged and we will
       // not be able to attach scope data to them, so we will wrap them in <span>
       forEach(templateElement, function(node, index){
@@ -13348,17 +13373,19 @@ function $CompileProvider($provide) {
           for (var attr, name, nName, value, nAttrs = node.attributes,
                    j = 0, jj = nAttrs && nAttrs.length; j < jj; j++) {
             attr = nAttrs[j];
-            name = attr.name;
-            nName = directiveNormalize(name.toLowerCase());
-            attrsMap[nName] = name;
-            attrs[nName] = value = trim((msie && name == 'href')
+            if (attr.specified) {
+              name = attr.name;
+              nName = directiveNormalize(name.toLowerCase());
+              attrsMap[nName] = name;
+              attrs[nName] = value = trim((msie && name == 'href')
                 ? decodeURIComponent(node.getAttribute(name, 2))
                 : attr.value);
-            if (isBooleanAttr(node, nName)) {
-              attrs[nName] = true; // presence means true
+              if (isBooleanAttr(node, nName)) {
+                attrs[nName] = true; // presence means true
+              }
+              addAttrInterpolateDirective(node, directives, value, nName)
+              addDirective(directives, nName, 'A', maxPriority);
             }
-            addAttrInterpolateDirective(node, directives, value, nName)
-            addDirective(directives, nName, 'A', maxPriority);
           }
 
           // use class as directive
@@ -13461,7 +13488,7 @@ function $CompileProvider($provide) {
             template = jqLite(templateNode);
             templateNode = (element = templateAttrs.$element = jqLite(
                 '<!-- ' + directiveName + ': ' + templateAttrs[directiveName]  + ' -->'))[0];
-            template.replaceWith(templateNode);
+            replaceWith(rootElement, jqLite(template[0]), templateNode);
             childTranscludeFn = compile(template, transcludeFn, terminalPriority);
           } else {
             template = jqLite(JQLiteClone(templateNode));
@@ -14859,7 +14886,7 @@ function dateFilter($locale) {
     format = $locale.DATETIME_FORMATS[format] || format;
     if (isString(date)) {
       if (NUMBER_STRING.test(date)) {
-        date = parseInt(date, 10);
+        date = int(date);
       } else {
         date = jsonStringToDate(date);
       }
@@ -15116,7 +15143,7 @@ function linkyFilter() {
 function limitToFilter(){
   return function(array, limit) {
     if (!(array instanceof Array)) return array;
-    limit = parseInt(limit, 10);
+    limit = int(limit);
     var out = [],
       i, n;
 
@@ -15459,7 +15486,7 @@ function matchUrl(url, obj) {
   match = {
       protocol: match[1],
       host: match[3],
-      port: parseInt(match[5], 10) || DEFAULT_PORTS[match[1]] || null,
+      port: int(match[5]) || DEFAULT_PORTS[match[1]] || null,
       path: match[6] || '/',
       search: match[8],
       hash: match[10]
@@ -18322,12 +18349,13 @@ function $RootScopeProvider(){
        * @param {(string|function())=} expression An angular expression to be executed.
        *
        *    - `string`: execute using the rules as defined in  {@link guide/dev_guide.expressions expression}.
-       *    - `function(scope)`: execute the function with the current `scope` parameter.
+       *    - `function(scope, locals)`: execute the function with the current `scope` parameter.
+       * @param {Object=} locals Hash object of local variables for the expression.
        *
        * @returns {*} The result of evaluating the expression.
        */
-      $eval: function(expr) {
-        return $parse(expr)(this);
+      $eval: function(expr, locals) {
+        return $parse(expr)(this, locals);
       },
 
       /**
@@ -20273,10 +20301,10 @@ var nullFormCtrl = {
  * of `FormController`.
  *
  */
-FormController.$inject = ['name', '$element', '$attrs'];
-function FormController(name, element, attrs) {
+FormController.$inject = ['$element', '$attrs'];
+function FormController(element, attrs) {
   var form = this,
-      parentForm = element.parent().inheritedData('$formController') || nullFormCtrl,
+      parentForm = element.parent().controller('form') || nullFormCtrl,
       invalidCount = 0, // used to easily determine if we are valid
       errors = form.$error = {};
 
@@ -20286,9 +20314,6 @@ function FormController(name, element, attrs) {
   form.$pristine = true;
   form.$valid = true;
   form.$invalid = false;
-
-  // publish the form into scope
-  name(this);
 
   parentForm.$addControl(form);
 
@@ -20373,8 +20398,23 @@ function FormController(name, element, attrs) {
 
 /**
  * @ngdoc directive
+ * @name angular.module.ng.$compileProvider.directive.ng-form
+ * @restrict EAC
+ *
+ * @description
+ * Nestable alias of {@link angular.module.ng.$compileProvider.directive.form `form`} directive. HTML
+ * does not allow nesting of form elements. It is useful to nest forms, for example if the validity of a
+ * sub-group of controls needs to be determined.
+ *
+ * @param {string=} ng-form|name Name of the form. If specified, the form controller will be published into
+ *                       related scope, under this name.
+ *
+ */
+
+ /**
+ * @ngdoc directive
  * @name angular.module.ng.$compileProvider.directive.form
- * @restrict EA
+ * @restrict E
  *
  * @description
  * Directive that instantiates
@@ -20383,12 +20423,12 @@ function FormController(name, element, attrs) {
  * If `name` attribute is specified, the form controller is published onto the current scope under
  * this name.
  *
- * # Alias: `ng-form`
+ * # Alias: {@link angular.module.ng.$compileProvider.directive.ng-form `ng-form`}
  *
  * In angular forms can be nested. This means that the outer form is valid when all of the child
  * forms are valid as well. However browsers do not allow nesting of `<form>` elements, for this
- * reason angular provides `<ng-form>` alias which behaves identical to `<form>` but allows
- * element nesting.
+ * reason angular provides {@link angular.module.ng.$compileProvider.directive.ng-form `ng-form`} alias
+ * which behaves identical to `<form>` but allows form nesting.
  *
  *
  * # CSS classes
@@ -20460,25 +20500,31 @@ function FormController(name, element, attrs) {
       </doc:scenario>
     </doc:example>
  */
-var formDirectiveDev = {
+var formDirectiveDir = {
   name: 'form',
   restrict: 'E',
-  inject: {
-    name: 'accessor'
-  },
   controller: FormController,
   compile: function() {
     return {
       pre: function(scope, formElement, attr, controller) {
-        formElement.bind('submit', function(event) {
-          if (!attr.action) event.preventDefault();
-        });
+        if (!attr.action) {
+          formElement.bind('submit', function(event) {
+            event.preventDefault();
+          });
+        }
 
-        var parentFormCtrl = formElement.parent().inheritedData('$formController');
+        var parentFormCtrl = formElement.parent().controller('form'),
+            alias = attr.name || attr.ngForm;
+
+        if (alias) {
+          scope[alias] = controller;
+        }
         if (parentFormCtrl) {
           formElement.bind('$destroy', function() {
             parentFormCtrl.$removeControl(controller);
-            if (attr.name) delete scope[attr.name];
+            if (alias) {
+              scope[alias] = undefined;
+            }
             extend(controller, nullFormCtrl); //stop propagating child destruction handlers upwards
           });
         }
@@ -20487,8 +20533,8 @@ var formDirectiveDev = {
   }
 };
 
-var formDirective = valueFn(formDirectiveDev);
-var ngFormDirective = valueFn(extend(copy(formDirectiveDev), {restrict:'EAC'}));
+var formDirective = valueFn(formDirectiveDir);
+var ngFormDirective = valueFn(extend(copy(formDirectiveDir), {restrict: 'EAC'}));
 'use strict';
 
 var URL_REGEXP = /^(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$/;
@@ -20906,7 +20952,7 @@ function textInputType(scope, element, attr, ctrl) {
 
   // min length validator
   if (attr.ngMinlength) {
-    var minlength = parseInt(attr.ngMinlength, 10);
+    var minlength = int(attr.ngMinlength);
     var minLengthValidator = function(value) {
       if (!isEmpty(value) && value.length < minlength) {
         ctrl.$setValidity('minlength', false);
@@ -20923,7 +20969,7 @@ function textInputType(scope, element, attr, ctrl) {
 
   // max length validator
   if (attr.ngMaxlength) {
-    var maxlength = parseInt(attr.ngMaxlength, 10);
+    var maxlength = int(attr.ngMaxlength);
     var maxLengthValidator = function(value) {
       if (!isEmpty(value) && value.length > maxlength) {
         ctrl.$setValidity('maxlength', false);
@@ -22916,10 +22962,10 @@ var ngRepeatDirective = ngDirective({
       }
       lhs = match[1];
       rhs = match[2];
-      match = lhs.match(/^([\$\w]+)|\(([\$\w]+)\s*,\s*([\$\w]+)\)$/);
+      match = lhs.match(/^(?:([\$\w]+)|\(([\$\w]+)\s*,\s*([\$\w]+)\))$/);
       if (!match) {
         throw Error("'item' in 'item in collection' should be identifier or (key, value) but got '" +
-          keyValue + "'.");
+            lhs + "'.");
       }
       valueIdent = match[3] || match[1];
       keyIdent = match[2];
@@ -23465,7 +23511,8 @@ var ngViewDirective = ['$http', '$templateCache', '$route', '$anchorScroll', '$c
 
               lastScope = current.scope = scope.$new();
               if (current.controller) {
-                $controller(current.controller, {$scope: lastScope});
+                element.contents().
+                  data('$ngControllerController', $controller(current.controller, {$scope: lastScope}));
               }
 
               link(lastScope);
@@ -23702,12 +23749,22 @@ var selectDirective = ['$compile', '$parse', function($compile,   $parse) {
       }
 
       function Multiple(scope, selectElement, ctrl) {
+        var lastView;
         ctrl.$render = function() {
           var items = new HashMap(ctrl.$viewValue);
           forEach(selectElement.children(), function(option) {
             option.selected = isDefined(items.get(option.value));
           });
         };
+
+        // we have to do it on each watch since ng-model watches reference, but
+        // we need to work of an array, so we need to see if anything was inserted/removed
+        scope.$watch(function() {
+          if (!equals(lastView, ctrl.$viewValue)) {
+            lastView = copy(ctrl.$viewValue);
+            ctrl.$render();
+          }
+        });
 
         selectElement.bind('change', function() {
           scope.$apply(function() {
@@ -26189,7 +26246,7 @@ angular.forEach(script.attributes, function(attr) {
 });
 
 if (config.autotest) {
-  jqLiteWrap(document).ready(function() {
+  JQLite(document).ready(function() {
     angular.scenario.setUpAndRun(config);
   });
 }
