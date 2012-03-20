@@ -90,7 +90,7 @@ class boutique(
   $webapp_folder      = "${home}/webapp"
 
   $photo_folder       = "${shares_folder}/${photo_share}"
-  $photo_subfolders   = ["${photo_folder}/tessuti", "${photo_folder}/foto", "${photo_folder}/schizzi", "${photo_folder}/pubblicate"]
+  $photo_subfolders   = ["${photo_folder}/tessuti", "${photo_folder}/foto", "${photo_folder}/schizzi", "${photo_folder}/catalogo", "${photo_folder}/pubblicate"]
 
   Package { ensure => latest, }
 

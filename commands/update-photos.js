@@ -9,10 +9,11 @@ requirejs(['fs', 'child_process', 'path', 'findit', 'lib/servers'], function (fs
     images = servers.couchdb.webserver.images;
 
   function findFiles(inputFolder, pattern, outputFolder) {
+    var rexp = new RegExp(pattern, 'i');
     findit.sync(inputFolder, function (file) {
-      var m = file.match(new RegExp(pattern));
+      var m = rexp.exec(file);
       if (m) {
-        files.push([file, path.join(outputFolder, m[1] + '.jpg')]);
+        files.push([file, path.join(outputFolder, m.slice(1).join('_') + '.jpg')]);
       }
     });
   }
@@ -26,7 +27,7 @@ requirejs(['fs', 'child_process', 'path', 'findit', 'lib/servers'], function (fs
   });
 
   function done(code) {
-    if (typeof code !== 'number' || code !== 0) {
+    if (code !== 0) {
       throw new Error('convert from "' + f[0] + '" to "' + f[1] + '" failed with: ' + code);
     }
     process.stdout.write(Math.floor((i / ii) * 100) + '%\r');

@@ -751,6 +751,8 @@ var Ctrl = {};
           });
         });
       });
+      var m = /^Foto_(\d+)_(\d+)_\d+$/.exec($scope.idFoto);
+      $scope.image = m ? '../catalogo/' + m[1] + '_' + m[2] + '.jpg' : null;
     };
 
     $scope.total = function() {

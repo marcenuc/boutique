@@ -696,6 +696,8 @@ describe('Controller', function () {
       $httpBackend.flush();
       // it should put articoli in photo in results
       expect($scope.results).toEqual(FOTO.articoli);
+      // it should put image link in $scope
+      expect($scope.image).toBe('../catalogo/1_0.jpg');
     }));
   });
 });
