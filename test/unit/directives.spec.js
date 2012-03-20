@@ -67,6 +67,11 @@ describe('Directive', function() {
       setViewValue('101 60754 4000 8000 01');
       expect(modelValue()).toBe('101607544000800001');
     });
+
+    it('should accept empty values', function() {
+      setViewValue('  ');
+      expect(modelValue()).toBe('');
+    });
   });
 
   describe('bqCodiceAzienda', function() {

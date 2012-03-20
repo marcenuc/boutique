@@ -26,7 +26,7 @@ angular.module('app.directives', [], ['$compileProvider', '$filterProvider', fun
 
         ctrl.$parsers.unshift(function(viewValue) {
           var cleanedValue = viewValue.replace(/\s/g, ''),
-            isValid = codici.isBarcodeAs400(cleanedValue);
+            isValid = cleanedValue === '' || codici.isBarcodeAs400(cleanedValue);
           ctrl.$setValidity('barcodeAs400', isValid);
           if (isValid) return cleanedValue;
         });
