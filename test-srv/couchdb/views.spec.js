@@ -29,6 +29,23 @@ requirejs(['views', 'views/lib/codici'], function (views, codici) {
     });
   });
 
+  describe('costo map', function () {
+    var map = views.costo;
+    describe('CostoArticoli_125', function () {
+      it('should emit (sma, costo) for each articolo in articoli', function () {
+        var a = { _id: 'CostoArticoli_125', "costi": {
+          "98021": { "1881": 12345 },
+          "40021": { "2109": 3421 }
+        } };
+        map(a);
+        expect(views._rows()).toEqual([
+          ['125400212109', 3421],
+          ['125980211881', 12345]
+        ]);
+      });
+    });
+  });
+
   describe('listini map', function () {
     var map = views.listini;
     describe('Listino', function () {

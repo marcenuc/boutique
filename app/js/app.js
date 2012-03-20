@@ -13,11 +13,12 @@ angular.module('app',
     $routeProvider.when('/MovimentoMagazzino_:codice', { template: 'partials/edit-movimento-magazzino.html', controller: Ctrl.EditMovimentoMagazzino });
     $routeProvider.when('/Listino', { template: 'partials/listino.html', controller: Ctrl.Listino });
     $routeProvider.when('/Listino_:codice', { template: 'partials/edit-listino.html', controller: Ctrl.Listino });
+    $routeProvider.when('/Catalogo', { template: 'partials/catalogo.html', controller: Ctrl.Catalogo });
     $routeProvider.otherwise({ redirectTo: '/' });
   }])
   .run(['$window', '$rootScope', function($window, $rootScope) {
     'use strict';
-    $rootScope.$on('$afterRouteChange', function () {
+    $rootScope.$on('$afterRouteChange', function() {
       $window.scrollTo(0, 0);
     });
   }]);

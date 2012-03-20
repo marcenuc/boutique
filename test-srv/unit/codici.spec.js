@@ -271,6 +271,13 @@ requirejs(['views/lib/codici'], function (codici) {
     });
   });
 
+  describe('parseIdFoto', function () {
+    var u = codici.parseIdFoto;
+    it('should return codice', function () {
+      expect(u('Foto_1_0_1')).toBe('1_0_1');
+    });
+  });
+
   describe('parseIdMovimentoMagazzino', function () {
     var u = codici.parseIdMovimentoMagazzino;
     it('should return origine, anno, gruppo, and numero', function () {

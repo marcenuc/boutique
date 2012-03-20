@@ -180,9 +180,7 @@ angular.module('app.services', [], ['$provide', function ($provide) {
     }
 
     return {
-      all: function () {
-        return find();
-      },
+      all: find,
       nome: function (codiceAzienda) {
         return find().then(function (aziende) {
           var azienda = aziende[codiceAzienda];

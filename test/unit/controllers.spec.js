@@ -3,7 +3,7 @@ describe('Controller', function () {
   'use strict';
   // TODO remove AZIENDE and use VIEW_AZIENDE (or viceversa).
   // TODO remove LISTINI and use VIEW_LISTINI (or viceversa).
-  var AZIENDE, VIEW_AZIENDE, LISTINI, VIEW_LISTINI;
+  var AZIENDE, VIEW_AZIENDE, LISTINI, VIEW_LISTINI, FOTO;
   beforeEach(function () {
     AZIENDE = {
       '010101': {
@@ -46,6 +46,10 @@ describe('Controller', function () {
     VIEW_LISTINI = { rows: [
       { key: '1', id: 'Listino_1', value: null, doc: { _id: 'Listino_1', columnNames: ['costo', 'prezzo1', 'prezzo2', 'offerta'], prezzi: { '112': { '60456': { '5000': [100, 300, 200, '*'] } } } } },
       { key: '010101', id: 'Listino_010101', value: null, doc: { _id: 'Listino_010101', columnNames: ['costo', 'prezzo1', 'prezzo2', 'offerta'], prezzi: {}, versioneBase: '1' } }
+    ] };
+    FOTO = { _id: 'Foto_1_0_1', articoli: [
+      { stagione: '125', modello: '98021', articolo: '1881', colore: '8000' },
+      { stagione: '125', modello: '40021', articolo: '2109', colore: '5500' }
     ] };
   });
 
@@ -676,6 +680,22 @@ describe('Controller', function () {
       $scope.$digest();
       $httpBackend.flush();
       expect(SessionInfo.notice).toHaveBeenCalledWith('Salvato Listino_1');
+    }));
+  });
+
+  describe('Catalogo', function() {
+    it('should initialize $scope', inject(function($rootScope, $controller, controllers, $httpBackend, couchdb) {
+      var $scope = $rootScope, idFoto = 'Foto_1_0_1';
+      $controller(controllers.Catalogo, { '$scope': $scope });
+
+      $scope.idFoto = idFoto;
+      $httpBackend.expectGET(couchdb.docPath(idFoto)).respond(FOTO);
+      $httpBackend.expectGET(couchdb.viewPath('costo?key="125980211881"')).respond(JSON.stringify({ rows: [{ key: "125980211881", value: 12345 }] }));
+      $httpBackend.expectGET(couchdb.viewPath('costo?key="125400212109"')).respond(JSON.stringify({ rows: [{ key: "125400212109", value: 3121 }] }));
+      $scope.find();
+      $httpBackend.flush();
+      // it should put articoli in photo in results
+      expect($scope.results).toEqual(FOTO.articoli);
     }));
   });
 });

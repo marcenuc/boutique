@@ -733,6 +733,37 @@ var Ctrl = {};
     };
   };
   Ctrl.Listino.$inject = ['$scope', '$routeParams', 'SessionInfo', '$location', 'codici', 'Doc'];
+
+  Ctrl.Catalogo = function($scope, SessionInfo, couchdb, Doc) {
+    SessionInfo.resetFlash();
+
+    $scope.results = [];
+    $scope.costi = {};
+
+    $scope.find = function() {
+      Doc.find($scope.idFoto).then(function(foto) {
+        $scope.results = foto.articoli;
+        $scope.results.forEach(function (r) {
+          r.sma = [r.stagione, r.modello, r.articolo].join('');
+          Doc.find('COSTO', couchdb.viewPath('costo?key="' + r.sma + '"')).then(function (costo) {
+            var row = costo.rows[0];
+            if (row) $scope.costi[row.key] = row.value;
+          });
+        });
+      });
+    };
+
+    $scope.total = function() {
+      var costi = $scope.costi, smas = Object.keys(costi);
+      if (smas.length && smas.length === $scope.results.length) {
+        var t = 0;
+        smas.forEach(function(sma) { t += costi[sma]; });
+        return t;
+      }
+    };
+
+  };
+  Ctrl.Catalogo.$inject = ['$scope', 'SessionInfo', 'couchdb', 'Doc'];
 }());
 
 //TODO used only for testing

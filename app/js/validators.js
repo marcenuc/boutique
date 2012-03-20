@@ -278,6 +278,17 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
       });
     }
 
+    function hasValidArticoli(articoli) {
+      var msg = 'Invalid articoli';
+      if (typeOf(articoli) !== 'array' || !articoli.length) return error(msg);
+      articoli.forEach(function (a) {
+        var k = Object.keys(a).sort();
+        if (k.length !== 4 || k[0] !== 'articolo' || k[1] !== 'colore' || k[2] !== 'modello' || k[3] !== 'stagione' ||
+            !codici.codiceAs400(a.stagione, a.modello, a.articolo, a.colore, '01'))
+          error(msg);
+      });
+    }
+
     function hasColumnNames(columnNames) {
       if (!doc.columnNames ||
           columnNames.length !== doc.columnNames.length ||
@@ -443,6 +454,14 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
         error('Invalid stagione');
       } else {
         hasValidCosti(doc.costi);
+      }
+      break;
+    case 'Foto':
+      mustBeAdmin();
+      if (!codes) {
+        error('Invalid idFoto');
+      } else {
+        hasValidArticoli(doc.articoli);
       }
       break;
     default:

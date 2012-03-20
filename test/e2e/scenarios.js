@@ -1,4 +1,4 @@
-/*global describe:false, xdescribe:false, beforeEach:false, browser:false, it:false, xit:false, expect:false, element:false, using:false, repeater:false, binding:false, input:false, select:false*/
+/*global describe:false, ddescribe:false, beforeEach:false, browser:false, it:false, xit:false, expect:false, element:false, using:false, repeater:false, binding:false, input:false, select:false*/
 describe('Boutique', function () {
   'use strict';
 
@@ -164,6 +164,20 @@ describe('Boutique', function () {
       goTo('/MovimentoMagazzino');
       r = using('table.pendenti').repeater('tbody tr', 'row in pendenti.rows');
       expect(r.count()).toBe(0);
+    });
+  });
+
+  describe('/Catalogo', function () {
+    it('should find foto by rivista, pagina, posizione', function () {
+      goTo('/Catalogo');
+      input('idFoto').enter('1  0 1');
+      click('Cerca');
+      var r = using('table.results').repeater('tbody tr', 'row in results');
+      expect(r.count()).toBe(2);
+      expect(r.row(0)).toEqual(['1', '125', '98021', '1881', '8000', '123,45']);
+      expect(r.row(1)).toEqual(['2', '125', '40021', '2109', '5500', '34,21']);
+      expect(element('table.results tfoot tr th.n[colspan=5]').text()).toBe('Totale:');
+      expect(element('table.results tfoot tr th.n:last-child').text()).toBe('157,66');
     });
   });
 });

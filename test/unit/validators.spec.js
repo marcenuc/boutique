@@ -407,6 +407,47 @@ describe('Validation', function () {
         }));
       });
     });
+
+    describe('on Foto', function () {
+      var doc = { _id: 'Foto_1_0_1' },
+        docDeleted = { _id: 'Foto_1_0_1', _deleted: true };
+
+      describe('for anonymous user', function () {
+        beforeEach(setupSession(anonymous));
+
+        it('should not be authorized', inject(function (validate) {
+          expect(validate(doc)).not.toBeAuthorized();
+          expect(validate(docDeleted)).not.toBeAuthorized();
+        }));
+      });
+
+      describe('for other user', function () {
+        beforeEach(setupSession(other));
+
+        it('should not be authorized', inject(function (validate) {
+          expect(validate(doc)).not.toBeAuthorized();
+          expect(validate(docDeleted)).not.toBeAuthorized();
+        }));
+      });
+
+      describe('for owner user', function () {
+        beforeEach(setupSession(owner));
+
+        it('should not be authorized', inject(function (validate) {
+          expect(validate(doc)).not.toBeAuthorized();
+          expect(validate(docDeleted)).not.toBeAuthorized();
+        }));
+      });
+
+      describe('for admin user', function () {
+        beforeEach(setupSession(admin));
+
+        it('should be authorized', inject(function (validate) {
+          expect(validate(doc)).toBeAuthorized();
+          expect(validate(docDeleted)).toBeAuthorized();
+        }));
+      });
+    });
   });
 
   describe('of type', function () {
@@ -1046,6 +1087,39 @@ describe('Validation', function () {
           expect(validate(doc)).not.toMatchError(msg);
           doc.costi['12345'] = { '1234': 0 };
           expect(validate(doc)).toMatchError(msg);
+        }));
+      });
+    });
+
+    describe('Foto', function () {
+      function newDoc(articoli) {
+        return {
+          _id: 'Foto_1_0_1',
+          articoli: articoli || []
+        };
+      }
+
+      describe('idFoto', function () {
+        it('should be in _id', inject(function (validate) {
+          var msg = 'Invalid idFoto';
+          expect(validate({ _id: 'Foto', articoli: [] })).toHaveError(msg);
+        }));
+      });
+
+      describe('articoli', function () {
+        it('should be an array of { stagione, modello, articolo, colore }', inject(function (validate) {
+          var msg = 'Invalid articoli';
+          expect(validate(newDoc())).toMatchError(msg);
+          expect(validate(newDoc([{ modello: '40021', articolo: '2109', colore: '5500' }]))).toHaveError(msg);
+          expect(validate(newDoc([{ stagione: '125', articolo: '2109', colore: '5500' }]))).toHaveError(msg);
+          expect(validate(newDoc([{ stagione: '125', modello: '40021', colore: '5500' }]))).toHaveError(msg);
+          expect(validate(newDoc([{ stagione: '125', modello: '40021', articolo: '2109' }]))).toHaveError(msg);
+          expect(validate(newDoc([{ stagione: '125', modello: '40021', articolo: '2109', colore: '5500', taglia: '01' }]))).toHaveError(msg);
+          expect(validate(newDoc([{ stagione: '125', modello: '40021', articolo: '2109', colore: '5500' }]))).not.toHaveError(msg);
+          expect(validate(newDoc([
+            { stagione: '125', modello: '98021', articolo: '1881', colore: '8000' },
+            { stagione: '125', modello: '40021', articolo: '2109', colore: '5500' }
+          ]))).not.toHaveError(msg);
         }));
       });
     });

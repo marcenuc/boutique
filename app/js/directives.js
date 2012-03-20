@@ -52,6 +52,24 @@ angular.module('app.directives', [], ['$compileProvider', '$filterProvider', fun
     };
   });
 
+  $compileProvider.directive('bqIdFoto', function() {
+    return {
+      require: 'ngModel',
+      link: function(scope, element, attr, ctrl) {
+        ctrl.$formatters.push(function(modelValue) {
+          var codice = codici.parseIdFoto(modelValue);
+          if (codice) return codice;
+        });
+        ctrl.$parsers.push(function(viewValue) {
+          var parsedVal = (viewValue || '').replace(/ +/g, '_'),
+            isValid = parsedVal.length > 0;
+          ctrl.$setValidity('codiceAzienda', isValid);
+          if (isValid) return 'Foto_' + parsedVal;
+        });
+      }
+    };
+  });
+
   $compileProvider.directive('bqMoney', function() {
     return {
       require: 'ngModel',

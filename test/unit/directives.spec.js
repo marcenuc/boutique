@@ -85,6 +85,22 @@ describe('Directive', function() {
     });
   });
 
+  describe('bqIdFoto', function() {
+    beforeEach(function() {
+      createInput('bq-id-foto');
+    });
+
+    it('should show only codice from idFoto', function() {
+      setModelValue('Foto_1_0_1');
+      expect(viewValue()).toBe('1_0_1');
+    });
+
+    it('should create idFoto from codice', function() {
+      setViewValue('1 0 1');
+      expect(modelValue()).toBe('Foto_1_0_1');
+    });
+  });
+
   describe('bqMoney', function() {
     beforeEach(function() {
       createInput('bq-money');

@@ -233,6 +233,11 @@ angular.module('app.shared', []).factory('codici', function () {
     }
   };
 
+  codici.parseIdFoto = function (id) {
+    var m = /^Foto_(.+)$/.exec(id);
+    if (m) return m[1];
+  };
+
   codici.idListino = function (versione) {
     if (codici.isNumero(versione)) {
       return ['Listino', versione].join('_');

@@ -31,6 +31,20 @@ define(function (require) {
       }
     },
 
+    costo: function mapCosto(doc) {
+      var costi = doc.costi,
+        codici = require('views/lib/codici'),
+        ids = codici.splitId(doc._id);
+      if (ids[0] === 'CostoArticoli' && costi && codici.isCode(ids[1], codici.LEN_STAGIONE)) {
+        Object.keys(costi).forEach(function(modello) {
+          var costoModelli = costi[modello], sm = ids[1] + modello;
+          Object.keys(costoModelli).forEach(function(articolo) {
+            emit(sm + articolo, costoModelli[articolo]);
+          });
+        });
+      }
+    },
+
     listini: function mapListini(doc) {
       var codici = require('views/lib/codici'),
         codes = codici.parseIdListino(doc._id);
