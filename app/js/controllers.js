@@ -743,6 +743,7 @@ var Ctrl = {};
     $scope.total = '';
 
     $scope.find = function() {
+      $scope.total = '';
       Doc.find($scope.idFoto).then(function(foto) {
         Doc.find('ModelliEScalarini').then(function (modelliEScalarini) {
           var ms = modelliEScalarini.lista;
