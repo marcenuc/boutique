@@ -738,12 +738,15 @@ var Ctrl = {};
 
     Doc.load(['ModelliEScalarini']);
 
-    $scope.results = [];
-    $scope.costi = {};
-    $scope.total = '';
+    function reset() {
+      $scope.results = [];
+      $scope.costi = {};
+      $scope.total = '';
+    }
+    reset();
 
     $scope.find = function() {
-      $scope.total = '';
+      reset();
       Doc.find($scope.idFoto).then(function(foto) {
         Doc.find('ModelliEScalarini').then(function (modelliEScalarini) {
           var ms = modelliEScalarini.lista;
