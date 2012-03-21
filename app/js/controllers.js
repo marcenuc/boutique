@@ -740,6 +740,7 @@ var Ctrl = {};
 
     $scope.results = [];
     $scope.costi = {};
+    $scope.total = '';
 
     $scope.find = function() {
       Doc.find($scope.idFoto).then(function(foto) {
@@ -750,11 +751,21 @@ var Ctrl = {};
             if (desscal) articolo.descrizione = desscal[0];
             return articolo;
           });
+          var numCosti = 0;
           $scope.results.forEach(function (r) {
             r.sma = [r.stagione, r.modello, r.articolo].join('');
             Doc.find('COSTO', couchdb.viewPath('costo?key="' + r.sma + '"')).then(function(costo) {
               var row = costo.rows[0];
-              if (row) $scope.costi[row.key] = row.value;
+              if (row) {
+                $scope.costi[row.key] = row.value;
+
+                numCosti += 1;
+                if (numCosti === $scope.results.length) {
+                  var costi = $scope.costi, smas = Object.keys(costi), t = 0;
+                  smas.forEach(function(sma) { t += costi[sma]; });
+                  $scope.total = t;
+                }
+              }
             });
           });
         });
@@ -762,18 +773,6 @@ var Ctrl = {};
       var m = /^Foto_(\d+)_(\d+)_\d+$/.exec($scope.idFoto);
       $scope.image = m ? '../catalogo/' + m[1] + '_' + m[2] + '.jpg' : null;
     };
-
-    $scope.$watch('costi', function(costi) {
-      var smas = Object.keys(costi);
-      if (smas.length && smas.length === $scope.results.length) {
-        var t = 0;
-        smas.forEach(function(sma) { t += costi[sma]; });
-        $scope.total = t;
-      } else {
-        $scope.total = '';
-      }
-    }, true);
-
   };
   Ctrl.Catalogo.$inject = ['$scope', 'SessionInfo', 'couchdb', 'Doc'];
 }());
