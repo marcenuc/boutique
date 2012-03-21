@@ -1,8 +1,8 @@
 /*global describe:false, ddescribe:false, beforeEach:false, browser:false, it:false, xit:false, expect:false, element:false, using:false, repeater:false, binding:false, input:false, select:false*/
-describe('Boutique', function () {
+describe('Boutique', function() {
   'use strict';
 
-  beforeEach(function () {
+  beforeEach(function() {
     browser().navigateTo('/boutique/test-resetdb/test');
   });
 
@@ -14,12 +14,12 @@ describe('Boutique', function () {
     browser().navigateTo('/boutique/app/#' + path);
   }
 
-  describe('/Azienda', function () {
-    beforeEach(function () {
+  describe('/Azienda', function() {
+    beforeEach(function() {
       goTo('/Azienda');
     });
 
-    it('should save new azienda', function () {
+    it('should save new azienda', function() {
       input('azienda._id').enter('010101');
       select('azienda.tipo').option('NEGOZIO');
       input('azienda.nome').enter('Negozio 1');
@@ -35,12 +35,12 @@ describe('Boutique', function () {
     });
   });
 
-  describe('/ricerca-giacenza', function () {
-    beforeEach(function () {
+  describe('/ricerca-giacenza', function() {
+    beforeEach(function() {
       goTo('/ricerca-giacenza');
     });
 
-    it('should find all articles in stock by default', function () {
+    it('should find all articles in stock by default', function() {
       click('Cerca');
       var rows = repeater('tbody.giacenze tr', 'row in filtrate');
       expect(rows.count()).toBe(3);
@@ -49,7 +49,7 @@ describe('Boutique', function () {
       expect(rows.row(2)).toEqual(["3", "099999 Negozio 099999", "SMOKING", "112", "60456", "8000", "5000", "3", "PRONTO", "2", "3", "", "", "", "", "", "", "", "", "", "", "", "3", "1", "2*", "6"]);
     });
 
-    it('should find given article if on stock', function () {
+    it('should find given article if on stock', function() {
       input('articolo').enter('50');
       click('Cerca');
       var rows = repeater('tbody.giacenze tr', 'row in filtrate');
@@ -58,7 +58,7 @@ describe('Boutique', function () {
       expect(rows.row(1)).toEqual(["2", "099999 Negozio 099999", "SMOKING", "112", "60456", "5000", "8000", "3", "PRONTO", "2", "3", "", "", "", "", "", "", "", "", "", "", "", "3", "1", "2", "6"]);
     });
 
-    it('should find by tipo azienda', function () {
+    it('should find by tipo azienda', function() {
       select('quickSearch.tipo').option('MAGAZZINO');
       click('Cerca');
       var rows = repeater('tbody.giacenze tr', 'row in filtrate');
@@ -96,16 +96,16 @@ describe('Boutique', function () {
     expect(r.row(0)).toEqual(['1', '112 60456 5000 5000 66', '2', 'SM', 'SMOKING', '1,23']);
   }
 
-  describe('/MovimentoMagazzino_', function () {
-    beforeEach(function () {
+  describe('/MovimentoMagazzino_', function() {
+    beforeEach(function() {
       goTo('/MovimentoMagazzino_');
     });
 
     it('should save new movimento magazzino', saveMovimentoMagazzino);
   });
 
-  describe('/MovimentoMagazzino', function () {
-    it('should find movimento magazzino by id', function () {
+  describe('/MovimentoMagazzino', function() {
+    it('should find movimento magazzino by id', function() {
       var a, r;
       goTo('/MovimentoMagazzino_');
       saveMovimentoMagazzino();
@@ -131,7 +131,7 @@ describe('Boutique', function () {
       expect(r.row(0)).toEqual(['1', '112 60456 5000 5000 66', '2', 'SM', 'SMOKING', '1,23']);
     });
 
-    it('should list movimenti magazzino by barcode', function () {
+    it('should list movimenti magazzino by barcode', function() {
       goTo('/MovimentoMagazzino_');
       saveMovimentoMagazzino();
       goTo('/MovimentoMagazzino');
@@ -144,7 +144,7 @@ describe('Boutique', function () {
       expect(r.row(0)).toEqual(['1', '099994 Negozio 099994', '20111213', 'VENDITA A CLIENTI', 'C', '1']);
     });
 
-    it('should list movimento magazzino non accodato', function () {
+    it('should list movimento magazzino non accodato', function() {
       var r, a;
       goTo('/MovimentoMagazzino_');
       saveMovimentoMagazzino();
@@ -167,8 +167,8 @@ describe('Boutique', function () {
     });
   });
 
-  describe('/Catalogo', function () {
-    it('should find foto by rivista, pagina, posizione', function () {
+  describe('/Catalogo', function() {
+    it('should find foto by rivista, pagina, posizione', function() {
       goTo('/Catalogo');
       input('idFoto').enter('1  0 1');
       click('Cerca');
@@ -176,7 +176,7 @@ describe('Boutique', function () {
       expect(r.count()).toBe(2);
       expect(r.row(0)).toEqual(['1', '125', '98021', '1881', '8000', 'SCARPA CLASSICA FIBBIA', '123,45']);
       expect(r.row(1)).toEqual(['2', '125', '40021', '2109', '5500', 'CAMICIA CLASSICA', '34,21']);
-      expect(element('table.results tfoot tr th.n[colspan=5]').text()).toBe('Totale:');
+      expect(element('table.results tfoot tr th.n[colspan=6]').text()).toBe('Totale:');
       expect(element('table.results tfoot tr th.n:last-child').text()).toBe('157,66');
     });
   });
