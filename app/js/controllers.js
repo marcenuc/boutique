@@ -342,9 +342,8 @@ var Ctrl = {};
         $scope.province = Object.keys(province).sort();
         $scope.nazioni = Object.keys(nazioni).sort();
         $scope.quickSearch = {};
-        $scope.$watch('quickSearch', function () {
-          var qs = $scope.quickSearch,
-            fields = Object.keys(qs),
+        $scope.$watch('quickSearch', function(qs) {
+          var fields = Object.keys(qs),
             emptyQS = fields.every(function (field) {
               return !qs[field];
             });
@@ -755,14 +754,16 @@ var Ctrl = {};
       $scope.image = m ? '../catalogo/' + m[1] + '_' + m[2] + '.jpg' : null;
     };
 
-    $scope.total = function() {
-      var costi = $scope.costi, smas = Object.keys(costi);
+    $scope.$watch('costi', function(costi) {
+      var smas = Object.keys(costi);
       if (smas.length && smas.length === $scope.results.length) {
         var t = 0;
         smas.forEach(function(sma) { t += costi[sma]; });
-        return t;
+        $scope.total = t;
+      } else {
+        $scope.total = '';
       }
-    };
+    }, true);
 
   };
   Ctrl.Catalogo.$inject = ['$scope', 'SessionInfo', 'couchdb', 'Doc'];
