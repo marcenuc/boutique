@@ -174,8 +174,8 @@ describe('Boutique', function () {
       click('Cerca');
       var r = using('table.results').repeater('tbody tr', 'row in results');
       expect(r.count()).toBe(2);
-      expect(r.row(0)).toEqual(['1', '125', '98021', '1881', '8000', '123,45']);
-      expect(r.row(1)).toEqual(['2', '125', '40021', '2109', '5500', '34,21']);
+      expect(r.row(0)).toEqual(['1', '125', '98021', '1881', '8000', 'SCARPA CLASSICA FIBBIA', '123,45']);
+      expect(r.row(1)).toEqual(['2', '125', '40021', '2109', '5500', 'CAMICIA CLASSICA', '34,21']);
       expect(element('table.results tfoot tr th.n[colspan=5]').text()).toBe('Totale:');
       expect(element('table.results tfoot tr th.n:last-child').text()).toBe('157,66');
     });

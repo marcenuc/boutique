@@ -63,7 +63,7 @@ describe('Controller', function () {
       doc.colonneTaglie = [null, { '37': 0, '38': 1 }, { '66': 0 }, { '01': 0 }];
       break;
     case 'ModelliEScalarini':
-      doc.lista = { '11260456': ['SMOKING', 2] };
+      doc.lista = { '11260456': ['SMOKING', 2], '12598021': ['SCARPA CLASSICA FIBBIA', 4], '12540021': ['CAMICIA CLASSICA', 1] };
       break;
     case 'MovimentoMagazzino_010101_2012_A_1':
       doc.columnNames = ['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta'];
@@ -684,18 +684,25 @@ describe('Controller', function () {
   });
 
   describe('Catalogo', function() {
-    it('should initialize $scope', inject(function($rootScope, $controller, controllers, $httpBackend, couchdb) {
+    it('should initialize $scope', inject(function($rootScope, $controller, controllers, $httpBackend, couchdb, Doc) {
       var $scope = $rootScope, idFoto = 'Foto_1_0_1';
+      spyOn(Doc, 'load');
       $controller(controllers.Catalogo, { '$scope': $scope });
+      // it preloads needed docs
+      expect(Doc.load).toHaveBeenCalledWith(['ModelliEScalarini']);
 
       $scope.idFoto = idFoto;
       $httpBackend.expectGET(couchdb.docPath(idFoto)).respond(FOTO);
+      $httpBackend.expectGET(couchdb.docPath('ModelliEScalarini')).respond(getDocument('ModelliEScalarini'));
       $httpBackend.expectGET(couchdb.viewPath('costo?key="125980211881"')).respond(JSON.stringify({ rows: [{ key: "125980211881", value: 12345 }] }));
       $httpBackend.expectGET(couchdb.viewPath('costo?key="125400212109"')).respond(JSON.stringify({ rows: [{ key: "125400212109", value: 3121 }] }));
       $scope.find();
       $httpBackend.flush();
       // it should put articoli in photo in results
-      expect($scope.results).toEqual(FOTO.articoli);
+      expect($scope.results).toEqual([
+        { stagione: '125', modello: '98021', articolo: '1881', colore: '8000', sma: '125980211881', descrizione: 'SCARPA CLASSICA FIBBIA' },
+        { stagione: '125', modello: '40021', articolo: '2109', colore: '5500', sma: '125400212109', descrizione: 'CAMICIA CLASSICA' }
+      ]);
       // it should put image link in $scope
       expect($scope.image).toBe('../catalogo/1_0.jpg');
     }));

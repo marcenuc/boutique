@@ -5,8 +5,8 @@
   </fieldset>
 </form>
 <table class=results>
-  <thead><tr><th>#<th>Stagione<th>Modello<th>Articolo<th>Colore<th>Costo
+  <thead><tr><th>#<th>Stagione<th>Modello<th>Articolo<th>Colore<th>Descrizione<th>Costo
   <tfoot><tr><th colspan=5 class=n>Totale:<th class=n>{{total | money}}</th>
-  <tbody><tr ng-repeat="row in results"><td>{{$index + 1}}<td>{{row.stagione}}<td>{{row.modello}}<td>{{row.articolo}}<td>{{row.colore}}<td class=n>{{costi[row.sma] | money}}
+  <tbody><tr ng-repeat="row in results"><td>{{$index + 1}}<td>{{row.stagione}}<td>{{row.modello}}<td>{{row.articolo}}<td>{{row.colore}}<td>{{row.descrizione}}<td class=n>{{costi[row.sma] | money}}
 </table>
 <div><img ng-src="{{image}}"></div>

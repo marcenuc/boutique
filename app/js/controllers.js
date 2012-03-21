@@ -736,17 +736,26 @@ var Ctrl = {};
   Ctrl.Catalogo = function($scope, SessionInfo, couchdb, Doc) {
     SessionInfo.resetFlash();
 
+    Doc.load(['ModelliEScalarini']);
+
     $scope.results = [];
     $scope.costi = {};
 
     $scope.find = function() {
       Doc.find($scope.idFoto).then(function(foto) {
-        $scope.results = foto.articoli;
-        $scope.results.forEach(function (r) {
-          r.sma = [r.stagione, r.modello, r.articolo].join('');
-          Doc.find('COSTO', couchdb.viewPath('costo?key="' + r.sma + '"')).then(function (costo) {
-            var row = costo.rows[0];
-            if (row) $scope.costi[row.key] = row.value;
+        Doc.find('ModelliEScalarini').then(function (modelliEScalarini) {
+          var ms = modelliEScalarini.lista;
+          $scope.results = foto.articoli.map(function(articolo) {
+            var desscal = ms[articolo.stagione + articolo.modello];
+            if (desscal) articolo.descrizione = desscal[0];
+            return articolo;
+          });
+          $scope.results.forEach(function (r) {
+            r.sma = [r.stagione, r.modello, r.articolo].join('');
+            Doc.find('COSTO', couchdb.viewPath('costo?key="' + r.sma + '"')).then(function(costo) {
+              var row = costo.rows[0];
+              if (row) $scope.costi[row.key] = row.value;
+            });
           });
         });
       });
