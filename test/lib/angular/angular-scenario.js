@@ -9298,7 +9298,7 @@ jQuery.each([ "Height", "Width" ], function( i, name ) {
 // Expose jQuery to the global object
 window.jQuery = window.$ = jQuery;
 })( window );/**
- * @license AngularJS v1.0.0rc2-1cc0e417
+ * @license AngularJS v1.0.0rc3-263524d3
  * (c) 2010-2011 AngularJS http://angularjs.org
  * License: MIT
  */
@@ -10521,7 +10521,7 @@ function setupModuleLoader(window) {
  * - `codeName` – `{string}` – Code name of the release, such as "jiggling-armfat".
  */
 var version = {
-  full: '1.0.0rc2-1cc0e417',    // all of these placeholder strings will be replaced by rake's
+  full: '1.0.0rc3-263524d3',    // all of these placeholder strings will be replaced by rake's
   major: "NG_VERSION_MAJOR",    // compile task
   minor: "NG_VERSION_MINOR",
   dot: "NG_VERSION_DOT",
@@ -11364,170 +11364,6 @@ function createInjector(modulesToLoad) {
     };
   }
 }
-'use strict';
-
-
-
-function Route(template, defaults) {
-  this.template = template = template + '#';
-  this.defaults = defaults || {};
-  var urlParams = this.urlParams = {};
-  forEach(template.split(/\W/), function(param){
-    if (param && template.match(new RegExp(":" + param + "\\W"))) {
-      urlParams[param] = true;
-    }
-  });
-}
-
-Route.prototype = {
-  url: function(params) {
-    var self = this,
-        url = this.template,
-        encodedVal;
-
-    params = params || {};
-    forEach(this.urlParams, function(_, urlParam){
-      encodedVal = encodeUriSegment(params[urlParam] || self.defaults[urlParam] || "");
-      url = url.replace(new RegExp(":" + urlParam + "(\\W)"), encodedVal + "$1");
-    });
-    url = url.replace(/\/?#$/, '');
-    var query = [];
-    forEachSorted(params, function(value, key){
-      if (!self.urlParams[key]) {
-        query.push(encodeUriQuery(key) + '=' + encodeUriQuery(value));
-      }
-    });
-    url = url.replace(/\/*$/, '');
-    return url + (query.length ? '?' + query.join('&') : '');
-  }
-};
-
-function ResourceFactory($http) {
-  this.$http = $http;
-}
-
-ResourceFactory.DEFAULT_ACTIONS = {
-  'get':    {method:'GET'},
-  'save':   {method:'POST'},
-  'query':  {method:'GET', isArray:true},
-  'remove': {method:'DELETE'},
-  'delete': {method:'DELETE'}
-};
-
-ResourceFactory.prototype = {
-  route: function(url, paramDefaults, actions){
-    var self = this;
-    var route = new Route(url);
-    actions = extend({}, ResourceFactory.DEFAULT_ACTIONS, actions);
-    function extractParams(data){
-      var ids = {};
-      forEach(paramDefaults || {}, function(value, key){
-        ids[key] = value.charAt && value.charAt(0) == '@' ? getter(data, value.substr(1)) : value;
-      });
-      return ids;
-    }
-
-    function Resource(value){
-      copy(value || {}, this);
-    }
-
-    forEach(actions, function(action, name){
-      var isPostOrPut = action.method == 'POST' || action.method == 'PUT';
-      Resource[name] = function(a1, a2, a3, a4) {
-        var params = {};
-        var data;
-        var success = noop;
-        var error = null;
-        switch(arguments.length) {
-        case 4:
-          error = a4;
-          success = a3;
-          //fallthrough
-        case 3:
-        case 2:
-          if (isFunction(a2)) {
-            if (isFunction(a1)) {
-              success = a1;
-              error = a2;
-              break;
-            }
-
-            success = a2;
-            error = a3;
-            //fallthrough
-          } else {
-            params = a1;
-            data = a2;
-            success = a3;
-            break;
-          }
-        case 1:
-          if (isFunction(a1)) success = a1;
-          else if (isPostOrPut) data = a1;
-          else params = a1;
-          break;
-        case 0: break;
-        default:
-          throw "Expected between 0-4 arguments [params, data, success, error], got " +
-            arguments.length + " arguments.";
-        }
-
-        var value = this instanceof Resource ? this : (action.isArray ? [] : new Resource(data));
-        self.$http({
-          method: action.method,
-          url: route.url(extend({}, extractParams(data), action.params || {}, params)),
-          data: data
-        }).then(function(response) {
-            var data = response.data;
-
-            if (data) {
-              if (action.isArray) {
-                value.length = 0;
-                forEach(data, function(item) {
-                  value.push(new Resource(item));
-                });
-              } else {
-                copy(data, value);
-              }
-            }
-            (success||noop)(value, response.headers);
-          }, error);
-
-        return value;
-      };
-
-      Resource.bind = function(additionalParamDefaults){
-        return self.route(url, extend({}, paramDefaults, additionalParamDefaults), actions);
-      };
-
-      Resource.prototype['$' + name] = function(a1, a2, a3) {
-        var params = extractParams(this),
-            success = noop,
-            error;
-
-        switch(arguments.length) {
-        case 3: params = a1; success = a2; error = a3; break;
-        case 2:
-        case 1:
-          if (isFunction(a1)) {
-            success = a1;
-            error = a2;
-          } else {
-            params = a1;
-            success = a2 || noop;
-          }
-        case 0: break;
-        default:
-          throw "Expected between 1-3 arguments [params, success, error], got " +
-            arguments.length + " arguments.";
-        }
-        var data = isPostOrPut ? this : undefined;
-        Resource[name].call(this, params, data, success, error);
-      };
-    });
-    return Resource;
-  }
-};
 'use strict';
 
 //////////////////////////////////
@@ -13724,6 +13560,9 @@ function $CompileProvider($provide) {
       // reapply the old attributes to the new element
       forEach(dst, function(value, key) {
         if (key.charAt(0) != '$') {
+          if (src[key]) {
+            value += (key === 'style' ? ';' : ' ') + src[key];
+          }
           dst.$set(key, value, srcAttr[key]);
         }
       });
@@ -13853,31 +13692,42 @@ function $CompileProvider($provide) {
 
 
     function addAttrInterpolateDirective(node, directives, value, name) {
-      var interpolateFn = $interpolate(value, true);
-      if (SIDE_EFFECT_ATTRS[name]) {
-        name = SIDE_EFFECT_ATTRS[name];
-        if (isBooleanAttr(node, name)) {
-          value = true;
-        }
-      } else if (!interpolateFn) {
-        // we are not a side-effect attr, and we have no side-effects -> ignore
+      var interpolateFn = $interpolate(value, true),
+          realName = SIDE_EFFECT_ATTRS[name],
+          specialAttrDir = (realName && (realName !== name));
+
+      realName = realName || name;
+
+      if (specialAttrDir && isBooleanAttr(node, name)) {
+        value = true;
+      }
+
+      // no interpolation found and we are not a side-effect attr -> ignore
+      if (!interpolateFn && !specialAttrDir) {
         return;
       }
+
       directives.push({
         priority: 100,
         compile: function(element, attr) {
           if (interpolateFn) {
             return function(scope, element, attr) {
+              if (name === 'class') {
+                // we need to interpolate classes again, in the case the element was replaced
+                // and therefore the two class attrs got merged - we want to interpolate the result
+                interpolateFn = $interpolate(attr[name], true);
+              }
+
               // we define observers array only for interpolated attrs
               // and ignore observers for non interpolated attrs to save some memory
-              attr.$observers[name] = [];
-              attr[name] = undefined;
+              attr.$observers[realName] = [];
+              attr[realName] = undefined;
               scope.$watch(interpolateFn, function(value) {
-                attr.$set(name, value);
+                attr.$set(realName, value);
               });
             };
           } else {
-            attr.$set(name, value);
+            attr.$set(realName, value);
           }
         }
       });
@@ -14437,7 +14287,7 @@ function $FilterProvider($provide) {
                                 {name:'Adam', phone:'555-5678'},
                                 {name:'Julie', phone:'555-8765'}]"></div>
 
-       Search: <input ng-model="searchText"/>
+       Search: <input ng-model="searchText" ng-model-instant>
        <table id="searchTextResults">
          <tr><th>Name</th><th>Phone</th><tr>
          <tr ng-repeat="friend in friends | filter:searchText">
@@ -14446,9 +14296,9 @@ function $FilterProvider($provide) {
          <tr>
        </table>
        <hr>
-       Any: <input ng-model="search.$"/> <br>
-       Name only <input ng-model="search.name"/><br>
-       Phone only <input ng-model="search.phone"/><br>
+       Any: <input ng-model="search.$" ng-model-instant> <br>
+       Name only <input ng-model="search.name" ng-model-instant><br>
+       Phone only <input ng-model="search.phone" ng-model-instant><br>
        <table id="searchObjResults">
          <tr><th>Name</th><th>Phone</th><tr>
          <tr ng-repeat="friend in friends | filter:search">
@@ -14583,8 +14433,8 @@ function filterFilter() {
          }
        </script>
        <div ng-controller="Ctrl">
-         <input type="number" ng-model="amount"/> <br/>
-         default currency symbol ($): {{amount | currency}}<br/>
+         <input type="number" ng-model="amount" ng-model-instant> <br>
+         default currency symbol ($): {{amount | currency}}<br>
          custom currency identifier (USD$): {{amount | currency:"USD$"}}
        </div>
      </doc:source>
@@ -14634,9 +14484,9 @@ function currencyFilter($locale) {
          }
        </script>
        <div ng-controller="Ctrl">
-         Enter number: <input ng-model='val'><br/>
-         Default formatting: {{val | number}}<br/>
-         No fractions: {{val | number:0}}<br/>
+         Enter number: <input ng-model='val' ng-model-instant><br>
+         Default formatting: {{val | number}}<br>
+         No fractions: {{val | number:0}}<br>
          Negative number: {{-val | number:4}}
        </div>
      </doc:source>
@@ -14857,11 +14707,11 @@ var DATE_FORMATS_SPLIT = /((?:[^yMdHhmsaZE']+)|(?:'(?:[^']|'')*')|(?:E+|y+|M+|d+
    <doc:example>
      <doc:source>
        <span ng-non-bindable>{{1288323623006 | date:'medium'}}</span>:
-           {{1288323623006 | date:'medium'}}<br/>
+           {{1288323623006 | date:'medium'}}<br>
        <span ng-non-bindable>{{1288323623006 | date:'yyyy-MM-dd HH:mm:ss Z'}}</span>:
-          {{1288323623006 | date:'yyyy-MM-dd HH:mm:ss Z'}}<br/>
+          {{1288323623006 | date:'yyyy-MM-dd HH:mm:ss Z'}}<br>
        <span ng-non-bindable>{{1288323623006 | date:'MM/dd/yyyy @ h:mma'}}</span>:
-          {{'1288323623006' | date:'MM/dd/yyyy @ h:mma'}}<br/>
+          {{'1288323623006' | date:'MM/dd/yyyy @ h:mma'}}<br>
      </doc:source>
      <doc:scenario>
        it('should format date', function() {
@@ -15006,7 +14856,7 @@ var uppercaseFilter = valueFn(uppercase);
          }
        </script>
        <div ng-controller="Ctrl">
-       Snippet: <textarea ng-model="snippet" cols="60" rows="3"></textarea>
+       Snippet: <textarea ng-model="snippet" ng-model-instant cols="60" rows="3"></textarea>
        <table>
          <tr>
            <td>Filter</td>
@@ -15016,7 +14866,7 @@ var uppercaseFilter = valueFn(uppercase);
          <tr id="linky-filter">
            <td>linky filter</td>
            <td>
-             <pre>&lt;div ng-bind-html="snippet | linky"&gt;<br/>&lt;/div&gt;</pre>
+             <pre>&lt;div ng-bind-html="snippet | linky"&gt;<br>&lt;/div&gt;</pre>
            </td>
            <td>
              <div ng-bind-html="snippet | linky"></div>
@@ -15024,7 +14874,7 @@ var uppercaseFilter = valueFn(uppercase);
          </tr>
          <tr id="escaped-html">
            <td>no filter</td>
-           <td><pre>&lt;div ng-bind="snippet"&gt;<br/>&lt;/div&gt;</pre></td>
+           <td><pre>&lt;div ng-bind="snippet"&gt;<br>&lt;/div&gt;</pre></td>
            <td><div ng-bind="snippet"></div></td>
          </tr>
        </table>
@@ -16094,8 +15944,9 @@ function $LogProvider(){
     function formatError(arg) {
       if (arg instanceof Error) {
         if (arg.stack) {
-          arg = (arg.message && arg.stack.indexOf(arg.message) === -1) ?
-                'Error: ' + arg.message + '\n' + arg.stack : arg.stack;
+          arg = (arg.message && arg.stack.indexOf(arg.message) === -1)
+              ? 'Error: ' + arg.message + '\n' + arg.stack
+              : arg.stack;
         } else if (arg.sourceURL) {
           arg = arg.message + '\n' + arg.sourceURL + ':' + arg.line;
         }
@@ -16104,19 +15955,23 @@ function $LogProvider(){
     }
 
     function consoleLog(type) {
-      var console = $window.console || {};
-      var logFn = console[type] || console.log || noop;
+      var console = $window.console || {},
+          logFn = console[type] || console.log || noop;
+
       if (logFn.apply) {
         return function() {
           var args = [];
-          forEach(arguments, function(arg){
+          forEach(arguments, function(arg) {
             args.push(formatError(arg));
           });
           return logFn.apply(console, args);
         };
-      } else {
-        // we are IE, in which case there is nothing we can do
-        return logFn;
+      }
+
+      // we are IE which either doesn't have window.console => this is noop and we do nothing,
+      // or we are IE where console.log doesn't have apply so we log at least first 2 args
+      return function(arg1, arg2) {
+        logFn(arg1, arg2);
       }
     }
   }];
@@ -16325,8 +16180,168 @@ function $LogProvider(){
  */
 function $ResourceProvider() {
   this.$get = ['$http', function($http) {
-    var resource = new ResourceFactory($http);
-    return bind(resource, resource.route);
+    var DEFAULT_ACTIONS = {
+      'get':    {method:'GET'},
+      'save':   {method:'POST'},
+      'query':  {method:'GET', isArray:true},
+      'remove': {method:'DELETE'},
+      'delete': {method:'DELETE'}
+    };
+
+
+    function Route(template, defaults) {
+      this.template = template = template + '#';
+      this.defaults = defaults || {};
+      var urlParams = this.urlParams = {};
+      forEach(template.split(/\W/), function(param){
+        if (param && template.match(new RegExp("[^\\\\]:" + param + "\\W"))) {
+          urlParams[param] = true;
+        }
+      });
+      this.template = template.replace(/\\:/g, ':');
+    }
+
+    Route.prototype = {
+      url: function(params) {
+        var self = this,
+            url = this.template,
+            encodedVal;
+
+        params = params || {};
+        forEach(this.urlParams, function(_, urlParam){
+          encodedVal = encodeUriSegment(params[urlParam] || self.defaults[urlParam] || "");
+          url = url.replace(new RegExp(":" + urlParam + "(\\W)"), encodedVal + "$1");
+        });
+        url = url.replace(/\/?#$/, '');
+        var query = [];
+        forEachSorted(params, function(value, key){
+          if (!self.urlParams[key]) {
+            query.push(encodeUriQuery(key) + '=' + encodeUriQuery(value));
+          }
+        });
+        url = url.replace(/\/*$/, '');
+        return url + (query.length ? '?' + query.join('&') : '');
+      }
+    };
+
+
+    function ResourceFactory(url, paramDefaults, actions) {
+      var route = new Route(url);
+
+      actions = extend({}, DEFAULT_ACTIONS, actions);
+
+      function extractParams(data){
+        var ids = {};
+        forEach(paramDefaults || {}, function(value, key){
+          ids[key] = value.charAt && value.charAt(0) == '@' ? getter(data, value.substr(1)) : value;
+        });
+        return ids;
+      }
+
+      function Resource(value){
+        copy(value || {}, this);
+      }
+
+      forEach(actions, function(action, name) {
+        var isPostOrPut = action.method == 'POST' || action.method == 'PUT';
+        Resource[name] = function(a1, a2, a3, a4) {
+          var params = {};
+          var data;
+          var success = noop;
+          var error = null;
+          switch(arguments.length) {
+          case 4:
+            error = a4;
+            success = a3;
+            //fallthrough
+          case 3:
+          case 2:
+            if (isFunction(a2)) {
+              if (isFunction(a1)) {
+                success = a1;
+                error = a2;
+                break;
+              }
+
+              success = a2;
+              error = a3;
+              //fallthrough
+            } else {
+              params = a1;
+              data = a2;
+              success = a3;
+              break;
+            }
+          case 1:
+            if (isFunction(a1)) success = a1;
+            else if (isPostOrPut) data = a1;
+            else params = a1;
+            break;
+          case 0: break;
+          default:
+            throw "Expected between 0-4 arguments [params, data, success, error], got " +
+              arguments.length + " arguments.";
+          }
+
+          var value = this instanceof Resource ? this : (action.isArray ? [] : new Resource(data));
+          $http({
+            method: action.method,
+            url: route.url(extend({}, extractParams(data), action.params || {}, params)),
+            data: data
+          }).then(function(response) {
+              var data = response.data;
+
+              if (data) {
+                if (action.isArray) {
+                  value.length = 0;
+                  forEach(data, function(item) {
+                    value.push(new Resource(item));
+                  });
+                } else {
+                  copy(data, value);
+                }
+              }
+              (success||noop)(value, response.headers);
+            }, error);
+
+          return value;
+        };
+
+
+        Resource.bind = function(additionalParamDefaults){
+          return ResourceFactory(url, extend({}, paramDefaults, additionalParamDefaults), actions);
+        };
+
+
+        Resource.prototype['$' + name] = function(a1, a2, a3) {
+          var params = extractParams(this),
+              success = noop,
+              error;
+
+          switch(arguments.length) {
+          case 3: params = a1; success = a2; error = a3; break;
+          case 2:
+          case 1:
+            if (isFunction(a1)) {
+              success = a1;
+              error = a2;
+            } else {
+              params = a1;
+              success = a2 || noop;
+            }
+          case 0: break;
+          default:
+            throw "Expected between 1-3 arguments [params, success, error], got " +
+              arguments.length + " arguments.";
+          }
+          var data = isPostOrPut ? this : undefined;
+          Resource[name].call(this, params, data, success, error);
+        };
+      });
+      return Resource;
+    }
+
+    return ResourceFactory;
   }];
 }
 'use strict';
@@ -17496,7 +17511,10 @@ function $RouteProvider(){
    * @name angular.module.ng.$routeProvider#when
    * @methodOf angular.module.ng.$routeProvider
    *
-   * @param {string} path Route path (matched against `$location.hash`)
+   * @param {string} path Route path (matched against `$location.path`). If `$location.path`
+   *    contains redudant trailing slash or is missing one, the route will still match and the
+   *    `$location.path` will be updated to add or drop the trailing slash to exacly match the
+   *    route definition.
    * @param {Object} route Mapping information to be assigned to `$route.current` on route
    *    match.
    *
@@ -17535,6 +17553,16 @@ function $RouteProvider(){
     var routeDef = routes[path];
     if (!routeDef) routeDef = routes[path] = {reloadOnSearch: true};
     if (route) extend(routeDef, route); // TODO(im): what the heck? merge two route definitions?
+
+    // create redirection for trailing slashes
+    if (path) {
+      var redirectPath = (path[path.length-1] == '/')
+          ? path.substr(0, path.length-1)
+          : path +'/';
+
+      routes[redirectPath] = {redirectTo: path};
+    }
+
     return routeDef;
   };
 
@@ -19521,6 +19549,10 @@ function $HttpProvider() {
           reqData = transformData(config.data, headersGetter(reqHeaders), reqTransformFn),
           promise;
 
+      // strip content-type if data is undefined
+      if (isUndefined(config.data)) {
+        delete reqHeaders['Content-Type'];
+      }
 
       // send request
       promise = sendReq(config, reqData, reqHeaders);
@@ -21097,6 +21129,8 @@ function radioInputType(scope, element, attr, ctrl) {
     var value = attr.value;
     element[0].checked = isDefined(value) && (value == ctrl.$viewValue);
   };
+
+  attr.$observe('value', ctrl.$render);
 }
 
 function checkboxInputType(scope, element, attr, ctrl) {
@@ -21731,7 +21765,7 @@ var ngListDirective = function() {
          }
        </script>
        <div ng-controller="Ctrl">
-         Enter name: <input type="text" ng-model="name"> <br/>
+         Enter name: <input type="text" ng-model="name" ng-model-instant><br>
          Hello <span ng-bind="name"></span>!
        </div>
      </doc:source>
@@ -21827,8 +21861,8 @@ var ngBindHtmlDirective = ['$sanitize', function($sanitize) {
          }
        </script>
        <div ng-controller="Ctrl">
-        Salutation: <input type="text" ng-model="salutation"><br/>
-        Name: <input type="text" ng-model="name"><br/>
+        Salutation: <input type="text" ng-model="salutation" ng-model-instant><br>
+        Name: <input type="text" ng-model="name" ng-model-instant><br>
         <pre ng-bind-template="{{salutation}} {{name}}!"></pre>
        </div>
      </doc:source>
@@ -21915,7 +21949,7 @@ var ngBindTemplateDirective = ['$interpolate', function($interpolate) {
        </script>
        <div ng-controller="Ctrl">
         Google for:
-        <input type="text" ng-model="query"/>
+        <input type="text" ng-model="query" ng-model-instant>
         <a ng-bind-attr='{"href":"http://www.google.com/search?q={{query}}"}'>
           Google
         </a> (ng-bind-attr) |
@@ -26214,7 +26248,7 @@ angular.scenario.output('xml', function(context, runner, model) {
          stepContext.attr('status', step.status);
          it.append(stepContext);
          if (step.error) {
-           var error = $('<error></error');
+           var error = $('<error></error>');
            stepContext.append(error);
            error.text(formatException(stepContext.error));
          }
