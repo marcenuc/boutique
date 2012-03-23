@@ -4,16 +4,18 @@ requirejs.config({ baseUrl: process.cwd(), nodeRequire: require });
 
 requirejs(['fs', 'child_process', 'path', 'findit', 'lib/servers'], function (fs, child_process, path, findit, servers) {
   'use strict';
-  var doNext, i, ii, f, files = [],
+  var doNext, i, ii, src, dst, files = [],
     spawn = child_process.spawn,
-    images = servers.couchdb.webserver.images;
+    images = servers.couchdb.webserver.images,
+    ORIG = '_orig.jpg', IS_ORIG = new RegExp(ORIG + '$');
 
   function findFiles(inputFolder, pattern, outputFolder) {
     var rexp = new RegExp(pattern, 'i');
     findit.sync(inputFolder, function (file) {
       var m = rexp.exec(file);
       if (m) {
-        files.push([file, path.join(outputFolder, m.slice(1).join('_') + '.jpg')]);
+        var outname = m.slice(1).join('_');
+        files.push([file, path.join(outputFolder, outname + '.jpg'), path.join(outputFolder, outname + ORIG)]);
       }
     });
   }
@@ -27,43 +29,38 @@ requirejs(['fs', 'child_process', 'path', 'findit', 'lib/servers'], function (fs
   });
 
   function done(code) {
-    if (code !== 0) {
-      throw new Error('convert from "' + f[0] + '" to "' + f[1] + '" failed with: ' + code);
-    }
+    if (code !== 0)
+      throw new Error('convert from "' + src + '" to "' + dst + '" failed with: ' + code);
     process.stdout.write(Math.floor((i / ii) * 100) + '%\r');
     doNext();
   }
 
   doNext = function () {
     i += 1;
-    if (i >= ii) {
-      return process.stdout.write('Done.\n');
-    }
-    f = files[i];
-    fs.stat(f[0], function (err, stats0) {
-      if (err) {
-        throw new Error(err);
-      }
-      if (stats0.isDirectory()) {
-        done(0);
-      }
-      fs.stat(f[1], function (err, stats1) {
-        if (err && err.code !== 'ENOENT') {
-          throw new Error(err);
-        }
-        if (!err && !stats1.isFile()) {
-          throw new Error(f[1] + ' is not a regular file');
-        }
-        if (err || stats0.mtime.getTime() >= stats1.mtime.getTime()) {
-          spawn('convert', [f[0], '-resize', '400x800>', f[1]]).on('exit', done);
+    if (i >= ii) return process.stdout.write('Done.\n');
+
+    var f = files[Math.floor(i / 2)];
+    src = f[0];
+    dst = f[1 + i % 2];
+    fs.stat(src, function (err, srcStats) {
+      if (err) throw new Error(err);
+      if (srcStats.isDirectory()) done(0);
+
+      fs.stat(dst, function (err, dstStats) {
+        if (err && err.code !== 'ENOENT') throw new Error(err);
+        if (!err && !dstStats.isFile()) throw new Error(dst + ' is not a regular file');
+        if (!err && srcStats.mtime.getTime() < dstStats.mtime.getTime()) return done(0);
+
+        if (IS_ORIG.test(dst)) {
+          spawn('convert', [src, dst]).on('exit', done);
         } else {
-          done(0);
+          spawn('convert', [src, '-resize', '400x800>', dst]).on('exit', done);
         }
       });
     });
   };
 
   i = -1;
-  ii = files.length;
+  ii = files.length * 2;
   doNext();
 });
