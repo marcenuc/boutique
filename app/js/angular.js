@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.0.0rc3-263524d3
+ * @license AngularJS v1.0.0rc3-8d7e6948
  * (c) 2010-2012 AngularJS http://angularjs.org
  * License: MIT
  */
@@ -123,8 +123,11 @@ function forEach(obj, iterator, context) {
       for (key = 0; key < obj.length; key++)
         iterator.call(context, obj[key], key);
     } else {
-      for (key in obj)
-        iterator.call(context, obj[key], key);
+      for (key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          iterator.call(context, obj[key], key);
+        }
+      }
     }
   }
   return obj;
@@ -1219,7 +1222,7 @@ function setupModuleLoader(window) {
  * - `codeName` – `{string}` – Code name of the release, such as "jiggling-armfat".
  */
 var version = {
-  full: '1.0.0rc3-263524d3',    // all of these placeholder strings will be replaced by rake's
+  full: '1.0.0rc3-8d7e6948',    // all of these placeholder strings will be replaced by rake's
   major: 1,    // compile task
   minor: 0,
   dot: 0,
@@ -2340,6 +2343,13 @@ function JQLiteController(element, name) {
 
 function JQLiteInheritedData(element, name, value) {
   element = jqLite(element);
+
+  // if element is the document object work with the html element instead
+  // this makes $(document).scope() possible
+  if(element[0].nodeType == 9) {
+    element = element.find('html');
+  }
+
   while (element.length) {
     if (value = element.data(name)) return value;
     element = element.parent();
@@ -12940,11 +12950,11 @@ var ngCloakDirective = ngDirective({
      </doc:scenario>
    </doc:example>
  */
-var ngControllerDirective = ['$controller', '$window', function($controller, $window) {
+var ngControllerDirective = [function() {
   return {
     scope: true,
     controller: '@'
-  }
+  };
 }];
 
 /**
