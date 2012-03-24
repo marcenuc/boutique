@@ -9298,7 +9298,7 @@ jQuery.each([ "Height", "Width" ], function( i, name ) {
 // Expose jQuery to the global object
 window.jQuery = window.$ = jQuery;
 })( window );/**
- * @license AngularJS v1.0.0rc3-8d7e6948
+ * @license AngularJS v1.0.0rc3-74c84501
  * (c) 2010-2011 AngularJS http://angularjs.org
  * License: MIT
  */
@@ -10524,7 +10524,7 @@ function setupModuleLoader(window) {
  * - `codeName` – `{string}` – Code name of the release, such as "jiggling-armfat".
  */
 var version = {
-  full: '1.0.0rc3-8d7e6948',    // all of these placeholder strings will be replaced by rake's
+  full: '1.0.0rc3-74c84501',    // all of these placeholder strings will be replaced by rake's
   major: "NG_VERSION_MAJOR",    // compile task
   minor: "NG_VERSION_MINOR",
   dot: "NG_VERSION_DOT",
@@ -13165,7 +13165,7 @@ function $CompileProvider($provide) {
          childLinkingFn = /* nodesetLinkingFn */ linkingFns[i++];
 
          if (directiveLinkingFn) {
-           if (directiveLinkingFn.scope && !rootElement) {
+           if (directiveLinkingFn.scope) {
              childScope = scope.$new(isObject(directiveLinkingFn.scope));
              jqLite(node).data('$scope', childScope);
            } else {
@@ -17480,16 +17480,20 @@ function qFactory(nextTick, exceptionHandler) {
         counter = promises.length,
         results = [];
 
-    forEach(promises, function(promise, index) {
-      promise.then(function(value) {
-        if (index in results) return;
-        results[index] = value;
-        if (!(--counter)) deferred.resolve(results);
-      }, function(reason) {
-        if (index in results) return;
-        deferred.reject(reason);
+    if (counter) {
+      forEach(promises, function(promise, index) {
+        ref(promise).then(function(value) {
+          if (index in results) return;
+          results[index] = value;
+          if (!(--counter)) deferred.resolve(results);
+        }, function(reason) {
+          if (index in results) return;
+          deferred.reject(reason);
+        });
       });
-    });
+    } else {
+      deferred.resolve(results);
+    }
 
     return deferred.promise;
   }
@@ -19088,6 +19092,7 @@ function $WindowProvider(){
   this.$get = valueFn(window);
 }
 'use strict';
+'use strict';
 
 /**
  * Parse headers into key value object
@@ -19449,6 +19454,8 @@ function $HttpProvider() {
      *
      *    - **method** – `{string}` – HTTP method (e.g. 'GET', 'POST', etc)
      *    - **url** – `{string}` – Absolute or relative URL of the resource that is being requested.
+     *    - **params** – `{Object.<string|Object>}` – Map of strings or objects which will be turned to
+     *      `?key1=value1&key2=value2` after the url. If the value is not a string, it will be JSONified.
      *    - **data** – `{string|Object}` – Data to be sent as the request message data.
      *    - **headers** – `{Object}` – Map of strings representing HTTP headers to send to the server.
      *    - **transformRequest** – `{function(data, headersGetter)|Array.<function(data, headersGetter)>}` –
@@ -19727,7 +19734,8 @@ function $HttpProvider() {
       var deferred = $q.defer(),
           promise = deferred.promise,
           cache,
-          cachedResp;
+          cachedResp,
+          url = buildUrl(config.url, config.params);
 
       $http.pendingRequests.push(config);
       promise.then(removePendingReq, removePendingReq);
@@ -19738,7 +19746,7 @@ function $HttpProvider() {
       }
 
       if (cache) {
-        cachedResp = cache.get(config.url);
+        cachedResp = cache.get(url);
         if (cachedResp) {
           if (cachedResp.then) {
             // cached request has already been sent, but there is no response yet
@@ -19754,13 +19762,13 @@ function $HttpProvider() {
           }
         } else {
           // put the promise for the non-transformed response into cache as a placeholder
-          cache.put(config.url, promise);
+          cache.put(url, promise);
         }
       }
 
       // if we won't have the response in cache, send the request to the backend
       if (!cachedResp) {
-        $httpBackend(config.method, config.url, reqData, done, reqHeaders, config.timeout);
+        $httpBackend(config.method, url, reqData, done, reqHeaders, config.timeout);
       }
 
       return promise;
@@ -19775,10 +19783,10 @@ function $HttpProvider() {
       function done(status, response, headersString) {
         if (cache) {
           if (isSuccess(status)) {
-            cache.put(config.url, [status, response, parseHeaders(headersString)]);
+            cache.put(url, [status, response, parseHeaders(headersString)]);
           } else {
             // remove promise from the cache
-            cache.remove(config.url);
+            cache.remove(url);
           }
         }
 
@@ -19808,6 +19816,22 @@ function $HttpProvider() {
         if (idx !== -1) $http.pendingRequests.splice(idx, 1);
       }
     }
+
+
+    function buildUrl(url, params) {
+          if (!params) return url;
+          var parts = [];
+          forEachSorted(params, function(value, key) {
+            if (value == null || value == undefined) return;
+            if (isObject(value)) {
+              value = toJson(value);
+            }
+            parts.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
+          });
+          return url + ((url.indexOf('?') == -1) ? '?' : '&') + parts.join('&');
+        }
+
+
   }];
 }
 var XHR = window.XMLHttpRequest || function() {
