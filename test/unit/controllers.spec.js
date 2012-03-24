@@ -1,5 +1,5 @@
 /*global describe:false, beforeEach:false, afterEach:false, it:false, expect:false, module:false, inject:false, jasmine:false, spyOn:false*/
-describe('Controller', function () {
+describe('Controller', function() {
   'use strict';
 
   function get(id) {
@@ -29,25 +29,10 @@ describe('Controller', function () {
       return { _id: 'Giacenze',
         rows: [['112', '60456', '5000', '5000', '010101', 0, 3, { '66': 3 }]]
       };
-    case 'AZIENDE':
-      // TODO remove AZIENDE and use VIEW_AZIENDE (or viceversa).
-      return {
-        '010101': {
-          value: '010101 Negozio1',
-          key: '010101',
-          doc: { _id: 'Azienda_010101', nome: 'Negozio1', tipo: 'NEGOZIO', comune: 'Tricase', provincia: 'LE', nazione: 'IT' }
-        },
-        '020202': {
-          value: '020202_Magazzino2',
-          key: '020202',
-          doc: { _id: 'Azienda_020202', nome: 'Magazzino2', tipo: 'MAGAZZINO', comune: 'Bari', provincia: 'BA', nazione: 'IT' }
-        },
-        '030303': {
-          value: '030303 Negozio3',
-          key: '030303',
-          doc: { _id: 'Azienda_030303', nome: 'Negozio3', tipo: 'NEGOZIO', comune: 'Madrid', nazione: 'ES' }
-        }
-      };
+    case 'Azienda_010101':
+      return { _id: 'Azienda_010101', nome: 'Negozio1', tipo: 'NEGOZIO', comune: 'Tricase', provincia: 'LE', nazione: 'IT' };
+    case 'Azienda_020202':
+      return { _id: 'Azienda_020202', nome: 'Magazzino2', tipo: 'MAGAZZINO', comune: 'Bari', provincia: 'BA', nazione: 'IT' };
     case 'VIEW_AZIENDE':
       return { rows: [
         {
@@ -66,18 +51,14 @@ describe('Controller', function () {
           doc: { _id: 'Azienda_030303', nome: 'Negozio3', tipo: 'NEGOZIO', comune: 'Madrid', nazione: 'ES' }
         }
       ] };
-    case 'LISTINI':
-      // TODO remove LISTINI and use VIEW_LISTINI (or viceversa).
-      return {
-        '1': { _id: 'Listino_1', col: { costo: 0, prezzo1: 1, prezzo2: 2, offerta: 3  }, prezzi: { '112': { '60456': { '5000': [100, 300, 200, '*'] } } } },
-        '010101': { _id: 'Listino_010101', col: { costo: 0, prezzo1: 1, prezzo2: 2, offerta: 3  }, prezzi: {}, versioneBase: '1' }
-      };
+    case 'Listino_1':
+      return { _id: 'Listino_1', col: { costo: 0, prezzo1: 1, prezzo2: 2, offerta: 3  }, prezzi: { '112': { '60456': { '5000': [100, 300, 200, '*'] } } } };
     case 'VIEW_LISTINI':
       return { rows: [
         { key: '1', id: 'Listino_1', value: null, doc: { _id: 'Listino_1', columnNames: ['costo', 'prezzo1', 'prezzo2', 'offerta'], prezzi: { '112': { '60456': { '5000': [100, 300, 200, '*'] } } } } },
         { key: '010101', id: 'Listino_010101', value: null, doc: { _id: 'Listino_010101', columnNames: ['costo', 'prezzo1', 'prezzo2', 'offerta'], prezzi: {}, versioneBase: '1' } }
       ] };
-    case 'FOTO':
+    case 'Foto_1_0_1':
       return { _id: 'Foto_1_0_1', articoli: [
         { stagione: '125', modello: '98021', articolo: '1881', colore: '8000' },
         { stagione: '125', modello: '40021', articolo: '2109', colore: '5500' }
@@ -87,34 +68,41 @@ describe('Controller', function () {
     }
   }
 
-  function getPromise($q, doc) {
-    var deferred = $q.defer();
-    deferred.resolve(doc);
-    return deferred.promise;
+  beforeEach(module('app.config', 'app.services', 'app.shared', 'app.validators', 'app.controllers', function($provide) {
+    function doSpy(name, methods) { $provide.value(name, jasmine.createSpyObj(name, methods)); }
+    doSpy('MovimentoMagazzino', ['pendenti', 'build', 'findByRiferimento', 'search']);
+    doSpy('Downloads', ['prepare']);
+    doSpy('SessionInfo', ['setFlash', 'resetFlash', 'error', 'notice', 'startLoading', 'doneLoading', 'goTo']);
+    doSpy('$location', ['path']);
+  }));
+
+  var $scope, $controller, controllers, MovimentoMagazzino, Downloads, SessionInfo, $location, $httpBackend, couchdb;
+  beforeEach(inject(function($rootScope, _$controller_, _controllers_, _MovimentoMagazzino_, _Downloads_, _SessionInfo_, _$location_, _$httpBackend_, _couchdb_) {
+    $scope = $rootScope;
+    $controller = _$controller_;
+    controllers = _controllers_;
+    MovimentoMagazzino = _MovimentoMagazzino_;
+    Downloads = _Downloads_;
+    SessionInfo = _SessionInfo_;
+    $location = _$location_;
+    $httpBackend = _$httpBackend_;
+    couchdb = _couchdb_;
+  }));
+
+  afterEach(function() {
+    expect(SessionInfo.resetFlash).toHaveBeenCalledWith();
+  });
+
+  function expectDocGET(docId) {
+    $httpBackend.expectGET(couchdb.docPath(docId)).respond(JSON.stringify(get(docId)));
   }
 
-  beforeEach(module('app.config', 'app.services', 'app.shared', 'app.validators', 'app.controllers', function ($provide) {
-    var MovimentoMagazzino = jasmine.createSpyObj('MovimentoMagazzino', ['pendenti', 'build', 'findByRiferimento', 'search']),
-      Downloads = jasmine.createSpyObj('Downloads', ['prepare']),
-      SessionInfo = jasmine.createSpyObj('SessionInfo', ['setFlash', 'resetFlash', 'error', 'notice', 'startLoading', 'doneLoading', 'goTo']),
-      $location = jasmine.createSpyObj('$location', ['path']);
-    $provide.value('MovimentoMagazzino', MovimentoMagazzino);
-    $provide.value('Downloads', Downloads);
-    $provide.value('SessionInfo', SessionInfo);
-    $provide.value('$location', $location);
-  }));
-
-  afterEach(inject(function (SessionInfo) {
-    expect(SessionInfo.resetFlash).toHaveBeenCalledWith();
-  }));
-
-  describe('Header', function () {
-    beforeEach(inject(function ($httpBackend) {
+  describe('Header', function() {
+    beforeEach(function() {
       $httpBackend.expectGET('../_session').respond({ userCtx: { name: '010101' } });
-    }));
+    });
 
-    it('should initialize $scope', inject(function ($rootScope, $controller, controllers, session, SessionInfo) {
-      var $scope = $rootScope;
+    it('should initialize $scope', inject(function(session) {
       // FAKE CALL for afterEach: this is the only exception...
       SessionInfo.resetFlash();
       // ensure $scope is properly initialized
@@ -126,84 +114,71 @@ describe('Controller', function () {
     }));
   });
 
-  describe('NewMovimentoMagazzino', function () {
-    beforeEach(function () {
-      module(function ($provide) {
-        $provide.value('Doc', jasmine.createSpyObj('Doc', ['find', 'save', 'load']));
-        $provide.value('Azienda', jasmine.createSpyObj('Azienda', ['all', 'nome', 'nomi']));
-      });
-      inject(function ($httpBackend) {
-        $httpBackend.expectGET('../_session').respond({ userCtx: { name: '010101', roles: ['azienda'] } });
-      });
-    });
-
-    it('should initialize $scope', inject(function ($q, $rootScope, $controller, controllers, $location, codici, Azienda, MovimentoMagazzino, Doc, $httpBackend) {
-      var form, $scope = $rootScope,
-        AZIENDE = get('AZIENDE'),
-        aziende = getPromise($q, AZIENDE),
-        buildResp = jasmine.createSpyObj('buildMM', ['then']),
-        saveResp = jasmine.createSpyObj('save', ['then']),
-        causale = codici.findCausaleMovimentoMagazzino('VENDITA'),
-        newMM = { _id: 'MovimentoMagazzino_010101_2012_A_1' };
+  describe('NewMovimentoMagazzino', function() {
+    it('should initialize $scope', inject(function($q, codici, Azienda, Doc) {
       spyOn(codici, 'newYyyyMmDdDate').andReturn('20111231');
-      Azienda.all.andReturn(aziende);
-      MovimentoMagazzino.build.andReturn(buildResp);
-      Doc.save.andReturn(saveResp);
-      // ensure $scope is properly initialized
+      $httpBackend.expectGET('../_session').respond({ userCtx: { name: '010101', roles: ['azienda'] } });
+      $httpBackend.expectGET(couchdb.viewPath('aziende?include_docs=true')).respond(JSON.stringify(get('VIEW_AZIENDE')));
+      // describe $scope initialization
       $controller(controllers.NewMovimentoMagazzino, { '$scope': $scope });
       // it should put aziende in $scope
-      expect($scope.aziende).toBe(aziende);
+      expect(typeof $scope.aziende.then).toBe('function');
       // it should put causali in $scope
       expect($scope.causali).toBe(codici.CAUSALI_MOVIMENTO_MAGAZZINO);
-      $httpBackend.flush();
 
-      form = $scope.form;
+      var form = $scope.form;
       // it should default form.data to today
       expect(form.data).toBe('20111231');
+
+      // it should set magazzino1 and causale with _session data
+      expect(form.magazzino1).toBeUndefined();
+      expect(form.causale1).toBeUndefined();
+      $httpBackend.flush();
       // it should default magazzino1 to user's magazzino
       expect(form.magazzino1).toBe('010101');
       // it should default causale1 to "VENDITA A CLIENTI" if user's name is codice azienda
-      // TODO it should default causale1 to "VENDITA A CLIENTI" if user has role azienda
+      // TODO it should default causale1 to "VENDITA A CLIENTI" if user has *role* azienda
       expect(form.causale1).toEqual({ descrizione: 'VENDITA A CLIENTI', segno: -1, gruppo: 'C' });
 
-      // fill form
+      // describe fill form
       form.magazzino1 = '010101';
       form.magazzino2 = '020202';
-      form.causale1 = causale;
+      form.causale1 = codici.findCausaleMovimentoMagazzino('VENDITA');
 
+      // describe create
       $scope.create();
+
+      var newMM = { _id: 'MovimentoMagazzino_010101_2012_A_1' };
+      // TODO is this needed?
+      function promiseFor(doc) {
+        var deferred = $q.defer();
+        deferred.resolve(doc);
+        return deferred.promise;
+      }
+      MovimentoMagazzino.build.andReturn(promiseFor(newMM));
+      // it should save created doc
+      $httpBackend.expectPUT(couchdb.docPath(newMM._id), newMM).respond({ id: newMM._id });
+
       $scope.$digest();
-      // it should create new doc
+      // it should build new doc with data from form
       expect(MovimentoMagazzino.build).toHaveBeenCalledWith(
-        AZIENDE['010101'].doc,
+        get('Azienda_010101'),
         '20111231',
-        causale,
+        form.causale1,
         undefined,
-        AZIENDE['020202'].doc,
+        get('Azienda_020202'),
         undefined
       );
-      expect(buildResp.then).toHaveBeenCalled();
-      buildResp.then.mostRecentCall.args[0](newMM);
-      // it should save created doc
-      expect(saveResp.then).toHaveBeenCalled();
+
+      $httpBackend.flush();
       // it should redirect to saved document _id on success
-      saveResp.then.mostRecentCall.args[0](newMM);
       expect($location.path).toHaveBeenCalledWith(newMM._id);
     }));
   });
 
-  describe('EditMovimentoMagazzino', function () {
-    beforeEach(module(function ($provide) {
-      var Listino = jasmine.createSpyObj('Listino', ['all', 'load']);
-      $provide.value('Listino', Listino);
-      Listino.all.andReturn(jasmine.createSpyObj('listini', ['then']));
-      $provide.value('$routeParams', { codice: '010101_2012_A_1' });
-      $provide.value('Doc', jasmine.createSpyObj('Doc', ['find', 'save', 'load']));
-      $provide.value('Azienda', jasmine.createSpyObj('Azienda', ['all', 'nome', 'nomi']));
-    }));
-
-    it('should initialize $scope', inject(function ($controller, controllers, SessionInfo, $routeParams, Downloads, codici, Azienda, Listino, Doc) {
-      var saveCb, $scope = {}, listini = Listino.all(),
+  describe('EditMovimentoMagazzino', function() {
+    it('should initialize $scope', inject(function(codici, Azienda, Listino, Doc) {
+      var $routeParams = { codice: '010101_2012_A_1' },
         id = 'MovimentoMagazzino_' + $routeParams.codice,
         label = {
           descrizione: 'SMOKING',
@@ -217,19 +192,14 @@ describe('Controller', function () {
           prezzo1: '3,00',
           prezzo2: '2,00',
           offerta: '*'
-        },
-        savePromise = jasmine.createSpyObj('savePromise', ['then']),
-        find = {
-          TaglieScalarini: jasmine.createSpyObj('findTaglieScalarini', ['then']),
-          ModelliEScalarini: jasmine.createSpyObj('findModelliEScalarini', ['then'])
         };
-      find[id] = jasmine.createSpyObj('find', ['then']);
-      Doc.find.andCallFake(function (docId) {
-        return find[docId];
-      });
-      Azienda.nome.andReturn('PIPPO');
-      Doc.save.andReturn(savePromise);
-      $controller(controllers.EditMovimentoMagazzino, { '$scope': $scope });
+      spyOn(Doc, 'load').andReturn();
+      spyOn(Listino, 'load').andReturn();
+      spyOn(Azienda, 'nome').andReturn('PIPPO');
+      // describe scope initialization
+      // it should fetch movimento magazzino
+      expectDocGET(id);
+      $controller(controllers.EditMovimentoMagazzino, { '$scope': $scope, '$routeParams': $routeParams });
       // it preloads dependencies
       expect(Doc.load).toHaveBeenCalledWith(['TaglieScalarini', 'ModelliEScalarini']);
       // it preloads listini
@@ -241,47 +211,40 @@ describe('Controller', function () {
       expect($scope.col).toEqual(codici.colNamesToColIndexes(codici.COLUMN_NAMES.MovimentoMagazzino));
       // it should default qta for new row to 1
       expect($scope.newQta).toBe(1);
+      // it should default newBarcode to undefined
+      expect($scope.newBarcode).toBeUndefined();
 
       // it should put nomeMagazzino1 in $scope
       expect(Azienda.nome).toHaveBeenCalledWith('010101');
       expect($scope.nomeMagazzino1).toBe('PIPPO');
 
-      expect(Doc.find).toHaveBeenCalledWith(id);
-      expect(find[id].then).toHaveBeenCalled();
+      // it should initialize $scope.model only after response
       expect($scope.model).toBeUndefined();
-      find[id].then.mostRecentCall.args[0](get(id));
+      $httpBackend.flush();
       // it should put doc requested by $routeParams.codice in $scope.model
       expect($scope.model).toEqual(get(id));
       // it should put nomeMagazzino2 in $scope
       expect(Azienda.nome).toHaveBeenCalledWith('020202');
       expect($scope.nomeMagazzino2).toBe('PIPPO');
 
+      $httpBackend.expectGET(couchdb.viewPath('listini?include_docs=true')).respond(JSON.stringify(get('VIEW_LISTINI')));
       $scope.prepareDownloads();
+      $httpBackend.flush();
       // it should prepare download with correct labels and doc._id as filename.
-      expect(listini.then).toHaveBeenCalled();
-      listini.then.mostRecentCall.args[0](get('LISTINI'));
       expect(Downloads.prepare).toHaveBeenCalledWith([label, label], id);
 
       // compile form
       $scope.newBarcode = '112604565000800066';
       $scope.newQta = 3;
 
+      expectDocGET('TaglieScalarini');
+      expectDocGET('ModelliEScalarini');
+      // it should save the document in $scope.model
+      $httpBackend.expectPUT(couchdb.docPath(id), $scope.model).respond(JSON.stringify({ id: id, rev: 'arev' }));
       $scope.save();
+      $httpBackend.flush();
       // it shouldn't show errors
       expect(SessionInfo.error).not.toHaveBeenCalled();
-      // it should fetch TaglieScalarini
-      expect(find.TaglieScalarini.then).toHaveBeenCalled();
-      find.TaglieScalarini.then.mostRecentCall.args[0](get('TaglieScalarini'));
-      // it should fetch ModelliEScalarini
-      expect(find.ModelliEScalarini.then).toHaveBeenCalled();
-      find.ModelliEScalarini.then.mostRecentCall.args[0](get('ModelliEScalarini'));
-      // it should fetch listini
-      expect(listini.then).toHaveBeenCalled();
-      listini.then.mostRecentCall.args[0](get('LISTINI'));
-      // it should save the document in $scope.model
-      expect(Doc.save).toHaveBeenCalledWith($scope.model);
-      expect(savePromise.then).toHaveBeenCalled();
-      saveCb = savePromise.then.mostRecentCall.args[0];
       // it should reset form to default values
       expect($scope.newBarcode).toBe('');
       expect($scope.newQta).toBe(1);
@@ -290,8 +253,6 @@ describe('Controller', function () {
         ['112604565000500066', 2, 'SM', 'SMOKING', 100, 2],
         ['112604565000800066', 2, 'SM', 'SMOKING', 100, 3]
       ]);
-      // TODO this is brittle, how can be improved?
-      saveCb({ _id: $scope.model._id, _rev: 'arev' });
       // it should update $scope.model._rev with saved rev
       expect($scope.model._rev).toBe('arev');
       // it should display a notice
@@ -302,21 +263,13 @@ describe('Controller', function () {
     }));
   });
 
-  describe('MovimentoMagazzino', function () {
-    beforeEach(function () {
-      module(function ($provide) {
-        $provide.value('Azienda', jasmine.createSpyObj('Azienda', ['all', 'nome', 'nomi']));
-      });
-      inject(function ($httpBackend) {
-        $httpBackend.expectGET('../_session').respond({ userCtx: { name: '010101' } });
-      });
-    });
+  describe('MovimentoMagazzino', function() {
+    it('should initialize $scope', inject(function(codici, Azienda) {
+      var form, results, nomi = {}, pendenti = { rows: [] };
 
-    it('should initialize $scope', inject(function ($q, $rootScope, $controller, controllers, codici, Azienda, MovimentoMagazzino, $httpBackend) {
-      var form, results, $scope = $rootScope, aziende = getPromise($q, get('AZIENDE')), nomi = {}, pendenti = { rows: [] };
-
-      Azienda.all.andReturn(aziende);
-      Azienda.nomi.andReturn(nomi);
+      $httpBackend.expectGET('../_session').respond({ userCtx: { name: '010101' } });
+      $httpBackend.expectGET(couchdb.viewPath('aziende?include_docs=true')).respond(JSON.stringify(get('VIEW_AZIENDE')));
+      spyOn(Azienda, 'nomi').andReturn(nomi);
       MovimentoMagazzino.pendenti.andReturn(pendenti);
       spyOn(codici, 'newYyyyMmDdDate').andReturn('20111231');
       // ensure $scope is properly initialized
@@ -326,20 +279,21 @@ describe('Controller', function () {
       expect($scope.pendenti).toBe(pendenti);
       // it should query for movimementi pendenti of the user.
       expect(MovimentoMagazzino.pendenti).toHaveBeenCalledWith('010101');
-      // it should put aziende in $scope
-      expect($scope.aziende).toBe(aziende);
+      // it should promise aziende in $scope
+      expect(typeof $scope.aziende.then).toBe('function');
       // it should put causali in $scope
       expect($scope.causali).toBe(codici.CAUSALI_MOVIMENTO_MAGAZZINO);
       // it should put nomeAzienda in $scope
       expect($scope.nomeAzienda).toBe(nomi);
 
+      // describe form defaults
       form = $scope.form;
       // it should default to current year
       expect(form.anno).toBe(2011);
       // it should default magazzino1 to current user's azienda
       expect(form.magazzino1).toBe('010101');
 
-      // fill the form
+      // describe fill the form
       form.causale1 = codici.findCausaleMovimentoMagazzino('VENDITA');
       form.numero = 1;
       results = { some: 'results' };
@@ -352,56 +306,38 @@ describe('Controller', function () {
     }));
   });
 
-  describe('RicercaBollaAs400', function () {
-    beforeEach(module(function ($provide) {
-      $provide.value('Doc', jasmine.createSpyObj('Doc', ['find', 'save', 'load']));
-      $provide.value('Azienda', jasmine.createSpyObj('Azienda', ['all', 'nome', 'nomi']));
-    }));
-
-    it('should initialize $scope', inject(function ($q, $rootScope, $controller, controllers, As400, SessionInfo, MovimentoMagazzino, $location, codici, Azienda, Doc) {
-      var intestazione, dati, cbFind, promiseBolla, $scope = $rootScope,
-        AZIENDE = get('AZIENDE'), aziende = getPromise($q, AZIENDE),
-        movimento = jasmine.createSpyObj('movimento', ['then']),
-        buildResp = jasmine.createSpyObj('buildMM', ['then']),
-        saveResp = jasmine.createSpyObj('save', ['then']),
-        newMM = { _id: 'MovimentoMagazzino_010101_2012_A_1' },
-        find = {
-          TaglieScalarini: jasmine.createSpyObj('findTaglieScalarini', ['then']),
-          ModelliEScalarini: jasmine.createSpyObj('findModelliEScalarini', ['then']),
-          CausaliAs400: jasmine.createSpyObj('findCausaliAs400', ['then'])
-        };
-      Doc.find.andCallFake(function (docId) {
-        return find[docId];
-      });
+  describe('RicercaBollaAs400', function() {
+    it('should initialize $scope', inject(function(As400, codici, Azienda, Doc) {
       spyOn(codici, 'newYyyyMmDdDate').andReturn('20111231');
-      Azienda.all.andReturn(aziende);
-      MovimentoMagazzino.findByRiferimento.andReturn(movimento);
-      MovimentoMagazzino.build.andReturn(buildResp);
-      Doc.save.andReturn(saveResp);
+      spyOn(Doc, 'load').andReturn();
+      $httpBackend.expectGET(couchdb.viewPath('aziende?include_docs=true')).respond(JSON.stringify(get('VIEW_AZIENDE')));
       // ensure $scope is properly initialized
       $controller(controllers.RicercaBollaAs400, { '$scope': $scope });
       // it should preload needed docs
       expect(Doc.load).toHaveBeenCalledWith(['TaglieScalarini', 'ModelliEScalarini']);
       // it should put aziende in $scope
-      expect($scope.aziende).toBe(aziende);
+      $httpBackend.flush();
+      expect(typeof $scope.aziende.then).toBe('function');
       // it should put causali in $scope
       expect($scope.causali).toBe(codici.CAUSALI_MOVIMENTO_MAGAZZINO);
 
       // fill form
-      intestazione = $scope.intestazione = {
+      var intestazione = $scope.intestazione = {
         data: '20111231',
         numero: 10,
         enteNumerazione: 'A',
         codiceNumerazione: '20'
       };
 
+      var movimento = jasmine.createSpyObj('movimento', ['then']);
+      MovimentoMagazzino.findByRiferimento.andReturn(movimento);
       $scope.fetch();
       // it should build id from form's data
       expect($scope.id).toBe('BollaAs400_20111231_10_A_20');
       // it should check if BollaAs400 was already loaded
       expect(MovimentoMagazzino.findByRiferimento).toHaveBeenCalledWith('BollaAs400_20111231_10_A_20');
 
-      cbFind = movimento.then.mostRecentCall.args[0];
+      var cbFind = movimento.then.mostRecentCall.args[0];
       // when MovimentoMagazzino is found
       cbFind({ rows: [{ id: 'MovimentoMagazzino_010101_2011_A_1' }] });
       // it should send notice to the user
@@ -409,7 +345,7 @@ describe('Controller', function () {
       // it should redirect to found MovimentoMagazzino keeping notice
       expect(SessionInfo.goTo).toHaveBeenCalledWith('MovimentoMagazzino_010101_2011_A_1');
 
-      promiseBolla = jasmine.createSpyObj('promiseBolla', ['success']);
+      var promiseBolla = jasmine.createSpyObj('promiseBolla', ['success']);
       spyOn(As400, 'bolla').andReturn(promiseBolla);
       // when MovimentoMagazzino not found
       cbFind({ rows: [] });
@@ -417,16 +353,16 @@ describe('Controller', function () {
       expect(As400.bolla).toHaveBeenCalledWith(intestazione);
 
       // when bolla is found on as400
-      dati = {
+      var dati = {
         columnNames: ['codiceCliente', 'tipoMagazzino', 'causale', 'codiceMagazzino', 'scalarino', 'stagione', 'modello', 'articolo', 'colore', 'qta1', 'qta2', 'qta3', 'qta4', 'qta5', 'qta6', 'qta7', 'qta8', 'qta9', 'qta10', 'qta11', 'qta12'],
         rows: [['010101', '2', '73', 'K', '2', '112', '60456', '5000', '5000', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']]
       };
+      expectDocGET('CausaliAs400');
       promiseBolla.success.mostRecentCall.args[0](dati);
       // it should put bolla in $scope
       expect($scope.bollaAs400).toBe(dati);
 
-      expect(find.CausaliAs400.then).toHaveBeenCalled();
-      find.CausaliAs400.then.mostRecentCall.args[0](get('CausaliAs400'));
+      $httpBackend.flush();
       // it should fill form MovimentoMagazzino with data from BollaAs400
       expect($scope.movimentoMagazzino).toEqual({
         magazzino1: '010101',
@@ -437,43 +373,38 @@ describe('Controller', function () {
       // fill form
       $scope.movimentoMagazzino.magazzino2 = '020202';
 
+      expectDocGET('TaglieScalarini');
+      expectDocGET('ModelliEScalarini');
+      var buildResp = jasmine.createSpyObj('buildMM', ['then']);
+      MovimentoMagazzino.build.andReturn(buildResp);
       $scope.save();
-      $scope.$digest();
-      // TODO use promises here to get job done by $digest();
-      expect(find.TaglieScalarini.then).toHaveBeenCalled();
-      find.TaglieScalarini.then.mostRecentCall.args[0](get('TaglieScalarini'));
-      expect(find.ModelliEScalarini.then).toHaveBeenCalled();
-      find.ModelliEScalarini.then.mostRecentCall.args[0](get('ModelliEScalarini'));
-      $scope.$digest();
+      $httpBackend.flush();
       // it should create new doc
       expect(MovimentoMagazzino.build).toHaveBeenCalledWith(
-        AZIENDE['010101'].doc,
+        get('Azienda_010101'),
         '20111231',
         $scope.movimentoMagazzino.causale1,
         [['112604565000500066', 2, 'SM', 'SMOKING', 0, 1]],
-        AZIENDE['020202'].doc,
+        get('Azienda_020202'),
         'BollaAs400_20111231_10_A_20'
       );
       expect(buildResp.then).toHaveBeenCalled();
-      buildResp.then.mostRecentCall.args[0](newMM);
       // it should save created doc
-      expect(saveResp.then).toHaveBeenCalled();
+      var newMM = { _id: 'MovimentoMagazzino_010101_2012_A_1' };
+      $httpBackend.expectPUT(couchdb.docPath(newMM._id), newMM).respond(JSON.stringify({ ok: true }));
+      buildResp.then.mostRecentCall.args[0](newMM);
+      $httpBackend.flush();
       // it should redirect to saved document _id on success
-      saveResp.then.mostRecentCall.args[0](newMM);
       expect($location.path).toHaveBeenCalledWith(newMM._id);
     }));
   });
 
-  describe('RicercaArticoli', function () {
-    beforeEach(inject(function ($httpBackend, couchdb) {
-      $httpBackend.expectGET('../_session').respond({ userCtx: { name: '010101' } });
-      $httpBackend.expectGET(couchdb.viewPath('aziende?include_docs=true')).respond(JSON.stringify(get('VIEW_AZIENDE')));
-    }));
-
-    it('should initialize $scope', inject(function ($rootScope, $controller, controllers, $httpBackend, Listino, Doc, couchdb) {
-      var $scope = $rootScope;
+  describe('RicercaArticoli', function() {
+    it('should initialize $scope', inject(function(Listino, Doc) {
       spyOn(Doc, 'load');
       spyOn(Listino, 'load');
+      $httpBackend.expectGET('../_session').respond({ userCtx: { name: '010101' } });
+      $httpBackend.expectGET(couchdb.viewPath('aziende?include_docs=true')).respond(JSON.stringify(get('VIEW_AZIENDE')));
       $controller(controllers.RicercaArticoli, { '$scope': $scope });
       // it preloads giacenze and related docs
       expect(Doc.load).toHaveBeenCalledWith(['TaglieScalarini', 'ModelliEScalarini', 'Giacenze']);
@@ -491,7 +422,7 @@ describe('Controller', function () {
       // after session data arrives
       $httpBackend.flush();
       // it should put aziende in $scope
-      expect($scope.aziende).toEqualData(get('AZIENDE'));
+      expect($scope.aziende['010101']).toEqual(get('VIEW_AZIENDE').rows[0]);
       // it should select azienda of current user if found
       expect($scope.aziendeSelezionate).toEqual(['010101']);
       // it should put all tipiAzienda in $scope
@@ -561,9 +492,9 @@ describe('Controller', function () {
       });
       $scope.hidePhoto();
 
-      $httpBackend.expectGET(couchdb.docPath('TaglieScalarini')).respond(get('TaglieScalarini'));
-      $httpBackend.expectGET(couchdb.docPath('ModelliEScalarini')).respond(get('ModelliEScalarini'));
-      $httpBackend.expectGET(couchdb.docPath('Giacenze')).respond(get('Giacenze'));
+      expectDocGET('TaglieScalarini');
+      expectDocGET('ModelliEScalarini');
+      expectDocGET('Giacenze');
       $httpBackend.expectGET(couchdb.viewPath('listini?include_docs=true')).respond(JSON.stringify(get('VIEW_LISTINI')));
       // when no filter is given
       $scope.filtraGiacenza();
@@ -581,21 +512,17 @@ describe('Controller', function () {
     }));
   });
 
-  describe('Azienda', function () {
-    describe('without $routeParams.codice', function () {
-      beforeEach(inject(function ($httpBackend) {
+  describe('Azienda', function() {
+    describe('without $routeParams.codice', function() {
+      it('should initialize $scope', inject(function(codici) {
         $httpBackend.expectGET('../_session').respond({ userCtx: { name: 'boutique', roles: [] } });
-      }));
-
-      it('should initialize $scope', inject(function ($rootScope, $controller, controllers, codici, $httpBackend, SessionInfo, couchdb) {
-        var $scope = $rootScope;
         $httpBackend.expectGET(couchdb.viewPath('aziende?include_docs=true')).respond(JSON.stringify(get('VIEW_AZIENDE')));
         $controller(controllers.Azienda, { '$scope': $scope });
         $httpBackend.flush();
         // it should not put azienda in $scope
         expect($scope.azienda).toEqual({});
         // it should put aziende in $scope
-        expect($scope.aziende).toEqualData(get('AZIENDE'));
+        expect($scope.aziende['010101']).toEqualData(get('VIEW_AZIENDE').rows[0]);
         // it should put tipiAzienda in $scope
         expect($scope.tipiAzienda).toEqual(codici.TIPI_AZIENDA);
 
@@ -619,27 +546,17 @@ describe('Controller', function () {
       }));
     });
 
-    describe('with $routeParams.codice', function () {
-      beforeEach(function () {
-        module(function ($provide) {
-          $provide.value('$routeParams', { codice: '010101' });
-        });
-        inject(function ($httpBackend) {
-          $httpBackend.expectGET('../_session').respond({ userCtx: { name: 'boutique', roles: [] } });
-        });
-      });
-
-      it('should initialize $scope', inject(function ($rootScope, $controller, controllers, codici, $httpBackend, SessionInfo, couchdb) {
-        var $scope = $rootScope, AZIENDE = get('AZIENDE');
-        $httpBackend.expectGET(couchdb.docPath('Azienda_010101')).respond(JSON.stringify(AZIENDE['010101'].doc));
+    describe('with $routeParams.codice', function() {
+      it('should initialize $scope', inject(function(codici) {
+        $httpBackend.expectGET('../_session').respond({ userCtx: { name: 'boutique', roles: [] } });
+        expectDocGET('Azienda_010101');
         $httpBackend.expectGET(couchdb.viewPath('aziende?include_docs=true')).respond(JSON.stringify(get('VIEW_AZIENDE')));
-        $controller(controllers.Azienda, { '$scope': $scope });
+        $controller(controllers.Azienda, { '$scope': $scope, $routeParams: { codice: '010101' } });
         $httpBackend.flush();
-        $scope.$digest();
         // it should put azienda in $scope
-        expect($scope.azienda).toEqual(AZIENDE['010101'].doc);
+        expect($scope.azienda).toEqual(get('Azienda_010101'));
         // it should put aziende in $scope
-        expect($scope.aziende).toEqualData(AZIENDE);
+        expect($scope.aziende['010101']).toEqual(get('VIEW_AZIENDE').rows[0]);
         // it should put tipiAzienda in $scope
         expect($scope.tipiAzienda).toEqual(codici.TIPI_AZIENDA);
 
@@ -660,16 +577,11 @@ describe('Controller', function () {
     });
   });
 
-  describe('Listino', function () {
-    beforeEach(module(function ($provide) {
-      $provide.value('$routeParams', { codice: '1' });
-    }));
-
-    it('should initialize $scope', inject(function ($rootScope, $controller, controllers, $httpBackend, $location, Doc, SessionInfo, couchdb) {
-      var $scope = $rootScope, LISTINI = get('LISTINI');
-      $httpBackend.expectGET(couchdb.docPath('Listino_1')).respond(JSON.stringify(LISTINI['1']));
+  describe('Listino', function() {
+    it('should initialize $scope', inject(function(Doc) {
+      expectDocGET('Listino_1');
       spyOn(Doc, 'load');
-      $controller(controllers.Listino, { '$scope': $scope });
+      $controller(controllers.Listino, { '$scope': $scope, $routeParams: { codice: '1' } });
       // it should preload listino
       expect(Doc.load).toHaveBeenCalledWith(['Listino_1']);
 
@@ -693,16 +605,16 @@ describe('Controller', function () {
   });
 
   describe('Catalogo', function() {
-    it('should initialize $scope', inject(function($rootScope, $controller, controllers, $httpBackend, couchdb, Doc) {
-      var $scope = $rootScope, idFoto = 'Foto_1_0_1';
+    it('should initialize $scope', inject(function(Doc) {
+      var idFoto = 'Foto_1_0_1';
       spyOn(Doc, 'load');
       $controller(controllers.Catalogo, { '$scope': $scope });
       // it preloads needed docs
       expect(Doc.load).toHaveBeenCalledWith(['ModelliEScalarini']);
 
       $scope.idFoto = idFoto;
-      $httpBackend.expectGET(couchdb.docPath(idFoto)).respond(get('FOTO'));
-      $httpBackend.expectGET(couchdb.docPath('ModelliEScalarini')).respond(get('ModelliEScalarini'));
+      expectDocGET(idFoto);
+      expectDocGET('ModelliEScalarini');
       $httpBackend.expectGET(couchdb.viewPath('costo?key="125980211881"')).respond(JSON.stringify({ rows: [{ key: "125980211881", value: 12345 }] }));
       $httpBackend.expectGET(couchdb.viewPath('costo?key="125400212109"')).respond(JSON.stringify({ rows: [{ key: "125400212109", value: 3121 }] }));
       $scope.find();
@@ -712,8 +624,9 @@ describe('Controller', function () {
         { stagione: '125', modello: '98021', articolo: '1881', colore: '8000', sma: '125980211881', descrizione: 'SCARPA CLASSICA FIBBIA' },
         { stagione: '125', modello: '40021', articolo: '2109', colore: '5500', sma: '125400212109', descrizione: 'CAMICIA CLASSICA' }
       ]);
-      // it should put image link in $scope
+      // it should put image links in $scope
       expect($scope.image).toBe('../catalogo/1_0.jpg');
+      expect($scope.imageOrig).toBe('../catalogo/1_0_orig.jpg');
     }));
   });
 });
