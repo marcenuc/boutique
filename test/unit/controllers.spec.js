@@ -93,8 +93,13 @@ describe('Controller', function() {
     expect(SessionInfo.resetFlash).toHaveBeenCalledWith();
   });
 
-  function expectDocGET(docId) {
-    $httpBackend.expectGET(couchdb.docPath(docId)).respond(JSON.stringify(get(docId)));
+  var views = ['aziende', 'listini'];
+  function expectGET(id) {
+    if (views.indexOf(id) >= 0) {
+      $httpBackend.expectGET(couchdb.viewPath(id + '?include_docs=true')).respond(JSON.stringify(get('VIEW_' + id.toUpperCase())));
+    } else {
+      $httpBackend.expectGET(couchdb.docPath(id)).respond(JSON.stringify(get(id)));
+    }
   }
 
   describe('Header', function() {
@@ -118,7 +123,7 @@ describe('Controller', function() {
     it('should initialize $scope', inject(function($q, codici, Azienda, Doc) {
       spyOn(codici, 'newYyyyMmDdDate').andReturn('20111231');
       $httpBackend.expectGET('../_session').respond({ userCtx: { name: '010101', roles: ['azienda'] } });
-      $httpBackend.expectGET(couchdb.viewPath('aziende?include_docs=true')).respond(JSON.stringify(get('VIEW_AZIENDE')));
+      expectGET('aziende');
       // describe $scope initialization
       $controller(controllers.NewMovimentoMagazzino, { '$scope': $scope });
       // it should put aziende in $scope
@@ -198,7 +203,7 @@ describe('Controller', function() {
       spyOn(Azienda, 'nome').andReturn('PIPPO');
       // describe scope initialization
       // it should fetch movimento magazzino
-      expectDocGET(id);
+      expectGET(id);
       $controller(controllers.EditMovimentoMagazzino, { '$scope': $scope, '$routeParams': $routeParams });
       // it preloads dependencies
       expect(Doc.load).toHaveBeenCalledWith(['TaglieScalarini', 'ModelliEScalarini']);
@@ -227,7 +232,7 @@ describe('Controller', function() {
       expect(Azienda.nome).toHaveBeenCalledWith('020202');
       expect($scope.nomeMagazzino2).toBe('PIPPO');
 
-      $httpBackend.expectGET(couchdb.viewPath('listini?include_docs=true')).respond(JSON.stringify(get('VIEW_LISTINI')));
+      expectGET('listini');
       $scope.prepareDownloads();
       $httpBackend.flush();
       // it should prepare download with correct labels and doc._id as filename.
@@ -237,8 +242,8 @@ describe('Controller', function() {
       $scope.newBarcode = '112604565000800066';
       $scope.newQta = 3;
 
-      expectDocGET('TaglieScalarini');
-      expectDocGET('ModelliEScalarini');
+      expectGET('TaglieScalarini');
+      expectGET('ModelliEScalarini');
       // it should save the document in $scope.model
       $httpBackend.expectPUT(couchdb.docPath(id), $scope.model).respond(JSON.stringify({ id: id, rev: 'arev' }));
       $scope.save();
@@ -268,7 +273,7 @@ describe('Controller', function() {
       var form, results, nomi = {}, pendenti = { rows: [] };
 
       $httpBackend.expectGET('../_session').respond({ userCtx: { name: '010101' } });
-      $httpBackend.expectGET(couchdb.viewPath('aziende?include_docs=true')).respond(JSON.stringify(get('VIEW_AZIENDE')));
+      expectGET('aziende');
       spyOn(Azienda, 'nomi').andReturn(nomi);
       MovimentoMagazzino.pendenti.andReturn(pendenti);
       spyOn(codici, 'newYyyyMmDdDate').andReturn('20111231');
@@ -310,7 +315,7 @@ describe('Controller', function() {
     it('should initialize $scope', inject(function(As400, codici, Azienda, Doc) {
       spyOn(codici, 'newYyyyMmDdDate').andReturn('20111231');
       spyOn(Doc, 'load').andReturn();
-      $httpBackend.expectGET(couchdb.viewPath('aziende?include_docs=true')).respond(JSON.stringify(get('VIEW_AZIENDE')));
+      expectGET('aziende');
       // ensure $scope is properly initialized
       $controller(controllers.RicercaBollaAs400, { '$scope': $scope });
       // it should preload needed docs
@@ -357,7 +362,7 @@ describe('Controller', function() {
         columnNames: ['codiceCliente', 'tipoMagazzino', 'causale', 'codiceMagazzino', 'scalarino', 'stagione', 'modello', 'articolo', 'colore', 'qta1', 'qta2', 'qta3', 'qta4', 'qta5', 'qta6', 'qta7', 'qta8', 'qta9', 'qta10', 'qta11', 'qta12'],
         rows: [['010101', '2', '73', 'K', '2', '112', '60456', '5000', '5000', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']]
       };
-      expectDocGET('CausaliAs400');
+      expectGET('CausaliAs400');
       promiseBolla.success.mostRecentCall.args[0](dati);
       // it should put bolla in $scope
       expect($scope.bollaAs400).toBe(dati);
@@ -373,8 +378,8 @@ describe('Controller', function() {
       // fill form
       $scope.movimentoMagazzino.magazzino2 = '020202';
 
-      expectDocGET('TaglieScalarini');
-      expectDocGET('ModelliEScalarini');
+      expectGET('TaglieScalarini');
+      expectGET('ModelliEScalarini');
       var buildResp = jasmine.createSpyObj('buildMM', ['then']);
       MovimentoMagazzino.build.andReturn(buildResp);
       $scope.save();
@@ -404,7 +409,7 @@ describe('Controller', function() {
       spyOn(Doc, 'load');
       spyOn(Listino, 'load');
       $httpBackend.expectGET('../_session').respond({ userCtx: { name: '010101' } });
-      $httpBackend.expectGET(couchdb.viewPath('aziende?include_docs=true')).respond(JSON.stringify(get('VIEW_AZIENDE')));
+      expectGET('aziende');
       $controller(controllers.RicercaArticoli, { '$scope': $scope });
       // it preloads giacenze and related docs
       expect(Doc.load).toHaveBeenCalledWith(['TaglieScalarini', 'ModelliEScalarini', 'Giacenze']);
@@ -492,10 +497,10 @@ describe('Controller', function() {
       });
       $scope.hidePhoto();
 
-      expectDocGET('TaglieScalarini');
-      expectDocGET('ModelliEScalarini');
-      expectDocGET('Giacenze');
-      $httpBackend.expectGET(couchdb.viewPath('listini?include_docs=true')).respond(JSON.stringify(get('VIEW_LISTINI')));
+      expectGET('TaglieScalarini');
+      expectGET('ModelliEScalarini');
+      expectGET('Giacenze');
+      expectGET('listini');
       // when no filter is given
       $scope.filtraGiacenza();
       $httpBackend.flush();
@@ -516,7 +521,7 @@ describe('Controller', function() {
     describe('without $routeParams.codice', function() {
       it('should initialize $scope', inject(function(codici) {
         $httpBackend.expectGET('../_session').respond({ userCtx: { name: 'boutique', roles: [] } });
-        $httpBackend.expectGET(couchdb.viewPath('aziende?include_docs=true')).respond(JSON.stringify(get('VIEW_AZIENDE')));
+        expectGET('aziende');
         $controller(controllers.Azienda, { '$scope': $scope });
         $httpBackend.flush();
         // it should not put azienda in $scope
@@ -549,8 +554,8 @@ describe('Controller', function() {
     describe('with $routeParams.codice', function() {
       it('should initialize $scope', inject(function(codici) {
         $httpBackend.expectGET('../_session').respond({ userCtx: { name: 'boutique', roles: [] } });
-        expectDocGET('Azienda_010101');
-        $httpBackend.expectGET(couchdb.viewPath('aziende?include_docs=true')).respond(JSON.stringify(get('VIEW_AZIENDE')));
+        expectGET('Azienda_010101');
+        expectGET('aziende');
         $controller(controllers.Azienda, { '$scope': $scope, $routeParams: { codice: '010101' } });
         $httpBackend.flush();
         // it should put azienda in $scope
@@ -579,7 +584,7 @@ describe('Controller', function() {
 
   describe('Listino', function() {
     it('should initialize $scope', inject(function(Doc) {
-      expectDocGET('Listino_1');
+      expectGET('Listino_1');
       spyOn(Doc, 'load');
       $controller(controllers.Listino, { '$scope': $scope, $routeParams: { codice: '1' } });
       // it should preload listino
@@ -613,8 +618,8 @@ describe('Controller', function() {
       expect(Doc.load).toHaveBeenCalledWith(['ModelliEScalarini']);
 
       $scope.idFoto = idFoto;
-      expectDocGET(idFoto);
-      expectDocGET('ModelliEScalarini');
+      expectGET(idFoto);
+      expectGET('ModelliEScalarini');
       $httpBackend.expectGET(couchdb.viewPath('costo?key="125980211881"')).respond(JSON.stringify({ rows: [{ key: "125980211881", value: 12345 }] }));
       $httpBackend.expectGET(couchdb.viewPath('costo?key="125400212109"')).respond(JSON.stringify({ rows: [{ key: "125400212109", value: 3121 }] }));
       $scope.find();
