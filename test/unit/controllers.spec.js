@@ -102,9 +102,14 @@ describe('Controller', function() {
     }
   }
 
+  function expectSession(username) {
+    var u = username || '010101';
+    $httpBackend.expectGET('../_session').respond({ userCtx: { name: u } });
+  }
+
   describe('Header', function() {
     beforeEach(function() {
-      $httpBackend.expectGET('../_session').respond({ userCtx: { name: '010101' } });
+      expectSession();
     });
 
     it('should initialize $scope', inject(function(session) {
@@ -122,7 +127,7 @@ describe('Controller', function() {
   describe('NewMovimentoMagazzino', function() {
     it('should initialize $scope', inject(function($q, codici, Azienda, Doc) {
       spyOn(codici, 'newYyyyMmDdDate').andReturn('20111231');
-      $httpBackend.expectGET('../_session').respond({ userCtx: { name: '010101', roles: ['azienda'] } });
+      expectSession();
       expectGET('aziende');
       // describe $scope initialization
       $controller(controllers.NewMovimentoMagazzino, { '$scope': $scope });
@@ -272,7 +277,7 @@ describe('Controller', function() {
     it('should initialize $scope', inject(function(codici, Azienda) {
       var form, results, nomi = {}, pendenti = { rows: [] };
 
-      $httpBackend.expectGET('../_session').respond({ userCtx: { name: '010101' } });
+      expectSession();
       expectGET('aziende');
       spyOn(Azienda, 'nomi').andReturn(nomi);
       MovimentoMagazzino.pendenti.andReturn(pendenti);
@@ -408,7 +413,7 @@ describe('Controller', function() {
     it('should initialize $scope', inject(function(Listino, Doc) {
       spyOn(Doc, 'load');
       spyOn(Listino, 'load');
-      $httpBackend.expectGET('../_session').respond({ userCtx: { name: '010101' } });
+      expectSession();
       expectGET('aziende');
       $controller(controllers.RicercaArticoli, { '$scope': $scope });
       // it preloads giacenze and related docs
@@ -520,7 +525,7 @@ describe('Controller', function() {
   describe('Azienda', function() {
     describe('without $routeParams.codice', function() {
       it('should initialize $scope', inject(function(codici) {
-        $httpBackend.expectGET('../_session').respond({ userCtx: { name: 'boutique', roles: [] } });
+        expectSession('boutique');
         expectGET('aziende');
         $controller(controllers.Azienda, { '$scope': $scope });
         $httpBackend.flush();
@@ -553,7 +558,7 @@ describe('Controller', function() {
 
     describe('with $routeParams.codice', function() {
       it('should initialize $scope', inject(function(codici) {
-        $httpBackend.expectGET('../_session').respond({ userCtx: { name: 'boutique', roles: [] } });
+        expectSession('boutique');
         expectGET('Azienda_010101');
         expectGET('aziende');
         $controller(controllers.Azienda, { '$scope': $scope, $routeParams: { codice: '010101' } });
