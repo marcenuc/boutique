@@ -108,9 +108,7 @@ describe('Controller', function() {
   }
 
   describe('Header', function() {
-    beforeEach(function() {
-      expectSession();
-    });
+    beforeEach(expectSession);
 
     it('should initialize $scope', inject(function(session) {
       // FAKE CALL for afterEach: this is the only exception...
@@ -125,7 +123,7 @@ describe('Controller', function() {
   });
 
   describe('NewMovimentoMagazzino', function() {
-    it('should initialize $scope', inject(function($q, codici, Azienda, Doc) {
+    it('should initialize $scope', inject(function($q, codici) {
       spyOn(codici, 'newYyyyMmDdDate').andReturn('20111231');
       expectSession();
       expectGET('aziende');
@@ -317,7 +315,7 @@ describe('Controller', function() {
   });
 
   describe('RicercaBollaAs400', function() {
-    it('should initialize $scope', inject(function(As400, codici, Azienda, Doc) {
+    it('should initialize $scope', inject(function(As400, codici, Doc) {
       spyOn(codici, 'newYyyyMmDdDate').andReturn('20111231');
       spyOn(Doc, 'load').andReturn();
       expectGET('aziende');
