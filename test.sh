@@ -19,11 +19,14 @@ export LANG=C
 
 case "$suite" in
 e2e)
-  exec java -jar test/lib/jstestdriver/JsTestDriver.jar \
-    --basePath "$PWD" \
-    --config config/jsTestDriver-scenario.conf \
-    --tests "$tests" \
-    --reset
+  while inotifywait -e modify 'test/e2e/scenarios.js'
+  do
+    java -jar test/lib/jstestdriver/JsTestDriver.jar \
+      --basePath "$PWD" \
+      --config config/jsTestDriver-scenario.conf \
+      --tests "$tests" \
+      --reset
+  done
   ;;
 unit)
   exec testacular-run
