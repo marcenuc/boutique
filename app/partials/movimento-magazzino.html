@@ -8,7 +8,7 @@
  <label>Anno: <input ng-model-instant ng-model="form.anno" size=5 maxlength=4 type=number min=2000 max=2099></label>
  <label>Numero: <input ng-model-instant ng-model="form.numero" size=7 type=number min=0></label><p>
  <label>SMACT: <input ng-model-instant ng-model="form.smact" size=26 maxlength=22 bq-incomplete-smact></label><p>
- <input type=submit value=Cerca ng-disabled="{{movimentoMagazzino.$invalid}}">
+ <input type=submit value=Cerca ng-disabled="movimentoMagazzino.$invalid">
  [&nbsp;<a href="#/MovimentoMagazzino_">Nuovo</a>&nbsp;]
 </fieldset>
 </form>

@@ -1,20 +1,18 @@
 /*global angular:false*/
-var Ctrl = {};
-(function() {
+angular.module('app.controllers', [], ['$controllerProvider', function($controllerProvider) {
   'use strict';
 
-  Ctrl.Header = function ($scope, session, SessionInfo) {
+  $controllerProvider.register('Header', ['$scope', 'session', 'SessionInfo', function($scope, session, SessionInfo) {
     $scope.session = session;
     $scope.SessionInfo = SessionInfo;
-  };
-  Ctrl.Header.$inject = ['$scope', 'session', 'SessionInfo'];
+  }]);
 
   function createMovimentoMagazzino(Doc, MovimentoMagazzino, $location, promiseAziende, mm, rows, riferimento) {
-    promiseAziende.then(function (aziende) {
+    promiseAziende.then(function(aziende) {
       var magazzino1 = aziende[mm.magazzino1].doc,
         magazzino2 = aziende.hasOwnProperty(mm.magazzino2) ? aziende[mm.magazzino2].doc : null;
-      MovimentoMagazzino.build(magazzino1, mm.data, mm.causale1, rows, magazzino2, riferimento).then(function (newDoc) {
-        Doc.save(newDoc).then(function (savedDoc) {
+      MovimentoMagazzino.build(magazzino1, mm.data, mm.causale1, rows, magazzino2, riferimento).then(function(newDoc) {
+        Doc.save(newDoc).then(function(savedDoc) {
           $location.path(savedDoc._id);
         });
       });
@@ -22,8 +20,8 @@ var Ctrl = {};
   }
 
   function setDefaultMagazzino1($scope, session, codici) {
-    session.then(function (session) {
-      $scope.aziende.then(function (aziende) {
+    session.then(function(session) {
+      $scope.aziende.then(function(aziende) {
         var username = session.userCtx.name;
         if (aziende.hasOwnProperty(username)) {
           $scope.form.magazzino1 = username;
@@ -33,7 +31,7 @@ var Ctrl = {};
     });
   }
 
-  Ctrl.NewMovimentoMagazzino = function ($scope, SessionInfo, $location, codici, Doc, Azienda, MovimentoMagazzino, session) {
+  $controllerProvider.register('NewMovimentoMagazzino', ['$scope', 'SessionInfo', '$location', 'codici', 'Doc', 'Azienda', 'MovimentoMagazzino', 'session', function($scope, SessionInfo, $location, codici, Doc, Azienda, MovimentoMagazzino, session) {
     SessionInfo.resetFlash();
 
     $scope.aziende = Azienda.all();
@@ -41,11 +39,10 @@ var Ctrl = {};
     $scope.form = { data: codici.newYyyyMmDdDate() };
     setDefaultMagazzino1($scope, session, codici);
 
-    $scope.create = function () {
+    $scope.create = function() {
       createMovimentoMagazzino(Doc, MovimentoMagazzino, $location, $scope.aziende, $scope.form);
     };
-  };
-  Ctrl.NewMovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$location', 'codici', 'Doc', 'Azienda', 'MovimentoMagazzino', 'session'];
+  }]);
 
   //TODO DRY use codici.formatMoney()
   function formatPrezzo(prezzo) {
@@ -53,7 +50,7 @@ var Ctrl = {};
     return prezzo ? s.slice(0, -2) + ',' + s.slice(-2) : '0';
   }
 
-  Ctrl.EditMovimentoMagazzino = function ($scope, SessionInfo, $routeParams, Downloads, codici, Azienda, Doc, Listino) {
+  $controllerProvider.register('EditMovimentoMagazzino', ['$scope', 'SessionInfo', '$routeParams', 'Downloads', 'codici', 'Azienda', 'Doc', 'Listino', function($scope, SessionInfo, $routeParams, Downloads, codici, Azienda, Doc, Listino) {
     SessionInfo.resetFlash();
 
     Doc.load(['TaglieScalarini', 'ModelliEScalarini']);
@@ -71,7 +68,7 @@ var Ctrl = {};
 
     $scope.nomeMagazzino1 = Azienda.nome($scope.codes.magazzino1);
 
-    Doc.find(id).then(function (model) {
+    Doc.find(id).then(function(model) {
       $scope.model = model;
       codiceAzienda = codici.parseIdMovimentoMagazzino($scope.model._id).magazzino1;
       if (model.magazzino2) {
@@ -110,21 +107,21 @@ var Ctrl = {};
       return labels;
     }
 
-    $scope.prepareDownloads = function () {
+    $scope.prepareDownloads = function() {
       //FIXME ensure model is loaded
-      Listino.all().then(function (listini) {
+      Listino.all().then(function(listini) {
         Downloads.prepare(toLabels(listini), $scope.model._id);
       });
     };
 
     function save() {
-      Doc.save($scope.model).then(function (savedDoc) {
+      Doc.save($scope.model).then(function(savedDoc) {
         $scope.model._rev = savedDoc._rev;
         SessionInfo.notice('Salvato ' + savedDoc._id);
       });
     }
 
-    $scope.save = function () {
+    $scope.save = function() {
       //FIXME ensure model is loaded
       if (!$scope.newBarcode) {
         return save();
@@ -133,9 +130,9 @@ var Ctrl = {};
       if (!codes) {
         return SessionInfo.error('Codice non valido: "' + $scope.newBarcode + '"');
       }
-      Doc.find('TaglieScalarini').then(function (taglieScalarini) {
-        Doc.find('ModelliEScalarini').then(function (modelliEScalarini) {
-          Listino.all().then(function (listini) {
+      Doc.find('TaglieScalarini').then(function(taglieScalarini) {
+        Doc.find('ModelliEScalarini').then(function(modelliEScalarini) {
+          Listino.all().then(function(listini) {
             var prezziArticolo, newRow, col = $scope.col,
               descrizioniTaglie = taglieScalarini.descrizioniTaglie,
               listaModelli = modelliEScalarini.lista,
@@ -165,24 +162,23 @@ var Ctrl = {};
       });
     };
 
-    $scope.qtaTotale = function () {
+    $scope.qtaTotale = function() {
       if (!($scope.model && $scope.model.rows)) {
         return 0;
       }
       var colQta = $scope.col.qta;
-      return $scope.model.rows.reduce(function (a, b) {
+      return $scope.model.rows.reduce(function(a, b) {
         return a + b[colQta];
       }, 0);
     };
-  };
-  Ctrl.EditMovimentoMagazzino.$inject = ['$scope', 'SessionInfo', '$routeParams', 'Downloads', 'codici', 'Azienda', 'Doc', 'Listino'];
+  }]);
 
-  Ctrl.MovimentoMagazzino = function ($scope, SessionInfo, codici, Azienda, MovimentoMagazzino, session) {
+  $controllerProvider.register('MovimentoMagazzino', ['$scope', 'SessionInfo', 'codici', 'Azienda', 'MovimentoMagazzino', 'session', function($scope, SessionInfo, codici, Azienda, MovimentoMagazzino, session) {
     SessionInfo.resetFlash();
 
     $scope.aziende = Azienda.all();
-    session.then(function (session) {
-      $scope.aziende.then(function (aziende) {
+    session.then(function(session) {
+      $scope.aziende.then(function(aziende) {
         var username = session.userCtx.name;
         if (aziende.hasOwnProperty(username)) {
           $scope.pendenti = MovimentoMagazzino.pendenti(username);
@@ -195,15 +191,14 @@ var Ctrl = {};
     $scope.form = { anno: parseInt(codici.newYyyyMmDdDate().substring(0, 4), 10) };
     setDefaultMagazzino1($scope, session, codici);
 
-    $scope.find = function () {
+    $scope.find = function() {
       $scope.results = MovimentoMagazzino.search($scope.form);
     };
 
     $scope.nomeAzienda = Azienda.nomi();
-  };
-  Ctrl.MovimentoMagazzino.$inject = ['$scope', 'SessionInfo', 'codici', 'Azienda', 'MovimentoMagazzino', 'session'];
+  }]);
 
-  Ctrl.RicercaBollaAs400 = function ($scope, As400, SessionInfo, MovimentoMagazzino, $location, codici, Azienda, Doc) {
+  $controllerProvider.register('RicercaBollaAs400', ['$scope', 'As400', 'SessionInfo', 'MovimentoMagazzino', '$location', 'codici', 'Azienda', 'Doc', function($scope, As400, SessionInfo, MovimentoMagazzino, $location, codici, Azienda, Doc) {
     SessionInfo.resetFlash();
 
     Doc.load(['TaglieScalarini', 'ModelliEScalarini']);
@@ -219,7 +214,7 @@ var Ctrl = {};
         magazzino1: r0[col.codiceCliente],
         data: codici.newYyyyMmDdDate()
       };
-      Doc.find('CausaliAs400').then(function (causaliAs400) {
+      Doc.find('CausaliAs400').then(function(causaliAs400) {
         var causaleAs400 = causaliAs400[r0[col.tipoMagazzino]][r0[col.causale]],
           causale = codici.findCausaleMovimentoMagazzino(causaleAs400[0], causaleAs400[1]);
         $scope.movimentoMagazzino.causale1 = causale || $scope.causali[0];
@@ -227,7 +222,7 @@ var Ctrl = {};
     }
 
     function cercaBollaAs400() {
-      As400.bolla($scope.intestazione).success(function (dati) {
+      As400.bolla($scope.intestazione).success(function(dati) {
         $scope.bollaAs400 = dati;
         setMovimentoMagazzino();
       });
@@ -238,7 +233,7 @@ var Ctrl = {};
       return codici.idBollaAs400(d.data, d.numero, d.enteNumerazione, d.codiceNumerazione);
     }
 
-    $scope.fetch = function () {
+    $scope.fetch = function() {
       /*
        * Save id here to be sure that the data in `bolla`
        * does match the data in `intestazione`.
@@ -246,7 +241,7 @@ var Ctrl = {};
        */
       $scope.id = buildId();
 
-      MovimentoMagazzino.findByRiferimento($scope.id).then(function (resp) {
+      MovimentoMagazzino.findByRiferimento($scope.id).then(function(resp) {
         var movimento = resp.rows[0];
         if (!movimento) {
           return cercaBollaAs400();
@@ -266,7 +261,7 @@ var Ctrl = {};
         taglie = taglieScalarini.taglie,
         listeDescrizioni = taglieScalarini.listeDescrizioni,
         rows = [],
-        ok = $scope.bollaAs400.rows.every(function (row) {
+        ok = $scope.bollaAs400.rows.every(function(row) {
           var descrizioneTaglia, stagione, modello, descrizione, qta, i, barcode,
             scalarino = parseInt(row[col.scalarino], 10),
             ld = listeDescrizioni[scalarino],
@@ -294,9 +289,9 @@ var Ctrl = {};
       }
     }
 
-    $scope.save = function () {
-      Doc.find('TaglieScalarini').then(function (taglieScalarini) {
-        Doc.find('ModelliEScalarini').then(function (modelliEScalarini) {
+    $scope.save = function() {
+      Doc.find('TaglieScalarini').then(function(taglieScalarini) {
+        Doc.find('ModelliEScalarini').then(function(modelliEScalarini) {
           var rows = buildRows(taglieScalarini, modelliEScalarini);
           if (!rows) {
             return SessionInfo.error('Righe non valide');
@@ -305,10 +300,9 @@ var Ctrl = {};
         });
       });
     };
-  };
-  Ctrl.RicercaBollaAs400.$inject = ['$scope', 'As400', 'SessionInfo', 'MovimentoMagazzino', '$location', 'codici', 'Azienda', 'Doc'];
+  }]);
 
-  Ctrl.RicercaArticoli = function ($scope, SessionInfo, Downloads, codici, session, Azienda, Doc, Listino) {
+  $controllerProvider.register('RicercaArticoli', ['$scope', 'SessionInfo', 'Downloads', 'codici', 'session', 'Azienda', 'Doc', 'Listino', function($scope, SessionInfo, Downloads, codici, session, Azienda, Doc, Listino) {
     SessionInfo.resetFlash();
 
     Doc.load(['TaglieScalarini', 'ModelliEScalarini', 'Giacenze']);
@@ -317,14 +311,14 @@ var Ctrl = {};
     var selectedRow = 0;
 
     $scope.aziendeSelezionate = [];
-    session.then(function (session) {
-      Azienda.all().then(function (aziende) {
+    session.then(function(session) {
+      Azienda.all().then(function(aziende) {
         var tipiAzienda = {}, comuni = {}, province = {}, nazioni = {}, username = session.userCtx.name, codiciAzienda = Object.keys(aziende);
         $scope.aziende = aziende;
         if (aziende.hasOwnProperty(username)) {
           $scope.aziendeSelezionate = [username];
         }
-        codiciAzienda.forEach(function (codiceAzienda) {
+        codiciAzienda.forEach(function(codiceAzienda) {
           var azienda = aziende[codiceAzienda].doc;
           tipiAzienda[azienda.tipo] = true;
           if (azienda.comune) {
@@ -344,15 +338,15 @@ var Ctrl = {};
         $scope.quickSearch = {};
         $scope.$watch('quickSearch', function(qs) {
           var fields = Object.keys(qs),
-            emptyQS = fields.every(function (field) {
+            emptyQS = fields.every(function(field) {
               return !qs[field];
             });
           if (emptyQS) {
             $scope.aziendeSelezionate = aziende.hasOwnProperty(username) ? [username] : codiciAzienda;
           } else {
-            $scope.aziendeSelezionate = codiciAzienda.filter(function (codiceAzienda) {
+            $scope.aziendeSelezionate = codiciAzienda.filter(function(codiceAzienda) {
               var azienda = aziende[codiceAzienda].doc;
-              return fields.every(function (field) {
+              return fields.every(function(field) {
                 var qsf = qs[field];
                 return !qsf || azienda[field] === qsf;
               });
@@ -364,13 +358,13 @@ var Ctrl = {};
     $scope.filtrate = [];
     $scope.limiteRisultati = 50;
 
-    $scope.togglePhotoType = function () {
+    $scope.togglePhotoType = function() {
       $scope.photoType = $scope.photoType === 'foto' ? 'tessuto' : 'foto';
       $scope.showPhoto(selectedRow);
     };
     $scope.photoType = 'foto';
 
-    $scope.showPhoto = function (index) {
+    $scope.showPhoto = function(index) {
       if (index >= $scope.filtrate.length || index < 0) {
         return $scope.hidePhoto();
       }
@@ -400,20 +394,20 @@ var Ctrl = {};
       $scope.photo = photo;
     };
 
-    $scope.isSelectedRow = function (index) {
+    $scope.isSelectedRow = function(index) {
       return $scope.photo && selectedRow === index ? 'selected' : '';
     };
 
-    $scope.hidePhoto = function () {
+    $scope.hidePhoto = function() {
       selectedRow = 0;
       delete $scope.photo;
     };
 
-    $scope.prevPhoto = function () {
+    $scope.prevPhoto = function() {
       $scope.showPhoto((selectedRow || $scope.filtrate.length) - 1);
     };
 
-    $scope.nextPhoto = function () {
+    $scope.nextPhoto = function() {
       $scope.showPhoto((selectedRow + 1) % ($scope.filtrate.length || 1));
     };
 
@@ -433,7 +427,7 @@ var Ctrl = {};
     }
 
     function filtraGiacenza(taglieScalarini, modelliEScalarini, giacenze, listini) {
-      Azienda.nomi().then(function (nomeAzienda) {
+      Azienda.nomi().then(function(nomeAzienda) {
         var giacenzeRiga, taglia, qta, riga, versioneListino, prezzi, colPrezzi, azienda,
           scalarino, taglie = [], nn = '--', TAGLIE_PER_SCALARINO = 12,
           rows = giacenze.rows, r, i, ii,
@@ -524,10 +518,10 @@ var Ctrl = {};
     }
 
     function withAllDocs(cb) {
-      Doc.find('TaglieScalarini').then(function (taglieScalarini) {
-        Doc.find('ModelliEScalarini').then(function (modelliEScalarini) {
-          Doc.find('Giacenze').then(function (giacenze) {
-            Listino.all().then(function (listini) {
+      Doc.find('TaglieScalarini').then(function(taglieScalarini) {
+        Doc.find('ModelliEScalarini').then(function(modelliEScalarini) {
+          Doc.find('Giacenze').then(function(giacenze) {
+            Listino.all().then(function(listini) {
               cb(taglieScalarini, modelliEScalarini, giacenze, listini);
             });
           });
@@ -535,7 +529,7 @@ var Ctrl = {};
       });
     }
 
-    $scope.filtraGiacenza = function () {
+    $scope.filtraGiacenza = function() {
       withAllDocs(filtraGiacenza);
     };
 
@@ -599,23 +593,22 @@ var Ctrl = {};
       return labels;
     }
 
-    $scope.prepareDownloads = function () {
-      withAllDocs(function (taglieScalarini, modelliEScalarini, giacenze, listini) {
+    $scope.prepareDownloads = function() {
+      withAllDocs(function(taglieScalarini, modelliEScalarini, giacenze, listini) {
         Downloads.prepare(toLabels(taglieScalarini, modelliEScalarini, giacenze, listini), 'etichette');
       });
     };
-  };
-  Ctrl.RicercaArticoli.$inject = ['$scope', 'SessionInfo', 'Downloads', 'codici', 'session', 'Azienda', 'Doc', 'Listino'];
+  }]);
 
-  Ctrl.Azienda = function ($scope, $routeParams, SessionInfo, codici, validate, Azienda, Doc) {
+  $controllerProvider.register('Azienda', ['$scope', '$routeParams', 'SessionInfo', 'codici', 'validate', 'Azienda', 'Doc', function($scope, $routeParams, SessionInfo, codici, validate, Azienda, Doc) {
     SessionInfo.resetFlash();
 
     if ($routeParams.codice) {
-      Doc.find(codici.idAzienda($routeParams.codice)).then(function (azienda) {
+      Doc.find(codici.idAzienda($routeParams.codice)).then(function(azienda) {
         $scope.azienda = azienda;
       });
     }
-    Azienda.all().then(function (aziende) {
+    Azienda.all().then(function(aziende) {
       $scope.aziende = aziende;
     });
     $scope.azienda = {};
@@ -649,17 +642,17 @@ var Ctrl = {};
           prezzi: {},
           versioneBase: '1'
         };
-      Doc.save(listino).then(function () {
+      Doc.save(listino).then(function() {
         SessionInfo.goTo(azienda._id);
       });
     }
 
     //FIXME i contatti non vengono salvati.
-    $scope.save = function () {
+    $scope.save = function() {
       // TODO use $validate event
       if (checkUpdate($scope.aziende, $scope.azienda)) {
         var isNew = !getOldAziendaDocument($scope.aziende, $scope.azienda._id);
-        Doc.save($scope.azienda).then(function (azienda) {
+        Doc.save($scope.azienda).then(function(azienda) {
           $scope.azienda = azienda;
           aggiornaAzienda($scope.aziende, azienda);
           SessionInfo.notice('Salvato');
@@ -669,10 +662,9 @@ var Ctrl = {};
         });
       }
     };
-  };
-  Ctrl.Azienda.$inject = ['$scope', '$routeParams', 'SessionInfo', 'codici', 'validate', 'Azienda', 'Doc'];
+  }]);
 
-  Ctrl.Listino = function ($scope, $routeParams, SessionInfo, $location, codici, Doc) {
+  $controllerProvider.register('Listino', ['$scope', '$routeParams', 'SessionInfo', '$location', 'codici', 'Doc', function($scope, $routeParams, SessionInfo, $location, codici, Doc) {
     SessionInfo.resetFlash();
 
     var id = $routeParams.codice ? codici.idListino($routeParams.codice) : null;
@@ -681,7 +673,7 @@ var Ctrl = {};
       Doc.load([id]);
     }
 
-    $scope.fetch = function () {
+    $scope.fetch = function() {
       $location.path(codici.idListino($scope.versione));
     };
 
@@ -689,8 +681,8 @@ var Ctrl = {};
       return new RegExp('^' + codici.dotPad(val, len) + '$');
     }
 
-    $scope.findRows = function () {
-      Doc.find(id).then(function (listino) {
+    $scope.findRows = function() {
+      Doc.find(id).then(function(listino) {
         if ($scope.stagione || $scope.modello || $scope.articolo) {
           var filtroStagione = getFiltro($scope.stagione, codici.LEN_STAGIONE),
             filtroModello = getFiltro($scope.modello, codici.LEN_MODELLO),
@@ -700,10 +692,10 @@ var Ctrl = {};
       });
     };
 
-    $scope.save = function () {
-      Doc.find(id).then(function (listino) {
+    $scope.save = function() {
+      Doc.find(id).then(function(listino) {
         var ps = listino.prezzi,
-          ok = $scope.prezzi.every(function (r) {
+          ok = $scope.prezzi.every(function(r) {
             var stagione = r[0], modello = r[1], articolo = r[2], vals = r[3];
             return (codici.isCode(stagione, codici.LEN_STAGIONE) &&
                 codici.isCode(modello, codici.LEN_MODELLO) &&
@@ -715,7 +707,7 @@ var Ctrl = {};
         if (!ok) {
           return SessionInfo.error('Valori non validi');
         }
-        $scope.prezzi.forEach(function (r) {
+        $scope.prezzi.forEach(function(r) {
           var stagione = r[0], modello = r[1], articolo = r[2], vals = r[3],
             // FIXME write tests (I think it's broken): it removes offerta if empty.
             v = vals[4] ? vals : vals.slice(0, 4);
@@ -725,15 +717,14 @@ var Ctrl = {};
         if (!listino.versioneBase) {
           delete listino.versioneBase;
         }
-        Doc.save(listino).then(function (listino) {
+        Doc.save(listino).then(function(listino) {
           SessionInfo.notice('Salvato ' + listino._id);
         });
       });
     };
-  };
-  Ctrl.Listino.$inject = ['$scope', '$routeParams', 'SessionInfo', '$location', 'codici', 'Doc'];
+  }]);
 
-  Ctrl.Foto = function($scope, SessionInfo, couchdb, Doc, $routeParams) {
+  $controllerProvider.register('Foto', ['$scope', 'SessionInfo', 'couchdb', 'Doc', '$routeParams', function($scope, SessionInfo, couchdb, Doc, $routeParams) {
     SessionInfo.resetFlash();
     $scope.results = [];
     $scope.costi = {};
@@ -746,7 +737,7 @@ var Ctrl = {};
     if ($routeParams.id) {
       $scope.idFoto = 'Foto' + $routeParams.id;
       Doc.find($scope.idFoto).then(function(foto) {
-        Doc.find('ModelliEScalarini').then(function (modelliEScalarini) {
+        Doc.find('ModelliEScalarini').then(function(modelliEScalarini) {
           var ms = modelliEScalarini.lista;
           $scope.results = foto.articoli.map(function(articolo) {
             var desscal = ms[articolo.stagione + articolo.modello];
@@ -754,7 +745,7 @@ var Ctrl = {};
             return articolo;
           });
           var numCosti = 0;
-          $scope.results.forEach(function (r) {
+          $scope.results.forEach(function(r) {
             r.sma = [r.stagione, r.modello, r.articolo].join('');
             Doc.find('COSTO', couchdb.viewPath('costo?key="' + r.sma + '"')).then(function(costo) {
               var row = costo.rows[0];
@@ -777,11 +768,5 @@ var Ctrl = {};
       $scope.image = base ? base + '.jpg' : null;
       $scope.imageOrig = base ? base + '_orig.jpg' : null;
     }
-  };
-  Ctrl.Foto.$inject = ['$scope', 'SessionInfo', 'couchdb', 'Doc', '$routeParams'];
-}());
-
-//TODO used only for testing
-angular.module('app.controllers', [], ['$provide', function ($provide) {
-  $provide.value('controllers', Ctrl);
+  }]);
 }]);

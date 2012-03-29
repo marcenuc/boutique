@@ -18,7 +18,7 @@
     <ul><li ng-repeat="contatto in azienda.contatti"><select ng-model="contatto.tipo"><option>Telefono<option>Fax<option>Mail</select><input ng-model-instant ng-model="contatto.valore" required size=30> [&nbsp;<a href="" ng-click="azienda.contatti.$remove(contatto)">X</a>&nbsp;]</li></ul>
 </div>
 <hr>
-<div><input type=submit value=Salva ng-disabled="{{formAzienda.$invalid}}"> [&nbsp;<a href="#/Azienda">Nuova</a>&nbsp;]</div>
+<div><input type=submit value=Salva ng-disabled="formAzienda.$invalid"> [&nbsp;<a href="#/Azienda">Nuova</a>&nbsp;]</div>
 </fieldset>
 </form>
 

@@ -25,7 +25,7 @@ angular.module('app.directives', [], ['$compileProvider', '$filterProvider', fun
         ctrl.$formatters.push(formatBarcodeAs400);
 
         ctrl.$parsers.unshift(function(viewValue) {
-          var cleanedValue = viewValue.replace(/\s/g, ''),
+          var cleanedValue = viewValue && viewValue.replace(/\s/g, ''),
             isValid = cleanedValue === '' || codici.isBarcodeAs400(cleanedValue);
           ctrl.$setValidity('barcodeAs400', isValid);
           if (isValid) return cleanedValue;
@@ -61,7 +61,7 @@ angular.module('app.directives', [], ['$compileProvider', '$filterProvider', fun
           if (codice) return codice;
         });
         ctrl.$parsers.push(function(viewValue) {
-          var parsedVal = (viewValue || '').replace(/ +/g, '_'),
+          var parsedVal = viewValue && viewValue.replace(/ +/g, '_'),
             isValid = parsedVal.length > 0;
           ctrl.$setValidity('codiceAzienda', isValid);
           if (isValid) return 'Foto_' + parsedVal;
@@ -101,7 +101,7 @@ angular.module('app.directives', [], ['$compileProvider', '$filterProvider', fun
           function pad(str, len) {
             return str + new Array(len + 1 - str.length).join('1');
           }
-          var cleanedValue = viewValue.replace(/\s/g, ''),
+          var cleanedValue = viewValue && viewValue.replace(/\s/g, ''),
             isValid = codici.isBarcodeAs400(pad(cleanedValue, 18));
           ctrl.$setValidity('smact', isValid);
           if (isValid) return cleanedValue;
@@ -115,7 +115,7 @@ angular.module('app.directives', [], ['$compileProvider', '$filterProvider', fun
       require: 'ngModel',
       link: function(scope, element, attr, ctrl) {
         ctrl.$parsers.push(function(viewValue) {
-          var cleanedValue = viewValue.replace(/\s/g, ''),
+          var cleanedValue = viewValue && viewValue.replace(/\s/g, ''),
             isValid = codici.isYyyyMmDdDate(cleanedValue);
           ctrl.$setValidity('data', isValid);
           if (isValid) return cleanedValue;

@@ -76,11 +76,10 @@ describe('Controller', function() {
     doSpy('$location', ['path']);
   }));
 
-  var $scope, $controller, controllers, MovimentoMagazzino, Downloads, SessionInfo, $location, $httpBackend, couchdb;
-  beforeEach(inject(function($rootScope, _$controller_, _controllers_, _MovimentoMagazzino_, _Downloads_, _SessionInfo_, _$location_, _$httpBackend_, _couchdb_) {
+  var $scope, $controller, MovimentoMagazzino, Downloads, SessionInfo, $location, $httpBackend, couchdb;
+  beforeEach(inject(function($rootScope, _$controller_, _MovimentoMagazzino_, _Downloads_, _SessionInfo_, _$location_, _$httpBackend_, _couchdb_) {
     $scope = $rootScope;
     $controller = _$controller_;
-    controllers = _controllers_;
     MovimentoMagazzino = _MovimentoMagazzino_;
     Downloads = _Downloads_;
     SessionInfo = _SessionInfo_;
@@ -123,7 +122,7 @@ describe('Controller', function() {
       // FAKE CALL for afterEach: this is the only exception...
       SessionInfo.resetFlash();
       // ensure $scope is properly initialized
-      $controller(controllers.Header, { '$scope': $scope });
+      $controller('Header', { '$scope': $scope });
       // it should put SessionInfo in $scope
       expect($scope.SessionInfo).toBe(SessionInfo);
       // it should put session in $scope
@@ -137,7 +136,7 @@ describe('Controller', function() {
       expectSession();
       expectGET('aziende');
       // describe $scope initialization
-      $controller(controllers.NewMovimentoMagazzino, { '$scope': $scope });
+      $controller('NewMovimentoMagazzino', { '$scope': $scope });
       // it should put aziende in $scope
       expect(typeof $scope.aziende.then).toBe('function');
       // it should put causali in $scope
@@ -216,7 +215,7 @@ describe('Controller', function() {
       // describe scope initialization
       // it should fetch movimento magazzino
       expectGET(id);
-      $controller(controllers.EditMovimentoMagazzino, { '$scope': $scope, '$routeParams': $routeParams });
+      $controller('EditMovimentoMagazzino', { '$scope': $scope, '$routeParams': $routeParams });
       // it preloads dependencies
       expect(Doc.load).toHaveBeenCalledWith(['TaglieScalarini', 'ModelliEScalarini']);
       // it preloads listini
@@ -290,7 +289,7 @@ describe('Controller', function() {
       MovimentoMagazzino.pendenti.andReturn(pendenti);
       spyOn(codici, 'newYyyyMmDdDate').andReturn('20111231');
       // ensure $scope is properly initialized
-      $controller(controllers.MovimentoMagazzino, { '$scope': $scope });
+      $controller('MovimentoMagazzino', { '$scope': $scope });
       $httpBackend.flush();
       // it should put movimenti pendenti in $scope.pendenti
       expect($scope.pendenti).toBe(pendenti);
@@ -329,7 +328,7 @@ describe('Controller', function() {
       spyOn(Doc, 'load').andReturn();
       expectGET('aziende');
       // ensure $scope is properly initialized
-      $controller(controllers.RicercaBollaAs400, { '$scope': $scope });
+      $controller('RicercaBollaAs400', { '$scope': $scope });
       // it should preload needed docs
       expect(Doc.load).toHaveBeenCalledWith(['TaglieScalarini', 'ModelliEScalarini']);
       // it should put aziende in $scope
@@ -422,7 +421,7 @@ describe('Controller', function() {
       spyOn(Listino, 'load');
       expectSession();
       expectGET('aziende');
-      $controller(controllers.RicercaArticoli, { '$scope': $scope });
+      $controller('RicercaArticoli', { '$scope': $scope });
       // it preloads giacenze and related docs
       expect(Doc.load).toHaveBeenCalledWith(['TaglieScalarini', 'ModelliEScalarini', 'Giacenze']);
       // it preloads listini
@@ -534,7 +533,7 @@ describe('Controller', function() {
       it('should initialize $scope', inject(function(codici) {
         expectSession('boutique');
         expectGET('aziende');
-        $controller(controllers.Azienda, { '$scope': $scope });
+        $controller('Azienda', { '$scope': $scope });
         $httpBackend.flush();
         // it should not put azienda in $scope
         expect($scope.azienda).toEqual({});
@@ -568,7 +567,7 @@ describe('Controller', function() {
         expectSession('boutique');
         expectGET('Azienda_010101');
         expectGET('aziende');
-        $controller(controllers.Azienda, { '$scope': $scope, $routeParams: { codice: '010101' } });
+        $controller('Azienda', { '$scope': $scope, $routeParams: { codice: '010101' } });
         $httpBackend.flush();
         // it should put azienda in $scope
         expect($scope.azienda).toEqual(get('Azienda_010101'));
@@ -598,7 +597,7 @@ describe('Controller', function() {
     it('should initialize $scope', inject(function(Doc) {
       expectGET('Listino_1');
       spyOn(Doc, 'load');
-      $controller(controllers.Listino, { '$scope': $scope, $routeParams: { codice: '1' } });
+      $controller('Listino', { '$scope': $scope, $routeParams: { codice: '1' } });
       // it should preload listino
       expect(Doc.load).toHaveBeenCalledWith(['Listino_1']);
 
@@ -624,7 +623,7 @@ describe('Controller', function() {
   describe('Foto', function() {
     describe('without id', function() {
       it('should setup empty $scope', function() {
-        $controller(controllers.Foto, { '$scope': $scope });
+        $controller('Foto', { '$scope': $scope });
 
         // it should not set idFoto
         expect($scope.idFoto).toBeUndefined();
@@ -646,7 +645,7 @@ describe('Controller', function() {
     describe('with id _9_9_9 (invalid id)', function() {
       it('should show error message', function() {
         expectGET('Foto_9_9_9', 404);
-        $controller(controllers.Foto, { '$scope': $scope, $routeParams: { id: '_9_9_9' } });
+        $controller('Foto', { '$scope': $scope, $routeParams: { id: '_9_9_9' } });
         $httpBackend.flush();
         expect(SessionInfo.error).toHaveBeenCalledWith('Error 404 not_found on Foto_9_9_9: missing');
       });
@@ -659,7 +658,7 @@ describe('Controller', function() {
       it('should initialize $scope with data from foto', function() {
         // it should fetch the foto
         expectGET(idFoto);
-        $controller(controllers.Foto, { '$scope': $scope, $routeParams: { id: '_1_0_1' } });
+        $controller('Foto', { '$scope': $scope, $routeParams: { id: '_1_0_1' } });
 
         // it should set idFoto
         expect($scope.idFoto).toBe(idFoto);
