@@ -160,11 +160,14 @@ describe('Boutique', function() {
     });
   });
 
-  describe('/Catalogo', function() {
+  describe('/Foto', function() {
     it('should find foto by rivista, pagina, posizione', function() {
-      clickMenu('Catalogo');
+      clickMenu('Foto');
+      expect(element('div.foto').css('display')).toBe('none');
       input('idFoto').enter('1  0 1');
       click('Cerca');
+      expect(browser().location().path()).toBe('/Foto_1_0_1');
+      expect(element('div.foto').css('display')).toBe('block');
       var r = using('table.results').repeater('tbody tr', 'row in results');
       expect(r.count()).toBe(2);
       expect(r.row(0)).toEqual(['1', '125', '98021', '1881', '8000', 'SCARPA CLASSICA FIBBIA', '123,45']);

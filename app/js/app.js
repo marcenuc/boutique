@@ -13,7 +13,7 @@ angular.module('app',
     $routeProvider.when('/MovimentoMagazzino_:codice', { template: 'partials/edit-movimento-magazzino.html', controller: Ctrl.EditMovimentoMagazzino });
     $routeProvider.when('/Listino', { template: 'partials/listino.html', controller: Ctrl.Listino });
     $routeProvider.when('/Listino_:codice', { template: 'partials/edit-listino.html', controller: Ctrl.Listino });
-    $routeProvider.when('/Catalogo', { template: 'partials/catalogo.html', controller: Ctrl.Catalogo });
+    $routeProvider.when('/Foto:id', { template: 'partials/foto.html', controller: Ctrl.Foto });
     $routeProvider.otherwise({ redirectTo: '/' });
   }])
   .run(['$window', '$rootScope', function($window, $rootScope) {

@@ -733,20 +733,18 @@ var Ctrl = {};
   };
   Ctrl.Listino.$inject = ['$scope', '$routeParams', 'SessionInfo', '$location', 'codici', 'Doc'];
 
-  Ctrl.Catalogo = function($scope, SessionInfo, couchdb, Doc) {
+  Ctrl.Foto = function($scope, SessionInfo, couchdb, Doc, $routeParams) {
     SessionInfo.resetFlash();
-
-    Doc.load(['ModelliEScalarini']);
-
-    function reset() {
-      $scope.results = [];
-      $scope.costi = {};
-      $scope.total = '';
-    }
-    reset();
+    $scope.results = [];
+    $scope.costi = {};
+    $scope.total = '';
 
     $scope.find = function() {
-      reset();
+      SessionInfo.goTo($scope.idFoto);
+    };
+
+    if ($routeParams.id) {
+      $scope.idFoto = 'Foto' + $routeParams.id;
       Doc.find($scope.idFoto).then(function(foto) {
         Doc.find('ModelliEScalarini').then(function (modelliEScalarini) {
           var ms = modelliEScalarini.lista;
@@ -774,13 +772,13 @@ var Ctrl = {};
           });
         });
       });
-      var base, m = /^Foto_(\d+)_(\d+)_\d+$/.exec($scope.idFoto);
-      if (m) base = '../catalogo/' + m[1] + '_' + m[2];
-      $scope.image = m ? base + '.jpg' : null;
-      $scope.imageOrig = m ? base + '_orig.jpg' : null;
-    };
+      var m = /^Foto_(\d+)_(\d+)_\d+$/.exec($scope.idFoto),
+        base = m ? '../catalogo/' + m[1] + '_' + m[2] : null;
+      $scope.image = base ? base + '.jpg' : null;
+      $scope.imageOrig = base ? base + '_orig.jpg' : null;
+    }
   };
-  Ctrl.Catalogo.$inject = ['$scope', 'SessionInfo', 'couchdb', 'Doc'];
+  Ctrl.Foto.$inject = ['$scope', 'SessionInfo', 'couchdb', 'Doc', '$routeParams'];
 }());
 
 //TODO used only for testing

@@ -94,11 +94,20 @@ describe('Controller', function() {
   });
 
   var views = ['aziende', 'listini'];
-  function expectGET(id) {
+  var resps = { 404: { error: 'not_found', reason: 'missing' } };
+  function expectGET(id, status, response) {
+    var path;
     if (views.indexOf(id) >= 0) {
-      $httpBackend.expectGET(couchdb.viewPath(id + '?include_docs=true')).respond(JSON.stringify(get('VIEW_' + id.toUpperCase())));
+      path = couchdb.viewPath(id + '?include_docs=true');
+      id = 'VIEW_' + id.toUpperCase();
     } else {
-      $httpBackend.expectGET(couchdb.docPath(id)).respond(JSON.stringify(get(id)));
+      path = couchdb.docPath(id);
+    }
+    var xpct = $httpBackend.expectGET(path);
+    if (status) {
+      xpct.respond(status, response || resps[status] || '');
+    } else {
+      xpct.respond(JSON.stringify(get(id)));
     }
   }
 
@@ -612,29 +621,70 @@ describe('Controller', function() {
     }));
   });
 
-  describe('Catalogo', function() {
-    it('should initialize $scope', inject(function(Doc) {
-      var idFoto = 'Foto_1_0_1';
-      spyOn(Doc, 'load');
-      $controller(controllers.Catalogo, { '$scope': $scope });
-      // it preloads needed docs
-      expect(Doc.load).toHaveBeenCalledWith(['ModelliEScalarini']);
+  describe('Foto', function() {
+    describe('without id', function() {
+      it('should setup empty $scope', function() {
+        $controller(controllers.Foto, { '$scope': $scope });
 
-      $scope.idFoto = idFoto;
-      expectGET(idFoto);
-      expectGET('ModelliEScalarini');
-      $httpBackend.expectGET(couchdb.viewPath('costo?key="125980211881"')).respond(JSON.stringify({ rows: [{ key: "125980211881", value: 12345 }] }));
-      $httpBackend.expectGET(couchdb.viewPath('costo?key="125400212109"')).respond(JSON.stringify({ rows: [{ key: "125400212109", value: 3121 }] }));
-      $scope.find();
-      $httpBackend.flush();
-      // it should put articoli in photo in results
-      expect($scope.results).toEqual([
-        { stagione: '125', modello: '98021', articolo: '1881', colore: '8000', sma: '125980211881', descrizione: 'SCARPA CLASSICA FIBBIA' },
-        { stagione: '125', modello: '40021', articolo: '2109', colore: '5500', sma: '125400212109', descrizione: 'CAMICIA CLASSICA' }
-      ]);
-      // it should put image links in $scope
-      expect($scope.image).toBe('../catalogo/1_0.jpg');
-      expect($scope.imageOrig).toBe('../catalogo/1_0_orig.jpg');
-    }));
+        // it should not set idFoto
+        expect($scope.idFoto).toBeUndefined();
+        // it should set empty results
+        expect($scope.results).toEqual([]);
+        // it should set empty costs
+        expect($scope.costi).toEqual({});
+        // it should set empty total
+        expect($scope.total).toBe('');
+
+        var idFoto = 'Foto_1_0_1';
+        $scope.idFoto = idFoto;
+        $scope.find();
+        // it should go to foto's page
+        expect(SessionInfo.goTo).toHaveBeenCalledWith(idFoto);
+      });
+    });
+
+    describe('with id _9_9_9 (invalid id)', function() {
+      it('should show error message', function() {
+        expectGET('Foto_9_9_9', 404);
+        $controller(controllers.Foto, { '$scope': $scope, $routeParams: { id: '_9_9_9' } });
+        $httpBackend.flush();
+        expect(SessionInfo.error).toHaveBeenCalledWith('Error 404 not_found on Foto_9_9_9: missing');
+      });
+    });
+
+    describe('with id _1_0_1 (valid id)', function() {
+      var idFoto;
+      beforeEach(function() { idFoto = 'Foto_1_0_1'; });
+
+      it('should initialize $scope with data from foto', function() {
+        // it should fetch the foto
+        expectGET(idFoto);
+        $controller(controllers.Foto, { '$scope': $scope, $routeParams: { id: '_1_0_1' } });
+
+        // it should set idFoto
+        expect($scope.idFoto).toBe(idFoto);
+        // it should set empty results
+        expect($scope.results).toEqual([]);
+        // it should set empty costs
+        expect($scope.costi).toEqual({});
+        // it should set empty total
+        expect($scope.total).toBe('');
+
+        // it should fetch descriptions
+        expectGET('ModelliEScalarini');
+        // it should fetch costs
+        $httpBackend.expectGET(couchdb.viewPath('costo?key="125980211881"')).respond(JSON.stringify({ rows: [{ key: "125980211881", value: 12345 }] }));
+        $httpBackend.expectGET(couchdb.viewPath('costo?key="125400212109"')).respond(JSON.stringify({ rows: [{ key: "125400212109", value: 3121 }] }));
+        $httpBackend.flush();
+        // it should put articoli in photo in results
+        expect($scope.results).toEqual([
+          { stagione: '125', modello: '98021', articolo: '1881', colore: '8000', sma: '125980211881', descrizione: 'SCARPA CLASSICA FIBBIA' },
+          { stagione: '125', modello: '40021', articolo: '2109', colore: '5500', sma: '125400212109', descrizione: 'CAMICIA CLASSICA' }
+        ]);
+        // it should put image links in $scope
+        expect($scope.image).toBe('../catalogo/1_0.jpg');
+        expect($scope.imageOrig).toBe('../catalogo/1_0_orig.jpg');
+      });
+    });
   });
 });
