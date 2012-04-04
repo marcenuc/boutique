@@ -1,9 +1,9 @@
 <form ng-submit="fetch()" name=ricercaBollaAs400>
 <fieldset><legend>Ricerca bolla AS/400</legend>
-<label>Data (AAAAMMGG):<input ng-model-instant ng-model="intestazione.data" size=8 maxlength=8 bq-data required></label>
-<label>Numero:<input ng-model-instant ng-model="intestazione.numero" size=8 type=number min=1 required></label>
-<label>Ente numerazione:<input ng-model-instant ng-model="intestazione.enteNumerazione" size=2 required></label>
-<label>Codice numerazione:<input ng-model-instant ng-model="intestazione.codiceNumerazione" size=2 required></label>
+<label>Data (AAAAMMGG):<input ng-model="intestazione.data" size=8 maxlength=8 bq-data required></label>
+<label>Numero:<input ng-model="intestazione.numero" size=8 type=number min=1 required></label>
+<label>Ente numerazione:<input ng-model="intestazione.enteNumerazione" size=2 required></label>
+<label>Codice numerazione:<input ng-model="intestazione.codiceNumerazione" size=2 required></label>
 <input type=submit value=Cerca ng-disabled="ricercaBollaAs400.$invalid">
 </fieldset>
 </form>
@@ -22,7 +22,7 @@
    Causale2: <b>{{causali[movimentoMagazzino.causale1.causale2].descrizione}}</b></span><p>
  <label>Magazzino1: <select ng-model="movimentoMagazzino.magazzino1" ng-options="c as r.value for (c, r) in aziende" required><option></select></label>
  <label>Magazzino2: <select ng-model="movimentoMagazzino.magazzino2" ng-options="c as r.value for (c, r) in aziende" ng-required="movimentoMagazzino.causale1.causale2"><option></select></label><p>
- <label>Data (AAAAMMGG): <input ng-model-instant ng-model="movimentoMagazzino.data" size=8 maxlength=8 bq-data required></label><p>
+ <label>Data (AAAAMMGG): <input ng-model="movimentoMagazzino.data" size=8 maxlength=8 bq-data required></label><p>
  <input type=submit value="Carica come movimento magazzino" ng-disabled="caricamentoMovimentoMagazzino.$invalid">
 </fieldset>
 </form>

@@ -1,6 +1,6 @@
 <form ng-submit="find()" name=form>
   <fieldset><legend>Ricerca foto in catalogo</legend>
-    <label>ID foto: <input ng-model-instant bq-id-foto ng-model=idFoto my-focus required></label>
+    <label>ID foto: <input bq-id-foto ng-model=idFoto my-focus required></label>
     <input type=submit value=Cerca ng-disabled="form.$invalid">
   </fieldset>
 </form>

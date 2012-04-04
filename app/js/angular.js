@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.0.0rc4-a1f7f5d4
+ * @license AngularJS v1.0.0rc4-21b77ad5
  * (c) 2010-2012 AngularJS http://angularjs.org
  * License: MIT
  */
@@ -1290,7 +1290,7 @@ function setupModuleLoader(window) {
  * - `codeName` – `{string}` – Code name of the release, such as "jiggling-armfat".
  */
 var version = {
-  full: '1.0.0rc4-a1f7f5d4',    // all of these placeholder strings will be replaced by rake's
+  full: '1.0.0rc4-21b77ad5',    // all of these placeholder strings will be replaced by rake's
   major: 1,    // compile task
   minor: 0,
   dot: 0,
@@ -1374,7 +1374,6 @@ function publishExternalAPI(angular){
             ngModel: ngModelDirective,
             ngList: ngListDirective,
             ngChange: ngChangeDirective,
-            ngModelInstant: ngModelInstantDirective,
             required: requiredDirective,
             ngRequired: requiredDirective,
             ngValue: ngValueDirective
@@ -3740,7 +3739,7 @@ function $CompileProvider($provide) {
      var linkingFns = [],
          directiveLinkingFn, childLinkingFn, directives, attrs, linkingFnFound;
 
-     for(var i = 0, ii = nodeList.length; i < ii; i++) {
+     for(var i = 0; i < nodeList.length; i++) {
        attrs = new Attributes();
 
        // we must always refer to nodeList[i] since the nodes can be replaced underneath us.
@@ -3764,10 +3763,6 @@ function $CompileProvider($provide) {
      return linkingFnFound ? linkingFn : null;
 
      /* nodesetLinkingFn */ function linkingFn(scope, nodeList, rootElement, boundTranscludeFn) {
-       if (linkingFns.length != nodeList.length * 2) {
-         throw Error('Template changed structure!');
-       }
-
        var childLinkingFn, directiveLinkingFn, node, childScope, childTransclusionFn;
 
        for(var i=0, n=0, ii=linkingFns.length; i<ii; n++) {
@@ -5035,7 +5030,7 @@ LocationUrl.prototype = {
       if (paramValue === null) {
         delete this.$$search[search];
       } else {
-        this.$$search[search] = encodeUriQuery(paramValue);
+        this.$$search[search] = paramValue;
       }
     } else {
       this.$$search = isString(search) ? parseKeyValue(search) : search;
@@ -6397,7 +6392,7 @@ function qFactory(nextTick, exceptionHandler) {
       then: function(callback, errback) {
         var result = defer();
         nextTick(function() {
-          result.resolve(errback(reason));
+          result.resolve((errback || defaultErrback)(reason));
         });
         return result.promise;
       }
@@ -8053,13 +8048,23 @@ function htmlSanitizeWriter(buf){
  * @description
  * This is very simple implementation of testing browser's features.
  */
-function $SnifferProvider(){
-  this.$get = ['$window', function($window){
+function $SnifferProvider() {
+  this.$get = ['$window', function($window) {
+    var eventSupport = {};
+
     return {
       history: !!($window.history && $window.history.pushState),
       hashchange: 'onhashchange' in $window &&
                   // IE8 compatible mode lies
-                  (!$window.document.documentMode || $window.document.documentMode > 7)
+                  (!$window.document.documentMode || $window.document.documentMode > 7),
+      hasEvent: function(event) {
+        if (isUndefined(eventSupport[event])) {
+          var divElm = $window.document.createElement('div');
+          eventSupport[event] = 'on' + event in divElm;
+        }
+
+        return eventSupport[event];
+      }
     };
   }];
 }
@@ -10378,13 +10383,21 @@ forEach(['src', 'href'], function(attrName) {
   var normalized = directiveNormalize('ng-' + attrName);
   ngAttributeAliasDirectives[normalized] = function() {
     return {
-      priority: 100,
+      priority: 99, // it needs to run after the attributes are interpolated
       compile: function(tpl, attr) {
         return function(scope, element, attr) {
-          attr.$$observers[attrName] = [];
-          attr.$observe(normalized, function(value) {
+          var value = attr[normalized];
+          if (value == undefined) {
+            // undefined value means that the directive is being interpolated
+            // so just register observer
+            attr.$$observers[attrName] = [];
+            attr.$observe(normalized, function(value) {
+              attr.$set(attrName, value);
+            });
+          } else {
+            // value present means that no interpolation, so copy to native attribute.
             attr.$set(attrName, value);
-          });
+          }
         };
       }
     };
@@ -10460,23 +10473,43 @@ function FormController(element, attrs) {
     if (control.$name && form[control.$name] === control) {
       delete form[control.$name];
     }
-    forEach(errors, cleanupControlErrors, control);
+    forEach(errors, function(queue, validationToken) {
+      form.$setValidity(validationToken, true, control);
+    });
   };
 
   form.$setValidity = function(validationToken, isValid, control) {
-    if (isValid) {
-      cleanupControlErrors(errors[validationToken], validationToken, control);
+    var queue = errors[validationToken];
 
-      if (!invalidCount) {
-        toggleValidCss(isValid);
-        form.$valid = true;
-        form.$invalid = false;
+    if (isValid) {
+      if (queue) {
+        arrayRemove(queue, control);
+        if (!queue.length) {
+          invalidCount--;
+          if (!invalidCount) {
+            toggleValidCss(isValid);
+            form.$valid = true;
+            form.$invalid = false;
+          }
+          errors[validationToken] = false;
+          toggleValidCss(true, validationToken);
+          parentForm.$setValidity(validationToken, true, form);
+        }
       }
+
     } else {
       if (!invalidCount) {
         toggleValidCss(isValid);
       }
-      addControlError(validationToken, control);
+      if (queue) {
+        if (includes(queue, control)) return;
+      } else {
+        errors[validationToken] = queue = [];
+        invalidCount++;
+        toggleValidCss(false, validationToken);
+        parentForm.$setValidity(validationToken, false, form);
+      }
+      queue.push(control);
 
       form.$valid = false;
       form.$invalid = true;
@@ -10489,31 +10522,6 @@ function FormController(element, attrs) {
     form.$pristine = false;
   };
 
-  function cleanupControlErrors(queue, validationToken, control) {
-    if (queue) {
-      control = control || this; // so that we can be used in forEach;
-      arrayRemove(queue, control);
-      if (!queue.length) {
-        invalidCount--;
-        errors[validationToken] = false;
-        toggleValidCss(true, validationToken);
-        parentForm.$setValidity(validationToken, true, form);
-      }
-    }
-  }
-
-  function addControlError(validationToken, control) {
-    var queue = errors[validationToken];
-    if (queue) {
-      if (includes(queue, control)) return;
-    } else {
-      errors[validationToken] = queue = [];
-      invalidCount++;
-      toggleValidCss(false, validationToken);
-      parentForm.$setValidity(validationToken, false, form);
-    }
-    queue.push(control);
-  }
 }
 
 
@@ -11024,12 +11032,43 @@ function isEmpty(value) {
 }
 
 
-function textInputType(scope, element, attr, ctrl) {
-  element.bind('blur', function() {
-    scope.$apply(function() {
-      ctrl.$setViewValue(trim(element.val()));
+function textInputType(scope, element, attr, ctrl, $sniffer, $browser) {
+
+  var listener = function() {
+    var value = trim(element.val());
+
+    if (ctrl.$viewValue !== value) {
+      scope.$apply(function() {
+        ctrl.$setViewValue(value);
+      });
+    }
+  };
+
+  // if the browser does support "input" event, we are fine
+  if ($sniffer.hasEvent('input')) {
+    element.bind('input', listener);
+  } else {
+    var timeout;
+
+    element.bind('keydown', function(event) {
+      var key = event.keyCode;
+
+      // ignore
+      //    command            modifiers                   arrows
+      if (key === 91 || (15 < key && key < 19) || (37 <= key && key <= 40)) return;
+
+      if (!timeout) {
+        timeout = $browser.defer(function() {
+          listener();
+          timeout = null;
+        });
+      }
     });
-  });
+
+    // if user paste into input using mouse, we need "change" event to catch it
+    element.bind('change', listener);
+  }
+
 
   ctrl.$render = function() {
     element.val(isEmpty(ctrl.$viewValue) ? '' : ctrl.$viewValue);
@@ -11105,8 +11144,8 @@ function textInputType(scope, element, attr, ctrl) {
   }
 };
 
-function numberInputType(scope, element, attr, ctrl) {
-  textInputType(scope, element, attr, ctrl);
+function numberInputType(scope, element, attr, ctrl, $sniffer, $browser) {
+  textInputType(scope, element, attr, ctrl, $sniffer, $browser);
 
   ctrl.$parsers.push(function(value) {
     var empty = isEmpty(value);
@@ -11167,8 +11206,8 @@ function numberInputType(scope, element, attr, ctrl) {
   });
 }
 
-function urlInputType(scope, element, attr, ctrl) {
-  textInputType(scope, element, attr, ctrl);
+function urlInputType(scope, element, attr, ctrl, $sniffer, $browser) {
+  textInputType(scope, element, attr, ctrl, $sniffer, $browser);
 
   var urlValidator = function(value) {
     if (isEmpty(value) || URL_REGEXP.test(value)) {
@@ -11184,8 +11223,8 @@ function urlInputType(scope, element, attr, ctrl) {
   ctrl.$parsers.push(urlValidator);
 }
 
-function emailInputType(scope, element, attr, ctrl) {
-  textInputType(scope, element, attr, ctrl);
+function emailInputType(scope, element, attr, ctrl, $sniffer, $browser) {
+  textInputType(scope, element, attr, ctrl, $sniffer, $browser);
 
   var emailValidator = function(value) {
     if (isEmpty(value) || EMAIL_REGEXP.test(value)) {
@@ -11366,13 +11405,14 @@ function checkboxInputType(scope, element, attr, ctrl) {
       </doc:scenario>
     </doc:example>
  */
-var inputDirective = [function() {
+var inputDirective = ['$browser', '$sniffer', function($browser, $sniffer) {
   return {
     restrict: 'E',
     require: '?ngModel',
     link: function(scope, element, attr, ctrl) {
       if (ctrl) {
-        (inputType[lowercase(attr.type)] || inputType.text)(scope, element, attr, ctrl);
+        (inputType[lowercase(attr.type)] || inputType.text)(scope, element, attr, ctrl, $sniffer,
+                                                            $browser);
       }
     }
   };
@@ -11659,69 +11699,6 @@ var ngChangeDirective = valueFn({
     });
   }
 });
-
-
-/**
- * @ngdoc directive
- * @name angular.module.ng.$compileProvider.directive.ng-model-instant
- *
- * @element input
- *
- * @description
- * By default, Angular udpates the model only on `blur` event - when the input looses focus.
- * If you want to update after every key stroke, use `ng-model-instant`.
- *
- * @example
- * <doc:example>
- *   <doc:source>
- *     First name: <input type="text" ng-model="firstName" /><br />
- *     Last name: <input type="text" ng-model="lastName" ng-model-instant /><br />
- *
- *     First name ({{firstName}}) is only updated on `blur` event, but the last name ({{lastName}})
- *     is updated immediately, because of using `ng-model-instant`.
- *   </doc:source>
- *   <doc:scenario>
- *     it('should update first name on blur', function() {
- *       input('firstName').enter('santa', 'blur');
- *       expect(binding('firstName')).toEqual('santa');
- *     });
- *
- *     it('should update last name immediately', function() {
- *       input('lastName').enter('santa', 'keydown');
- *       expect(binding('lastName')).toEqual('santa');
- *     });
- *   </doc:scenario>
- * </doc:example>
- */
-var ngModelInstantDirective = ['$browser', function($browser) {
-  return {
-    require: 'ngModel',
-    link: function(scope, element, attr, ctrl) {
-      var handler = function() {
-        scope.$apply(function() {
-          ctrl.$setViewValue(trim(element.val()));
-        });
-      };
-
-      var timeout;
-      element.bind('keydown', function(event) {
-        var key = event.keyCode;
-
-        //    command            modifiers                   arrows
-        if (key === 91 || (15 < key && key < 19) || (37 <= key && key <= 40)) return;
-
-        if (!timeout) {
-          timeout = $browser.defer(function() {
-            handler();
-            timeout = null;
-          });
-        }
-      });
-
-      element.bind('change input', handler);
-    }
-  };
-}];
 
 
 var requiredDirective = [function() {
@@ -12531,7 +12508,7 @@ var ngSubmitDirective = ngDirective(function(scope, element, attrs) {
 /**
  * @ngdoc directive
  * @name angular.module.ng.$compileProvider.directive.ng-include
- * @restrict EA
+ * @restrict ECA
  *
  * @description
  * Fetches, compiles and includes an external HTML fragment.
@@ -12543,8 +12520,6 @@ var ngSubmitDirective = ngDirective(function(scope, element, attrs) {
  *
  * @param {string} ng-include|src angular expression evaluating to URL. If the source is a string constant,
  *                 make sure you wrap it in quotes, e.g. `src="'myPartialTemplate.html'"`.
- * @param {Scope=} [scope=new_child_scope] optional expression which evaluates to an
- *                 instance of angular.module.ng.$rootScope.Scope to set the HTML fragment to.
  * @param {string=} onload Expression to evaluate when a new partial is loaded.
  *
  * @param {string=} autoscroll Whether `ng-include` should call {@link angular.module.ng.$anchorScroll
@@ -12604,10 +12579,10 @@ var ngSubmitDirective = ngDirective(function(scope, element, attrs) {
 var ngIncludeDirective = ['$http', '$templateCache', '$anchorScroll', '$compile',
                   function($http,   $templateCache,   $anchorScroll,   $compile) {
   return {
-    restrict: 'EA',
+    restrict: 'ECA',
+    terminal: true,
     compile: function(element, attr) {
-      var srcExp = attr.ngInclude  || attr.src,
-          scopeExp = attr.scope || '',
+      var srcExp = attr.ngInclude || attr.src,
           onloadExp = attr.onload || '',
           autoScrollExp = attr.autoscroll;
 
@@ -12615,47 +12590,42 @@ var ngIncludeDirective = ['$http', '$templateCache', '$anchorScroll', '$compile'
         var changeCounter = 0,
             childScope;
 
-        function incrementChange() { changeCounter++;}
-        scope.$watch(srcExp, incrementChange);
-        scope.$watch(function() {
-          var includeScope = scope.$eval(scopeExp);
-          if (includeScope) return includeScope.$id;
-        }, incrementChange);
-        scope.$watch(function() {return changeCounter;}, function(newChangeCounter) {
-           var src = scope.$eval(srcExp),
-               useScope = scope.$eval(scopeExp);
-
-          function clearContent() {
-            // if this callback is still desired
-            if (newChangeCounter === changeCounter) {
-              if (childScope) childScope.$destroy();
-              childScope = null;
-              element.html('');
-            }
+        var clearContent = function() {
+          if (childScope) {
+            childScope.$destroy();
+            childScope = null;
           }
 
-           if (src) {
-             $http.get(src, {cache: $templateCache}).success(function(response) {
-               // if this callback is still desired
-               if (newChangeCounter === changeCounter) {
-                 element.html(response);
-                 if (childScope) childScope.$destroy();
-                 childScope = useScope ? useScope : scope.$new();
-                 $compile(element.contents())(childScope);
-                 if (isDefined(autoScrollExp) && (!autoScrollExp || scope.$eval(autoScrollExp))) {
-                   $anchorScroll();
-                 }
-                 scope.$emit('$includeContentLoaded');
-                 scope.$eval(onloadExp);
-               }
-             }).error(clearContent);
-           } else {
-             clearContent();
-           }
+          element.html('');
+        };
+
+        scope.$watch(srcExp, function(src) {
+          var thisChangeId = ++changeCounter;
+
+          if (src) {
+            $http.get(src, {cache: $templateCache}).success(function(response) {
+              if (thisChangeId !== changeCounter) return;
+
+              if (childScope) childScope.$destroy();
+              childScope = scope.$new();
+
+              element.html(response);
+              $compile(element.contents())(childScope);
+
+              if (isDefined(autoScrollExp) && (!autoScrollExp || scope.$eval(autoScrollExp))) {
+                $anchorScroll();
+              }
+
+              childScope.$emit('$includeContentLoaded');
+              scope.$eval(onloadExp);
+            }).error(function() {
+              if (thisChangeId === changeCounter) clearContent();
+            });
+          } else clearContent();
         });
       };
     }
-  }
+  };
 }];
 
 /**
@@ -13512,42 +13482,44 @@ var ngViewDirective = ['$http', '$templateCache', '$route', '$anchorScroll', '$c
           lastScope,
           onloadExp = attr.onload || '';
 
-      scope.$on('$afterRouteChange', function(event, next, previous) {
-        changeCounter++;
-      });
+      scope.$on('$afterRouteChange', update);
+      update();
 
-      scope.$watch(function() {return changeCounter;}, function(newChangeCounter) {
-        var template = $route.current && $route.current.template;
 
-        function destroyLastScope() {
-          if (lastScope) {
-            lastScope.$destroy();
-            lastScope = null;
-          }
+      function destroyLastScope() {
+        if (lastScope) {
+          lastScope.$destroy();
+          lastScope = null;
         }
+      }
+
+      function update() {
+        var template = $route.current && $route.current.template,
+            thisChangeId = ++changeCounter;
 
         function clearContent() {
           // ignore callback if another route change occured since
-          if (newChangeCounter == changeCounter) {
+          if (thisChangeId === changeCounter) {
             element.html('');
+            destroyLastScope();
           }
-          destroyLastScope();
         }
 
         if (template) {
           $http.get(template, {cache: $templateCache}).success(function(response) {
             // ignore callback if another route change occured since
-            if (newChangeCounter == changeCounter) {
+            if (thisChangeId === changeCounter) {
               element.html(response);
               destroyLastScope();
 
               var link = $compile(element.contents()),
-                  current = $route.current;
+                  current = $route.current,
+                  controller;
 
               lastScope = current.scope = scope.$new();
               if (current.controller) {
-                element.contents().
-                  data('$ngControllerController', $controller(current.controller, {$scope: lastScope}));
+                controller = $controller(current.controller, {$scope: lastScope});
+                element.contents().data('$ngControllerController', controller);
               }
 
               link(lastScope);
@@ -13561,7 +13533,7 @@ var ngViewDirective = ['$http', '$templateCache', '$route', '$anchorScroll', '$c
         } else {
           clearContent();
         }
-      });
+      }
     }
   };
 }];

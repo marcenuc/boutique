@@ -12,7 +12,7 @@
 <td>
  <label>Magazzino2: <select ng-model="form.magazzino2" ng-options="c as r.value for (c, r) in aziende" ng-required="form.causale1.causale2"><option></select></label>
 </table>
- <label>Data (AAAAMMGG): <input ng-model-instant ng-model="form.data" size=8 maxlength=8 bq-data required></label><p>
+ <label>Data (AAAAMMGG): <input ng-model="form.data" size=8 maxlength=8 bq-data required></label><p>
  <input type=submit value=Crea ng-disabled="movimentoMagazzino.$invalid">
 </fieldset>
 </form>

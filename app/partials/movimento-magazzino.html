@@ -5,9 +5,9 @@
    Gruppo: <b>{{form.causale1.gruppo}}</b></span><span ng-show="form.causale1 && form.causale1.causale2 >= 0">,
    Causale2: <b>{{causali[form.causale1.causale2].descrizione}}</b></span><p>
  <label>Magazzino1: <select ng-model="form.magazzino1" ng-options="c as r.value for (c, r) in aziende" required><option></select></label>
- <label>Anno: <input ng-model-instant ng-model="form.anno" size=5 maxlength=4 type=number min=2000 max=2099></label>
- <label>Numero: <input ng-model-instant ng-model="form.numero" size=7 type=number min=0></label><p>
- <label>SMACT: <input ng-model-instant ng-model="form.smact" size=26 maxlength=22 bq-incomplete-smact></label><p>
+ <label>Anno: <input ng-model="form.anno" size=5 maxlength=4 type=number min=2000 max=2099></label>
+ <label>Numero: <input ng-model="form.numero" size=7 type=number min=0></label><p>
+ <label>SMACT: <input ng-model="form.smact" size=26 maxlength=22 bq-incomplete-smact></label><p>
  <input type=submit value=Cerca ng-disabled="movimentoMagazzino.$invalid">
  [&nbsp;<a href="#/MovimentoMagazzino_">Nuovo</a>&nbsp;]
 </fieldset>

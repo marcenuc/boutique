@@ -1,8 +1,8 @@
 <form ng-submit="findRows()" name=ricercaArticoli>
 <fieldset><legend>Ricerca articoli in {{listino._id}}</legend>
-<label>Stagione: <input ng-model-instant ng-model=stagione size=3></label>
-<label>Modello: <input ng-model-instant ng-model=modello size=5></label>
-<label>Articolo: <input ng-model-instant ng-model=articolo size=4></label>
+<label>Stagione: <input ng-model=stagione size=3></label>
+<label>Modello: <input ng-model=modello size=5></label>
+<label>Articolo: <input ng-model=articolo size=4></label>
 <input type=submit value=Cerca>
 </fieldset>
 </form>
@@ -10,17 +10,17 @@
 <form ng-submit="save()" name=righeListino>
 <fieldset><legend>{{listino._id}}</legend>
 <div style="position: fixed; right: 0pt; bottom: 0pt;"><label>Versione listino base: <input
-    ng-model-instant ng-model="listino.versioneBase" size=7></label></div>
+    ng-model="listino.versioneBase" size=7></label></div>
 <table>
 <thead><tr><th>Stagione<th>Modello<th>Articolo<th>Costo<th>Prezzo1<th>Prezzo2<th>Offerta
 <tbody><tr ng-repeat="r in prezzi">
-  <td><input ng-model-instant ng-model="r[0]" size=3 maxlength=3 ng-pattern="/^\d{3}$/">
-  <td><input ng-model-instant ng-model="r[1]" size=5 maxlength=5 ng-pattern="/^\d{5}$/">
-  <td><input ng-model-instant ng-model="r[2]" size=4 maxlength=4 ng-pattern="/^\d{4}$/">
-  <td><input ng-model-instant ng-model="r[3][0]" size=7 bq-money>
-  <td><input ng-model-instant ng-model="r[3][1]" size=7 bq-money>
-  <td><input ng-model-instant ng-model="r[3][2]" size=7 bq-money>
-  <td><input ng-model-instant ng-model="r[3][3]" size=2>
+  <td><input ng-model="r[0]" size=3 maxlength=3 ng-pattern="/^\d{3}$/">
+  <td><input ng-model="r[1]" size=5 maxlength=5 ng-pattern="/^\d{5}$/">
+  <td><input ng-model="r[2]" size=4 maxlength=4 ng-pattern="/^\d{4}$/">
+  <td><input ng-model="r[3][0]" size=7 bq-money>
+  <td><input ng-model="r[3][1]" size=7 bq-money>
+  <td><input ng-model="r[3][2]" size=7 bq-money>
+  <td><input ng-model="r[3][3]" size=2>
 </table>
 [&nbsp;<a href="" ng-click="prezzi.push(['','','',[0,0,0,'']])">Aggiungi riga</a>&nbsp;]
 <input type=submit value=Salva ng-disabled="righeListino.$invalid">
