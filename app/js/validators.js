@@ -4,12 +4,9 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
   function validateDocUpdate(doc, oldDoc, userCtx, secObj, CODICI) {
     var errors = [],
       codici = CODICI || require('views/lib/codici'),
+      typeOf = codici.typeOf,
       typeAndCode = codici.typeAndCodeFromId(doc._id),
       codes = typeAndCode && typeAndCode[2] ? typeAndCode[2].split('_') : null;
-
-    function typeOf(value) {
-      return Object.prototype.toString.call(value).match(/^\[object ([A-Za-z]+)\]$/)[1].toLowerCase();
-    }
 
     function authorizedIf(condition) {
       if (condition === true) {
@@ -53,11 +50,11 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
 
     function mustHave(field, fieldValues) {
       var v = doc[field], tfv = typeOf(fieldValues), tv = typeOf(v);
-      if ((tfv === 'array' && fieldValues.indexOf(v) < 0) ||
-          tv === 'undefined' ||
-          tv === 'null' ||
-          (tfv === 'string' && tv !== fieldValues) ||
-          (tv === 'string' && !v.trim())) {
+      if ((tfv === 'Array' && fieldValues.indexOf(v) < 0) ||
+          tv === 'Undefined' ||
+          tv === 'Null' ||
+          (tfv === 'String' && tv !== fieldValues) ||
+          (tv === 'String' && !v.trim())) {
         error('Required: ' + field);
       }
     }
@@ -88,7 +85,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
               return error('Invalid articolo: "' + [stagione, modello, articolo].join(' ') + '"');
             }
             var note, amount, i, ii, r = articoli[articolo];
-            if (typeOf(r) !== 'array' || (r.length !== 3 && r.length !== 4)) {
+            if (typeOf(r) !== 'Array' || (r.length !== 3 && r.length !== 4)) {
               return error('Invalid row for ' + [stagione, modello, articolo].join(' ') + ': ' + JSON.stringify(r));
             }
             for (i = 0, ii = 3; i < ii; i += 1) {
@@ -116,7 +113,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
       }
       // TODO verificare anche l'ordinamento
       inventario.forEach(function (row, idx) {
-        if (typeOf(row) !== 'array' || row.length < 8) {
+        if (typeOf(row) !== 'Array' || row.length < 8) {
           return error('Invalid row: ' + JSON.stringify(row));
         }
         if (!codici.isCode(row[0], codici.LEN_STAGIONE)) {
@@ -154,11 +151,11 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
     }
 
     function hasMovimenti(rows) {
-      if (typeOf(rows) !== 'array') {
+      if (typeOf(rows) !== 'Array') {
         return error('Invalid rows');
       }
       rows.forEach(function (row, idx) {
-        if (typeOf(row) !== 'array') {
+        if (typeOf(row) !== 'Array') {
           return error('Invalid row[' + idx + ']');
         }
         var barcode = row[0], scalarino = row[1], descrizioneTaglia = row[2], descrizione = row[3], costo = row[4], qta = row[5];
@@ -202,14 +199,14 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
 
     function hasValidCausaliTipo(tipoMagazzino) {
       var causali = doc[tipoMagazzino], cod, causale, isEmpty = true;
-      if (typeOf(causali) !== 'object') {
+      if (typeOf(causali) !== 'Object') {
         return error('Invalid causali tipo ' + tipoMagazzino);
       }
       for (cod in causali) {
         if (causali.hasOwnProperty(cod)) {
           isEmpty = false;
           causale = causali[cod];
-          if (typeOf(causale) !== 'array' || causale.length !== 2 ||
+          if (typeOf(causale) !== 'Array' || causale.length !== 2 ||
               typeof causale[0] !== 'string' ||
               (causale[1] !== -1 && causale[1] !== 1)) {
             return error('Invalid causale: ' + JSON.stringify(causale));
@@ -222,11 +219,11 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
     }
 
     function hasValidCausaliMovimentoMagazzino(causali, causaliAs400) {
-      if (typeOf(causali) !== 'array' || !causali.length) {
+      if (typeOf(causali) !== 'Array' || !causali.length) {
         return error('Invalid causali');
       }
       causali.forEach(function (causale) {
-        if (typeOf(causale) !== 'array' || causale.length !== 3 ||
+        if (typeOf(causale) !== 'Array' || causale.length !== 3 ||
             typeof causale[0] !== 'string' ||
             (causale[1] !== -1 && causale[1] !== 1) ||
             (causale[2] !== -1 && causale[2] !== 0 && causale[2] !== 1)) {
@@ -234,7 +231,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
         }
       });
 
-      if (typeOf(causaliAs400) !== 'object') {
+      if (typeOf(causaliAs400) !== 'Object') {
         return error('Invalid causaliAs400');
       }
       var codAs400, causaleBoutique, i, n = causali.length, found;
@@ -258,7 +255,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
     }
 
     function hasValidCosti(costi) {
-      if (typeOf(costi) !== 'object') {
+      if (typeOf(costi) !== 'Object') {
         return error('Invalid costi');
       }
       Object.keys(costi).forEach(function (modello) {
@@ -280,7 +277,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
 
     function hasValidArticoli(articoli) {
       var msg = 'Invalid articoli';
-      if (typeOf(articoli) !== 'array' || !articoli.length) return error(msg);
+      if (typeOf(articoli) !== 'Array' || !articoli.length) return error(msg);
       articoli.forEach(function (a) {
         var k = Object.keys(a).sort();
         if (k.length !== 4 || k[0] !== 'articolo' || k[1] !== 'colore' || k[2] !== 'modello' || k[3] !== 'stagione' ||
@@ -300,7 +297,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
     }
 
     function hasCausale1(desc) {
-      return typeOf(doc.causale1) === 'array' && doc.causale1[0] === desc;
+      return typeOf(doc.causale1) === 'Array' && doc.causale1[0] === desc;
     }
 
     function isFlag(field) {
@@ -320,19 +317,19 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
     case 'Azienda':
       hasValidAziendaCode();
       mustBeAdmin();
-      mustHave('nome', 'string');
+      mustHave('nome', 'String');
       mustHave('tipo', ['NEGOZIO', 'MAGAZZINO']);
       break;
     case 'Cliente':
       hasValidAziendaCode();
-      mustHave('nome', 'string');
+      mustHave('nome', 'String');
       break;
     case 'TaglieScalarini':
       mustBeAdmin();
-      mustHave('descrizioniTaglie', 'array');
-      mustHave('taglie', 'array');
-      mustHave('listeDescrizioni', 'array');
-      mustHave('colonneTaglie', 'array');
+      mustHave('descrizioniTaglie', 'Array');
+      mustHave('taglie', 'Array');
+      mustHave('listeDescrizioni', 'Array');
+      mustHave('colonneTaglie', 'Array');
       if (!errors.length) {
         hasEquivalentData('descrizioniTaglie', 'taglie');
         hasEquivalentData('taglie', 'descrizioniTaglie');
@@ -341,7 +338,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
               return !!listaDescrizioni;
             }
             var ts = doc.taglie[scalarino];
-            return !ts || typeOf(listaDescrizioni) !== 'array' || listaDescrizioni.some(function (descrizioneTaglia) {
+            return !ts || typeOf(listaDescrizioni) !== 'Array' || listaDescrizioni.some(function (descrizioneTaglia) {
               return !ts.hasOwnProperty(descrizioneTaglia);
             });
           })) {
@@ -352,7 +349,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
               return !!colonnaTaglie;
             }
             var ds = doc.descrizioniTaglie[scalarino];
-            return !ds || typeOf(colonnaTaglie) !== 'object' || Object.keys(colonnaTaglie).some(function (taglia) {
+            return !ds || typeOf(colonnaTaglie) !== 'Object' || Object.keys(colonnaTaglie).some(function (taglia) {
               return !ds.hasOwnProperty(taglia);
             });
           })) {
@@ -362,7 +359,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
       break;
     case 'ModelliEScalarini':
       mustBeAdmin();
-      mustHave('lista', 'object');
+      mustHave('lista', 'Object');
       break;
     case 'Giacenze':
       mustBeAdmin();
@@ -396,7 +393,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
       }
       hasColumnNames(['barcode', 'scalarino', 'descrizioneTaglia', 'descrizione', 'costo', 'qta']);
       // TODO questo codice è illeggibile
-      if (typeOf(doc.causale1) !== 'array' || doc.causale1.length !== 2 ||
+      if (typeOf(doc.causale1) !== 'Array' || doc.causale1.length !== 2 ||
           !codici.CAUSALI_MOVIMENTO_MAGAZZINO.some(function (causale) {
             if (causale.descrizione === doc.causale1[0] &&
                 causale.segno === doc.causale1[1] &&
@@ -406,7 +403,7 @@ angular.module('app.validators', [], ['$provide', function ($provide) {
                 return true;
               }
               var causale2 = codici.CAUSALI_MOVIMENTO_MAGAZZINO[causale.causale2];
-              return typeOf(doc.causale2) === 'array' && doc.causale2.length === 2 &&
+              return typeOf(doc.causale2) === 'Array' && doc.causale2.length === 2 &&
                 causale2.descrizione === doc.causale2[0] && causale2.segno === doc.causale2[1];
             }
             return false;

@@ -459,6 +459,10 @@ angular.module('app.shared', []).factory('codici', function () {
     return listini;
   };
 
+  codici.typeOf = function(value) {
+    return Object.prototype.toString.call(value).slice(8, -1);
+  };
+
   codici.hasExternalWarehouse = function (azienda) {
     return azienda.tipo !== 'NEGOZIO';
   };
