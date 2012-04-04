@@ -1,4 +1,4 @@
-#!/bin/dash
+#!/bin/bash
 USAGE="$0 -s {unit|couchdb|srv} [-t TEST_FILTER] [-r]"
 
 while getopts s:t:r f
@@ -17,9 +17,13 @@ shift `expr $OPTIND - 1`
 
 export LANG=C
 
+
+function notifyUpdateOf { [ "$first_run" = "1" ] && first_run=0 || inotifywait -qe modify "$@"; }
+
 case "$suite" in
 e2e)
-  while inotifywait -e modify 'test/e2e/scenarios.js'
+  first_run=0
+  while notifyUpdateOf 'test/e2e/scenarios.js'
   do
     java -jar test/lib/jstestdriver/JsTestDriver.jar \
       --basePath "$PWD" \
@@ -35,7 +39,11 @@ couchdb)
   exec ./node_modules/.bin/jasmine-node --test-dir "$PWD/test-srv/couchdb" "$@"
   ;;
 srv)
-  exec ./node_modules/.bin/jasmine-node --test-dir "$PWD/test-srv/unit" "$@"
+  first_run=1
+  while notifyUpdateOf test-srv/unit/*.js app/js/*.js
+  do
+    ./node_modules/.bin/jasmine-node --test-dir "$PWD/test-srv/unit" "$@"
+  done
   ;;
 *)
   echo "$USAGE" && exit 2
