@@ -1,19 +1,16 @@
 /*global define:false*/
-define(function (require) {
+define(['vm', 'fs'], function(vm, fs) {
   'use strict';
-  var angular = {};
-
-  // Mock angular.module() implementation.
-  /*jslint unparam:true*/
-  angular.module = function () {
-    return {
-      factory: function (name, getter) {
-        return getter();
+  var context = {
+    angular: {
+      module: function() {
+        return {
+          factory: function(name, getter) {
+            return getter();
+          }
+        };
       }
-    };
+    }
   };
-  /*jslint unparam:false*/
-
-  /*jslint evil:true*/
-  return eval(require('fs').readFileSync('app/js/codici.js', 'utf8'));
+  return vm.runInNewContext(fs.readFileSync('app/js/codici.js'), context);
 });
