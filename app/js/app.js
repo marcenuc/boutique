@@ -1,4 +1,4 @@
-/*global angular:false, Ctrl:false*/
+/*global angular:false*/
 angular.module('app',
   ['app.directives', 'app.services', 'app.widgets', 'app.validators', 'app.shared', 'app.config', 'app.controllers'],
   ['$routeProvider', function($routeProvider) {
