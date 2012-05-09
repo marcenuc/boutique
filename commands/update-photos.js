@@ -14,7 +14,7 @@ requirejs(['fs', 'child_process', 'path', 'findit', 'lib/servers'], function (fs
     findit.sync(inputFolder, function (file) {
       var m = rexp.exec(file);
       if (m) {
-        var outname = m.slice(1).join('_');
+        var outname = m.slice(1).filter(function(e) { return e; }).join('_');
         files.push([file, path.join(outputFolder, outname + '.jpg'), path.join(outputFolder, outname + ORIG)]);
       }
     });
@@ -51,6 +51,7 @@ requirejs(['fs', 'child_process', 'path', 'findit', 'lib/servers'], function (fs
         if (!err && !dstStats.isFile()) throw new Error(dst + ' is not a regular file');
         if (!err && srcStats.mtime.getTime() < dstStats.mtime.getTime()) return done(0);
 
+        //TODO use jpegtrans
         if (IS_ORIG.test(dst)) {
           spawn('convert', [src, dst]).on('exit', done);
         } else {
