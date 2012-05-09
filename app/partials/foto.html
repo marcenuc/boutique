@@ -6,9 +6,9 @@
 </form>
 <div class=foto ng-show=results>
 <table class=results>
-  <thead><tr><th>#<th>Stagione<th>Modello<th>Articolo<th>Colore<th>Descrizione<th>Costo
-  <tfoot><tr><th colspan=6 class=n>Totale:<th class=n>{{total | money}}</th>
-  <tbody><tr ng-repeat="row in results"><td>{{$index + 1}}<td>{{row.stagione}}<td>{{row.modello}}<td>{{row.articolo}}<td>{{row.colore}}<td>{{row.descrizione}}<td class=n>{{costi[row.sma] | money}}
+  <thead><tr><th>#<th>Stagione<th>Modello<th>Articolo<th>Colore<th>Descrizione<th>Costo<th>Selezionato
+  <tfoot><tr><th colspan=6 class=n>Totale:<th class=n>{{total | money}}
+  <tbody><tr ng-repeat="row in results"><td>{{$index + 1}}<td>{{row.stagione}}<td>{{row.modello}}<td>{{row.articolo}}<td>{{row.colore}}<td>{{row.descrizione}}<td class=n>{{costi[row.sma] | money}}<td><input type=checkbox ng-model=row.selected ng-change=reSum()>
 </table>
 <div><a target=_blank ng-href="{{imageOrig}}">Ingrandisci</a><br><img ng-src="{{image}}"></div>
 </div>

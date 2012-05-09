@@ -677,8 +677,8 @@ describe('Controller', function() {
         $httpBackend.flush();
         // it should put articoli in photo in results
         expect($scope.results).toEqual([
-          { stagione: '125', modello: '98021', articolo: '1881', colore: '8000', sma: '125980211881', descrizione: 'SCARPA CLASSICA FIBBIA' },
-          { stagione: '125', modello: '40021', articolo: '2109', colore: '5500', sma: '125400212109', descrizione: 'CAMICIA CLASSICA' }
+          { selected: true, stagione: '125', modello: '98021', articolo: '1881', colore: '8000', sma: '125980211881', descrizione: 'SCARPA CLASSICA FIBBIA' },
+          { selected: true, stagione: '125', modello: '40021', articolo: '2109', colore: '5500', sma: '125400212109', descrizione: 'CAMICIA CLASSICA' }
         ]);
         // it should put image links in $scope
         expect($scope.image).toBe('../catalogo/1_0.jpg');

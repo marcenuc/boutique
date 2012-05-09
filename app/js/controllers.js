@@ -734,6 +734,15 @@ angular.module('app.controllers', [], ['$controllerProvider', function($controll
       SessionInfo.goTo($scope.idFoto);
     };
 
+    function reSum() {
+      var costi = $scope.costi, results = $scope.results, t = 0;
+      for (var i = 0, ii = results.length; i < ii; ++i) {
+        if (results[i].selected) t += costi[results[i].sma];
+      }
+      $scope.total = t;
+    }
+
+    //TODO cleanup this mess!!!
     if ($routeParams.id) {
       $scope.idFoto = 'Foto' + $routeParams.id;
       Doc.find($scope.idFoto).then(function(foto) {
@@ -746,17 +755,16 @@ angular.module('app.controllers', [], ['$controllerProvider', function($controll
           });
           var numCosti = 0;
           $scope.results.forEach(function(r) {
+            r.selected = true;
             r.sma = [r.stagione, r.modello, r.articolo].join('');
             Doc.find('COSTO', couchdb.viewPath('costo?key="' + r.sma + '"')).then(function(costo) {
               var row = costo.rows[0];
               if (row) {
                 $scope.costi[row.key] = row.value;
-
                 numCosti += 1;
                 if (numCosti === $scope.results.length) {
-                  var costi = $scope.costi, smas = Object.keys(costi), t = 0;
-                  smas.forEach(function(sma) { t += costi[sma]; });
-                  $scope.total = t;
+                  $scope.reSum = reSum;
+                  reSum();
                 }
               }
             });
