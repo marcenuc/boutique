@@ -16,7 +16,7 @@ define({
         rootFolder: '<%= photo_folder %>',
         inputs: {
           catalogo: {
-            catalogo: '(?: foto (\\d+).*|/(\\d)/[^ ]+ 0*(\\d+))\\.[a-z]+$'
+            catalogo: '(?:foto (\\d+).*|/(\\d)/[^ ]+ 0*(\\d+))\\.[a-z]+$'
           },
           foto: {
             foto: '/(\\d{16})\\.[a-z]+$',
