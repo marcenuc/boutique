@@ -51,11 +51,11 @@ requirejs(['fs', 'child_process', 'path', 'findit', 'lib/servers'], function (fs
         if (!err && !dstStats.isFile()) throw new Error(dst + ' is not a regular file');
         if (!err && srcStats.mtime.getTime() < dstStats.mtime.getTime()) return done(0);
 
-        //TODO use jpegtrans
+        //TODO use jpegtrans?
         if (IS_ORIG.test(dst)) {
-          spawn('convert', [src, dst]).on('exit', done);
+          spawn('convert', ['-strip', '-interlace', 'Plane', src, dst]).on('exit', done);
         } else {
-          spawn('convert', [src, '-resize', '400x800>', dst]).on('exit', done);
+          spawn('convert', ['-strip', '-interlace', 'Plane', '-resize', '400x800>', src, dst]).on('exit', done);
         }
       });
     });
