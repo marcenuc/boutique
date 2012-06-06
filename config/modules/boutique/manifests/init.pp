@@ -34,7 +34,7 @@ class boutique(
 ) {
   case $::operatingsystem {
     ubuntu: {
-      $packages = ['default-jre-headless', 'nodejs', 'zlib1g', 'libssl', 'samba', 'libpam-smbpass', 'imagemagick']
+      $packages = ['default-jre-headless', 'nodejs', 'zlib1g', 'libssl1.0.0', 'samba', 'libpam-smbpass', 'imagemagick']
     }
     default: {
       fail("Module ${::module_name} does not support ${::operatingsystem}")
