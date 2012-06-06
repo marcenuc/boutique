@@ -32,12 +32,11 @@ class boutique(
   $shares_folder   = '/srv/samba',
   $home            = undef,
   $packages_folder = undef,
-  $as400_host      = undef,
-  $java_home       = '/opt/jdk'
+  $as400_host      = undef
 ) {
   case $::operatingsystem {
     ubuntu: {
-      $packages = ['git', 'zlib1g', 'libssl0.9.8', 'samba', 'libpam-smbpass', 'imagemagick']
+      $packages = ['default-jre-headless', 'nodejs', 'zlib1g', 'libssl', 'samba', 'libpam-smbpass', 'imagemagick']
     }
     default: {
       fail("Module ${::module_name} does not support ${::operatingsystem}")
@@ -79,13 +78,10 @@ class boutique(
   }
   #TODO Validate all parameters.
   #TODO Hash $admin_password.
-  #TODO Ensure JDK is installed in $java_home.
 
-  $couchdb_folder     = "${home}/CouchDB"
+  $couchdb_folder     = "/opt/couchdb"
   $couchdb_log        = "${home}/couch.log"
   $couchdb_lib_folder = "${home}/var/lib/couchdb"
-
-  $nodejs_folder      = "${home}/NodeJS"
 
   $webapp_folder      = "${home}/webapp"
 
@@ -109,15 +105,10 @@ class boutique(
     hasstatus  => false,
   }
 
-  unpacked_package { ['CouchDB', 'NodeJS']:
-    packages_folder     => $packages_folder,
-    installation_folder => $home,
-  }
-
   upstart_service { 'couchdb':
     run_command => "${couchdb_folder}/bin/couchdb",
     admin_user  => $admin_user,
-    require     => [Unpacked_package['CouchDB'], User[$admin_user]],
+    require     => [User[$admin_user]],
   }
 
   file { 'environment':
@@ -192,14 +183,14 @@ class boutique(
 
   file { "${couchdb_folder}/var":
     ensure  => directory,
-    require => [Unpacked_package['CouchDB'], User[$admin_user]],
+    require => [User[$admin_user]],
     notify  => Service['couchdb'],
   }
 
   file { "${couchdb_folder}/etc/couchdb/local.d/boutique.ini":
     ensure  => file,
     content => template('boutique/couchdb.ini.erb'),
-    require => [Unpacked_package['CouchDB'], User[$admin_user]],
+    require => [User[$admin_user]],
     notify  => Service['couchdb'],
   }
 
@@ -264,10 +255,9 @@ class boutique(
     content => template('boutique/local.properties.erb'),
   }
 
-  # TODO this service requires java: add dependency.
   cron { 'sync-as400':
     command     => "${webapp_folder}/run sync-as400",
-    environment => ["MAILTO=\"${admin_mail}\"", "PATH=\"/usr/local/bin:/bin:/usr/bin:${java_home}/bin\""],
+    environment => ["MAILTO=\"${admin_mail}\""],
     hour        => [7, 13, 16],
     minute      => 30,
     user        => $admin_user,
@@ -276,6 +266,7 @@ class boutique(
 
   cron { 'backup':
     command => "${webapp_folder}/run backup",
+    environment => ["MAILTO=\"${admin_mail}\""],
     hour    => 6,
     minute  => 0,
     user    => $admin_user,
