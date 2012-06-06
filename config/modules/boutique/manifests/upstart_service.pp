@@ -14,7 +14,8 @@ define upstart_service($run_command, $admin_user) {
   service { $name:
     ensure     => running,
     name       => $service_name,
-    enable     => true,
+    # FIXME put it to true once Puppet works with upstart.
+    enable     => manual,
     provider   => upstart,
     # Upstart does not detect new .conf file on restart of service.
     hasrestart => false,

@@ -94,7 +94,8 @@ class boutique(
 
   Service {
     ensure     => running,
-    enable     => true,
+    # FIXME put it to true once Puppet works with upstart.
+    enable     => manual,
     provider   => upstart,
     # Upstart does not detect new .conf file on restart of service.
     hasrestart => false,
