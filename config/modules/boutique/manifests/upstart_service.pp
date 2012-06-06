@@ -19,6 +19,8 @@ define upstart_service($run_command, $admin_user) {
     # Upstart does not detect new .conf file on restart of service.
     hasrestart => false,
     hasstatus  => false,
-    status     => "/sbin/status '${service_name}' | /bin/grep -q '${service_name} start/running'"
+    status     => "/sbin/status $service_name | /bin/grep -q ' start/'",
+    start      => "/sbin/start $service_name",
+    stop       => "/sbin/stop $service_name",
   }
 }

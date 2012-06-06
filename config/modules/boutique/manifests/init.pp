@@ -218,8 +218,18 @@ class boutique(
     require => [Package['samba'], Package['imagemagick'], Package['libpam-smbpass']],
   }
 
-  service { ['smbd', 'nmbd']:
+  service { 'smbd':
     subscribe => File['smb.conf'],
+    status    => "/sbin/status smbd | /bin/grep -q ' start/'",
+    start     => "/sbin/start smbd",
+    stop      => "/sbin/stop smbd",
+  }
+
+  service { 'nmbd':
+    subscribe => File['smb.conf'],
+    status    => "/sbin/status nmbd | /bin/grep -q ' start/'",
+    start     => "/sbin/start nmbd",
+    stop      => "/sbin/stop nmbd",
   }
 
   file { $couchdb_log_file:
