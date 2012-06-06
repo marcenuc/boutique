@@ -75,7 +75,8 @@ class boutique(
   #TODO Hash $admin_password.
 
   $couchdb_folder     = "/opt/couchdb"
-  $couchdb_log        = "${home}/couch.log"
+  $couchdb_log_file   = "${home}/couch.log"
+  $couchdb_uri_file   = "${home}/couch.uri"
   $couchdb_lib_folder = "${home}/var/lib/couchdb"
 
   $webapp_folder      = "${home}/webapp"
@@ -221,7 +222,12 @@ class boutique(
     subscribe => File['smb.conf'],
   }
 
-  file { $couchdb_log:
+  file { $couchdb_log_file:
+    ensure => file,
+    notify => Service['couchdb'],
+  }
+
+  file { $couchdb_uri_file:
     ensure => file,
     notify => Service['couchdb'],
   }
