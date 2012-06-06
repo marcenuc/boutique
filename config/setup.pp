@@ -10,6 +10,4 @@ class { 'boutique':
   proxyed_port    => '7999',
   home            => '/home/boutique',
   as400_host      => 'localhost',
-  packages_folder => '/vagrant',
-  java_home       => '/home/marcenuc/opt/jdk',
 }

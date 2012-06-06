@@ -10,7 +10,6 @@
 #   class { 'boutique':
 #     auth_realm      => 'Boutique realm',
 #     couchdb_secret  => 'b8b5d0da8105b4287dda5936bb3bd613',
-#     packages_folder => '/vagrant',
 #   }
 #
 # == Authors
@@ -31,7 +30,6 @@ class boutique(
   $photo_share     = 'Boutique',
   $shares_folder   = '/srv/samba',
   $home            = undef,
-  $packages_folder = undef,
   $as400_host      = undef
 ) {
   case $::operatingsystem {
@@ -72,9 +70,6 @@ class boutique(
   }
   if $couchdb_secret == undef {
     fail("Set couchdb_secret.")
-  }
-  if $packages_folder == undef {
-    fail("Set packages_folder.")
   }
   #TODO Validate all parameters.
   #TODO Hash $admin_password.
