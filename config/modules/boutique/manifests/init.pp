@@ -8,8 +8,10 @@
 # == Examples
 #
 #   class { 'boutique':
-#     auth_realm      => 'Boutique realm',
-#     couchdb_secret  => 'b8b5d0da8105b4287dda5936bb3bd613',
+#     auth_realm          => 'Boutique realm',
+#     couchdb_secret      => 'b8b5d0da8105b4287dda5936bb3bd613',
+#     backup_share        => '//server/backup',
+#     backup_share_folder => 'Boutique',
 #   }
 #
 # == Authors
@@ -21,20 +23,22 @@
 # Copyright 2011 Nuccio s.a.s., unless otherwise noted.
 #
 class boutique(
-  $admin_mail      = undef,
-  $auth_realm      = undef,
-  $couchdb_secret  = undef,
-  $proxyed_path    = 'boutique',
-  $proxyed_port    = '8000',
-  $couchdb_port    = '12000',
-  $photo_share     = 'Boutique',
-  $shares_folder   = '/srv/samba',
-  $home            = undef,
-  $as400_host      = undef
+  $admin_mail          = undef,
+  $auth_realm          = undef,
+  $couchdb_secret      = undef,
+  $proxyed_path        = 'boutique',
+  $proxyed_port        = '8000',
+  $couchdb_port        = '12000',
+  $photo_share         = 'Boutique',
+  $shares_folder       = '/srv/samba',
+  $home                = undef,
+  $as400_host          = undef,
+  $backup_share        = undef,
+  $backup_share_folder = undef
 ) {
   case $::operatingsystem {
     ubuntu: {
-      $packages = ['default-jre-headless', 'nodejs', 'zlib1g', 'libssl1.0.0', 'samba', 'libpam-smbpass', 'imagemagick']
+      $packages = ['default-jre-headless', 'nodejs', 'zlib1g', 'libssl1.0.0', 'samba', 'smbclient', 'libpam-smbpass', 'imagemagick']
     }
     default: {
       fail("Module ${::module_name} does not support ${::operatingsystem}")
@@ -53,6 +57,14 @@ class boutique(
 
   if $as400_host == undef {
     fail("Set as400_host.")
+  }
+
+  if $backup_share == undef {
+    fail("Set backup_share.")
+  }
+
+  if $backup_share_folder == undef {
+    fail("Set backup_share_folder.")
   }
 
   if $::boutique_as400_user == undef {
