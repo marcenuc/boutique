@@ -1,8 +1,7 @@
 define upstart_service($run_command, $admin_user) {
   $service_name = "${admin_user}-${name}"
-  $service_conf = "/etc/init/${service_name}.conf"
 
-  file { $service_conf:
+  file { "/etc/init/${service_name}.conf":
     ensure  => file,
     owner   => 'root',
     group   => 'root',
@@ -15,7 +14,7 @@ define upstart_service($run_command, $admin_user) {
   #FIXME workaround to upstart provider bugs
   file { "/etc/init.d/${service_name}":
     ensure => link,
-    target => $service_conf,
+    target => '/lib/init/upstart-job',
     before => Service[$name],
   }
 
