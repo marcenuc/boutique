@@ -1,7 +1,8 @@
 define upstart_service($run_command, $admin_user) {
   $service_name = "${admin_user}-${name}"
+  $service_conf = "/etc/init/${service_name}.conf"
 
-  file { "/etc/init/${service_name}.conf":
+  file { $service_conf:
     ensure  => file,
     owner   => 'root',
     group   => 'root',
@@ -11,17 +12,20 @@ define upstart_service($run_command, $admin_user) {
     notify  => Service[$name],
   }
 
+  #FIXME workaround to upstart provider bugs
+  file { "/etc/init.d/${service_name}":
+    ensure => link,
+    target => $service_conf,
+    before => Service[$name],
+  }
+
   service { $name:
     ensure     => running,
     name       => $service_name,
-    # FIXME put it to true once Puppet works with upstart.
-    enable     => manual,
+    # FIXME uncomment when Puppet works with upstart.
+    #enable     => true,
     provider   => upstart,
     # Upstart does not detect new .conf file on restart of service.
     hasrestart => false,
-    hasstatus  => false,
-    status     => "/sbin/status $service_name | /bin/grep -q ' start/'",
-    start      => "/sbin/start $service_name",
-    stop       => "/sbin/stop $service_name",
   }
 }

@@ -94,8 +94,8 @@ class boutique(
 
   Service {
     ensure     => running,
-    # FIXME put it to true once Puppet works with upstart.
-    enable     => manual,
+    # FIXME uncomment when Puppet works with upstart.
+    #enable     => true,
     provider   => upstart,
     # Upstart does not detect new .conf file on restart of service.
     hasrestart => false,
@@ -219,18 +219,8 @@ class boutique(
     require => [Package['samba'], Package['imagemagick'], Package['libpam-smbpass']],
   }
 
-  service { 'smbd':
+  service { ['smbd', 'nmbd']:
     subscribe => File['smb.conf'],
-    status    => "/sbin/status smbd | /bin/grep -q ' start/'",
-    start     => "/sbin/start smbd",
-    stop      => "/sbin/stop smbd",
-  }
-
-  service { 'nmbd':
-    subscribe => File['smb.conf'],
-    status    => "/sbin/status nmbd | /bin/grep -q ' start/'",
-    start     => "/sbin/start nmbd",
-    stop      => "/sbin/stop nmbd",
   }
 
   file { $couchdb_log_file:
