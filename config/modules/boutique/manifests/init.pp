@@ -281,7 +281,7 @@ class boutique(
   cron { 'backup':
     command => "${webapp_folder}/run backup",
     environment => ["MAILTO=\"${admin_mail}\""],
-    hour    => 6,
+    hour    => 21,
     minute  => 0,
     user    => $admin_user,
     require => User[$admin_user],
