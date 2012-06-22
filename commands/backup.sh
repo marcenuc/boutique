@@ -19,5 +19,7 @@ for i in $BACKUP_DATA_FILES; do
 done
 
 for i in $BACKUP_STATIC_FILES; do
+  log "Backing up $i to $BACKUP_SHARE_FOLDER/$BACKUP_SHARE_FOLDER."
   smbclient -A backup-access.cfg -c "cd $BACKUP_SHARE_FOLDER;recurse ON;prompt OFF;mput $i" $BACKUP_SHARE
+  log "Done backing up $i to $BACKUP_SHARE_FOLDER/$BACKUP_SHARE_FOLDER."
 done
