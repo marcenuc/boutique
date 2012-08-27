@@ -169,6 +169,9 @@ angular.module('app.services', [], ['$provide', function ($provide) {
         }
 
         function toCsv(labels) {
+          var head = [
+            '"azienda"', '"descrizione"', '"stagione"', '"modello"', '"articolo"', '"colore"', '"giacenza"', '"listino"', '"prezzo1"', '"prezzo2"', '"offerta"'
+            ].join("\t");
           var rows = labels.map(function(label) {
             return [
               '"' + label.codiceAzienda + '"',
@@ -184,7 +187,7 @@ angular.module('app.services', [], ['$provide', function ($provide) {
               '"' + label.offerta + '"'
             ].join("\t");
           });
-          return rows.join("\r\n");
+          return head + "\r\n" + rows.join("\r\n");
         }
 
         var zip = new JSZip();
