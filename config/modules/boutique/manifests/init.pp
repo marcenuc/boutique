@@ -96,7 +96,7 @@ class boutique(
   $photo_folder       = "${shares_folder}/${photo_share}"
   $photo_subfolders   = ["${photo_folder}/tessuti", "${photo_folder}/foto", "${photo_folder}/schizzi", "${photo_folder}/catalogo", "${photo_folder}/pubblicate"]
 
-  Package { ensure => latest, }
+  Package { ensure => present, }
 
   File {
     owner => $admin_user,
