@@ -182,9 +182,9 @@ angular.module('app.services', [], ['$provide', function ($provide) {
               label.prezzo1,
               label.prezzo2,
               '"' + label.offerta + '"'
-            ].join(',');
+            ].join("\t");
           });
-          return rows.join("\n");
+          return rows.join("\r\n");
         }
 
         var zip = new JSZip();
