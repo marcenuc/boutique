@@ -598,6 +598,60 @@ angular.module('app.controllers', [], ['$controllerProvider', function($controll
         Downloads.prepare(toLabels(taglieScalarini, modelliEScalarini, giacenze, listini), 'etichette');
       });
     };
+
+    function toCsv(taglieScalarini, modelliEScalarini, giacenze, listini) {
+      var giacenzeRiga, taglia, prezziArticolo, label, colListino, listinoAzienda,
+        col = codici.colNamesToColIndexes(giacenze.columnNames),
+        labels = [],
+        desscal, ms = modelliEScalarini.lista,
+        rows = giacenze.rows, r, i, ii, j, jj;
+      for (i = 0, ii = rows.length; i < ii; i += 1) {
+        r = rows[i];
+        label = {
+          codiceAzienda: r[col.codiceAzienda],
+          stagione: r[col.stagione],
+          modello: r[col.modello],
+          articolo: r[col.articolo],
+          colore: r[col.colore]
+        };
+        desscal = ms[label.stagione + label.modello];
+        if (!desscal) {
+          label.descrizione = 'Modello non in anagrafe';
+        } else {
+          label.descrizione = desscal[0];
+        }
+        prezziArticolo = codici.readListino(listini, r[col.codiceAzienda], label.stagione, label.modello, label.articolo);
+        if (!prezziArticolo) {
+          label.prezzo1 = '';
+          label.prezzo2 = '';
+          label.offerta = '';
+          listinoAzienda = listini[r[col.codiceAzienda]];
+          label.versioneListino = listinoAzienda.hasOwnProperty('versioneBase') ? listinoAzienda.versioneBase : r[col.codiceAzienda];
+        } else {
+          colListino = prezziArticolo[0];
+          label.prezzo1 = formatPrezzo(prezziArticolo[1][colListino.prezzo1]);
+          label.prezzo2 = formatPrezzo(prezziArticolo[1][colListino.prezzo2]);
+          label.offerta = prezziArticolo[1][colListino.offerta] || '';
+          label.versioneListino = prezziArticolo[2];
+        }
+
+        label.giacenza = 0;
+        giacenzeRiga = r[col.giacenze];
+        for (taglia in giacenzeRiga) {
+          if (giacenzeRiga.hasOwnProperty(taglia)) {
+            label.giacenza += giacenzeRiga[taglia];
+          }
+        }
+        labels.push(label);
+      }
+      return labels;
+    }
+
+    $scope.prepareCsvDownloads = function() {
+      withAllDocs(function(taglieScalarini, modelliEScalarini, giacenze, listini) {
+        Downloads.prepareCsv(toCsv(taglieScalarini, modelliEScalarini, giacenze, listini), 'giacenze');
+      });
+    };
   }]);
 
   $controllerProvider.register('Azienda', ['$scope', '$routeParams', 'SessionInfo', 'codici', 'validate', 'Azienda', 'Doc', function($scope, $routeParams, SessionInfo, codici, validate, Azienda, Doc) {

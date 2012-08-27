@@ -161,6 +161,39 @@ angular.module('app.services', [], ['$provide', function ($provide) {
         i = 0;
         ii = templates.length;
         addFiles();
+      },
+
+      prepareCsv: function(labels, fileName) {
+        if (!labels) {
+          return SessionInfo.notice('Impossibile generare le etichette in presenza di errori');
+        }
+
+        function toCsv(labels) {
+          var rows = labels.map(function(label) {
+            return [
+              '"' + label.codiceAzienda + '"',
+              '"' + label.descrizione + '"',
+              '"' + label.stagione + '"',
+              '"' + label.modello + '"',
+              '"' + label.articolo + '"',
+              '"' + label.colore + '"',
+              label.giacenza,
+              '"' + label.versioneListino + '"',
+              label.prezzo1,
+              label.prezzo2,
+              '"' + label.offerta + '"'
+            ].join(',');
+          });
+          return rows.join("\n");
+        }
+
+        var zip = new JSZip();
+        zip.add(fileName + '.csv', toCsv(labels));
+        setData({
+          data: zip.generate(),
+          filename: fileName + '.zip',
+          dataType: 'base64'
+        });
       }
     };
   }]);
@@ -373,7 +406,9 @@ angular.module('app.services', [], ['$provide', function ($provide) {
             }) };
           });
         } else {
-          SessionInfo.error('ATTENZIONE: RICERCA NON VALIDA (QUESTA FUNZIONALITÀ È ANCORA INCOMPLETA) PER ORA È NECESSARIO SPECIFICARE: o causale1, magazzino1, anno, e numero; o magazzino1, e parte iniziale del codice SMACT (facoltativamente anche l\'anno).');
+          SessionInfo.error('ATTENZIONE: RICERCA NON VALIDA (QUESTA FUNZIONALITÀ È ANCORA INCOMPLETA)' +
+              'PER ORA È NECESSARIO SPECIFICARE: o causale1, magazzino1, anno, e numero; o magazzino1,' +
+              'e parte iniziale del codice SMACT (facoltativamente anche l\'anno).');
         }
       },
       pendenti: function (codiceAzienda) {
