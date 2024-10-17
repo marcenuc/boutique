@@ -1,3 +1,5 @@
+# THIS PROJECT IS STALE
+
 # Boutique — The boutique manager
 
 This is a [couchapp][] built for the management of tailor's shops.
